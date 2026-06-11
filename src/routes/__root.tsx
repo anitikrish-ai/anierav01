@@ -11,6 +11,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { Navbar } from "../components/Navbar";
 
 function NotFoundComponent() {
   return (
@@ -77,16 +78,22 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "AniEra — Stream Anime in Frosted Glass" },
+      { name: "description", content: "AniEra is a premium anime streaming experience: trending series, seasonal releases, multilingual playback, and a frosted glass UI." },
+      { name: "author", content: "AniEra" },
+      { property: "og:title", content: "AniEra — Stream Anime in Frosted Glass" },
+      { property: "og:description", content: "Discover, browse and watch anime with a sleek glassmorphism interface." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:site", content: "@AniEra" },
     ],
     links: [
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap",
+      },
       {
         rel: "stylesheet",
         href: appCss,
@@ -118,8 +125,15 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      <div className="min-h-screen">
+        <Navbar />
+        <main className="mx-auto max-w-7xl px-4 pb-20 pt-4 sm:px-6">
+          <Outlet />
+        </main>
+        <footer className="border-t border-white/5 py-8 text-center text-xs text-white/40">
+          AniEra · Powered by Jikan, VidNest & MegaPlay · Streams are embedded from third-party sources.
+        </footer>
+      </div>
     </QueryClientProvider>
   );
 }
