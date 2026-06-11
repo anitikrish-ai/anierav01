@@ -9,11 +9,17 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as LibraryRouteImport } from './routes/library'
 import { Route as BrowseRouteImport } from './routes/browse'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AnimeIdRouteImport } from './routes/anime.$id'
 import { Route as WatchIdEpRouteImport } from './routes/watch.$id.$ep'
 
+const LibraryRoute = LibraryRouteImport.update({
+  id: '/library',
+  path: '/library',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const BrowseRoute = BrowseRouteImport.update({
   id: '/browse',
   path: '/browse',
@@ -38,12 +44,14 @@ const WatchIdEpRoute = WatchIdEpRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/browse': typeof BrowseRoute
+  '/library': typeof LibraryRoute
   '/anime/$id': typeof AnimeIdRoute
   '/watch/$id/$ep': typeof WatchIdEpRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/browse': typeof BrowseRoute
+  '/library': typeof LibraryRoute
   '/anime/$id': typeof AnimeIdRoute
   '/watch/$id/$ep': typeof WatchIdEpRoute
 }
@@ -51,26 +59,41 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/browse': typeof BrowseRoute
+  '/library': typeof LibraryRoute
   '/anime/$id': typeof AnimeIdRoute
   '/watch/$id/$ep': typeof WatchIdEpRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/browse' | '/anime/$id' | '/watch/$id/$ep'
+  fullPaths: '/' | '/browse' | '/library' | '/anime/$id' | '/watch/$id/$ep'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/browse' | '/anime/$id' | '/watch/$id/$ep'
-  id: '__root__' | '/' | '/browse' | '/anime/$id' | '/watch/$id/$ep'
+  to: '/' | '/browse' | '/library' | '/anime/$id' | '/watch/$id/$ep'
+  id:
+    | '__root__'
+    | '/'
+    | '/browse'
+    | '/library'
+    | '/anime/$id'
+    | '/watch/$id/$ep'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BrowseRoute: typeof BrowseRoute
+  LibraryRoute: typeof LibraryRoute
   AnimeIdRoute: typeof AnimeIdRoute
   WatchIdEpRoute: typeof WatchIdEpRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/library': {
+      id: '/library'
+      path: '/library'
+      fullPath: '/library'
+      preLoaderRoute: typeof LibraryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/browse': {
       id: '/browse'
       path: '/browse'
@@ -105,6 +128,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BrowseRoute: BrowseRoute,
+  LibraryRoute: LibraryRoute,
   AnimeIdRoute: AnimeIdRoute,
   WatchIdEpRoute: WatchIdEpRoute,
 }
