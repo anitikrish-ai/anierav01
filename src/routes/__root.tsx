@@ -11,6 +11,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { Navbar } from "../components/Navbar";
 
 function NotFoundComponent() {
   return (
@@ -124,8 +125,15 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      <div className="min-h-screen">
+        <Navbar />
+        <main className="mx-auto max-w-7xl px-4 pb-20 pt-4 sm:px-6">
+          <Outlet />
+        </main>
+        <footer className="border-t border-white/5 py-8 text-center text-xs text-white/40">
+          AniEra · Powered by Jikan, VidNest & MegaPlay · Streams are embedded from third-party sources.
+        </footer>
+      </div>
     </QueryClientProvider>
   );
 }
