@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as BrowseRouteImport } from './routes/browse'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AnimeIdRouteImport } from './routes/anime.$id'
+import { Route as WatchIdEpRouteImport } from './routes/watch.$id.$ep'
 
 const BrowseRoute = BrowseRouteImport.update({
   id: '/browse',
@@ -28,35 +29,44 @@ const AnimeIdRoute = AnimeIdRouteImport.update({
   path: '/anime/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const WatchIdEpRoute = WatchIdEpRouteImport.update({
+  id: '/watch/$id/$ep',
+  path: '/watch/$id/$ep',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/browse': typeof BrowseRoute
   '/anime/$id': typeof AnimeIdRoute
+  '/watch/$id/$ep': typeof WatchIdEpRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/browse': typeof BrowseRoute
   '/anime/$id': typeof AnimeIdRoute
+  '/watch/$id/$ep': typeof WatchIdEpRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/browse': typeof BrowseRoute
   '/anime/$id': typeof AnimeIdRoute
+  '/watch/$id/$ep': typeof WatchIdEpRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/browse' | '/anime/$id'
+  fullPaths: '/' | '/browse' | '/anime/$id' | '/watch/$id/$ep'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/browse' | '/anime/$id'
-  id: '__root__' | '/' | '/browse' | '/anime/$id'
+  to: '/' | '/browse' | '/anime/$id' | '/watch/$id/$ep'
+  id: '__root__' | '/' | '/browse' | '/anime/$id' | '/watch/$id/$ep'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BrowseRoute: typeof BrowseRoute
   AnimeIdRoute: typeof AnimeIdRoute
+  WatchIdEpRoute: typeof WatchIdEpRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -82,6 +92,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AnimeIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/watch/$id/$ep': {
+      id: '/watch/$id/$ep'
+      path: '/watch/$id/$ep'
+      fullPath: '/watch/$id/$ep'
+      preLoaderRoute: typeof WatchIdEpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -89,6 +106,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BrowseRoute: BrowseRoute,
   AnimeIdRoute: AnimeIdRoute,
+  WatchIdEpRoute: WatchIdEpRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
