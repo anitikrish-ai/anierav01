@@ -11,8 +11,11 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LibraryRouteImport } from './routes/library'
 import { Route as BrowseRouteImport } from './routes/browse'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AnimeIdRouteImport } from './routes/anime.$id'
+import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as WatchIdEpRouteImport } from './routes/watch.$id.$ep'
 
 const LibraryRoute = LibraryRouteImport.update({
@@ -25,6 +28,15 @@ const BrowseRoute = BrowseRouteImport.update({
   path: '/browse',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -35,6 +47,11 @@ const AnimeIdRoute = AnimeIdRouteImport.update({
   path: '/anime/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const WatchIdEpRoute = WatchIdEpRouteImport.update({
   id: '/watch/$id/$ep',
   path: '/watch/$id/$ep',
@@ -43,42 +60,68 @@ const WatchIdEpRoute = WatchIdEpRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/browse': typeof BrowseRoute
   '/library': typeof LibraryRoute
+  '/profile': typeof AuthenticatedProfileRoute
   '/anime/$id': typeof AnimeIdRoute
   '/watch/$id/$ep': typeof WatchIdEpRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/browse': typeof BrowseRoute
   '/library': typeof LibraryRoute
+  '/profile': typeof AuthenticatedProfileRoute
   '/anime/$id': typeof AnimeIdRoute
   '/watch/$id/$ep': typeof WatchIdEpRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
   '/browse': typeof BrowseRoute
   '/library': typeof LibraryRoute
+  '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/anime/$id': typeof AnimeIdRoute
   '/watch/$id/$ep': typeof WatchIdEpRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/browse' | '/library' | '/anime/$id' | '/watch/$id/$ep'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/browse'
+    | '/library'
+    | '/profile'
+    | '/anime/$id'
+    | '/watch/$id/$ep'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/browse' | '/library' | '/anime/$id' | '/watch/$id/$ep'
+  to:
+    | '/'
+    | '/auth'
+    | '/browse'
+    | '/library'
+    | '/profile'
+    | '/anime/$id'
+    | '/watch/$id/$ep'
   id:
     | '__root__'
     | '/'
+    | '/_authenticated'
+    | '/auth'
     | '/browse'
     | '/library'
+    | '/_authenticated/profile'
     | '/anime/$id'
     | '/watch/$id/$ep'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
   BrowseRoute: typeof BrowseRoute
   LibraryRoute: typeof LibraryRoute
   AnimeIdRoute: typeof AnimeIdRoute
@@ -101,6 +144,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BrowseRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -115,6 +172,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AnimeIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/profile': {
+      id: '/_authenticated/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof AuthenticatedProfileRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/watch/$id/$ep': {
       id: '/watch/$id/$ep'
       path: '/watch/$id/$ep'
@@ -125,8 +189,21 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedProfileRoute: AuthenticatedProfileRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
   BrowseRoute: BrowseRoute,
   LibraryRoute: LibraryRoute,
   AnimeIdRoute: AnimeIdRoute,
@@ -135,3 +212,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

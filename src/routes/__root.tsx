@@ -12,6 +12,8 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Navbar } from "../components/Navbar";
+import { supabase } from "@/integrations/supabase/client";
+import { Toaster } from "sonner";
 
 function NotFoundComponent() {
   return (
@@ -126,6 +128,16 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const router = useRouter();
+
+  useEffect(() => {
+    const { data } = supabase.auth.onAuthStateChange((event) => {
+      if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
+      router.invalidate();
+      if (event !== "SIGNED_OUT") queryClient.invalidateQueries();
+    });
+    return () => data.subscription.unsubscribe();
+  }, [router, queryClient]);
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -137,6 +149,7 @@ function RootComponent() {
         <footer className="border-t border-white/5 py-8 text-center text-xs text-white/40">
           AniEra · Powered by Jikan, VidNest & MegaPlay · Streams are embedded from third-party sources.
         </footer>
+        <Toaster theme="dark" position="top-right" richColors />
       </div>
     </QueryClientProvider>
   );
