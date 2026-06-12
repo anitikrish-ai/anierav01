@@ -1,11 +1,13 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useAuth } from "@/lib/auth";
 
 export function Navbar() {
   const navigate = useNavigate();
   const [q, setQ] = useState("");
   const pathname = useRouterState({ select: s => s.location.pathname });
   const [scrolled, setScrolled] = useState(false);
+  const { user, signedIn } = useAuth();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -69,6 +71,27 @@ export function Navbar() {
             />
           </div>
         </form>
+
+        {signedIn ? (
+          <Link to="/profile" className="shrink-0 rounded-full glass p-1 pr-3 transition hover:bg-white/10" title="Profile">
+            <div className="flex items-center gap-2">
+              {user?.user_metadata?.avatar_url ? (
+                <img src={user.user_metadata.avatar_url} alt="" className="h-7 w-7 rounded-full object-cover" />
+              ) : (
+                <div className="grid h-7 w-7 place-items-center rounded-full bg-gradient-to-br from-neon-cyan to-neon-magenta text-[11px] font-bold text-background">
+                  {(user?.email ?? "?")[0].toUpperCase()}
+                </div>
+              )}
+              <span className="hidden text-xs font-medium text-white sm:inline">
+                {user?.user_metadata?.full_name ?? user?.email?.split("@")[0]}
+              </span>
+            </div>
+          </Link>
+        ) : (
+          <Link to="/auth" className="shrink-0 rounded-full bg-gradient-to-r from-neon-cyan to-neon-magenta px-4 py-2 text-xs font-semibold text-background">
+            Sign in
+          </Link>
+        )}
       </div>
     </header>
   );
