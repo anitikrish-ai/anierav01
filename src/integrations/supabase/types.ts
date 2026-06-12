@@ -14,7 +14,84 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      library_entries: {
+        Row: {
+          created_at: string
+          episodes_watched: number
+          id: string
+          image: string | null
+          is_favorite: boolean
+          last_lang: string | null
+          mal_id: number
+          notes: string | null
+          score: number | null
+          status: string
+          title: string
+          total_episodes: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          episodes_watched?: number
+          id?: string
+          image?: string | null
+          is_favorite?: boolean
+          last_lang?: string | null
+          mal_id: number
+          notes?: string | null
+          score?: number | null
+          status?: string
+          title: string
+          total_episodes?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          episodes_watched?: number
+          id?: string
+          image?: string | null
+          is_favorite?: boolean
+          last_lang?: string | null
+          mal_id?: number
+          notes?: string | null
+          score?: number | null
+          status?: string
+          title?: string
+          total_episodes?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          mal_username: string | null
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id: string
+          mal_username?: string | null
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          mal_username?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
