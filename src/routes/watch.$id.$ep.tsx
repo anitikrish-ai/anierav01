@@ -1,40 +1,145 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { jikan, bestTitle } from "@/lib/jikan";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { saveHistory } from "@/lib/history";
+import { malToAnilist } from "@/lib/anilist";
+import { searchAnikotoByTitle, getAnikotoSeries, type AnikotoSeries } from "@/lib/anikoto.functions";
 
-type Server = "vidnest" | "megaplay" | "2anime";
 type Lang = "sub" | "dub";
+
+interface ServerDef {
+  id: string;
+  label: string;
+  /** Returns an embed URL, or null if this server cannot serve this request. */
+  build: (ctx: { malId: number; anilistId: number | null; anikoto: AnikotoSeries | null; ep: number; lang: Lang }) => string | null;
+}
+
+const SERVERS: ServerDef[] = [
+  {
+    id: "vidnest-mal",
+    label: "VidNest (MAL)",
+    build: ({ malId, ep, lang }) => `https://vidnest.fun/anime/${malId}/${ep}/${lang}`,
+  },
+  {
+    id: "vidnest-al",
+    label: "VidNest (AniList)",
+    build: ({ anilistId, ep, lang }) =>
+      anilistId ? `https://vidnest.fun/anime/${anilistId}/${ep}/${lang}` : null,
+  },
+  {
+    id: "megaplay-mal",
+    label: "MegaPlay (MAL)",
+    build: ({ malId, ep, lang }) => `https://megaplay.buzz/stream/s-2/${malId}-${ep}/${lang}`,
+  },
+  {
+    id: "megaplay-al",
+    label: "MegaPlay (AniList)",
+    build: ({ anilistId, ep, lang }) =>
+      anilistId ? `https://megaplay.buzz/stream/s-2/${anilistId}-${ep}/${lang}` : null,
+  },
+  {
+    id: "2anime",
+    label: "2anime",
+    build: ({ malId, ep }) => `https://2anime.xyz/embed/${malId}-episode-${ep}`,
+  },
+  {
+    id: "anikoto",
+    label: "Anikoto",
+    build: ({ anikoto, ep, lang }) => {
+      if (!anikoto) return null;
+      const match = anikoto.episodes.find(e => e.number === ep);
+      const url = match?.embed_url?.[lang] ?? match?.embed_url?.sub ?? match?.embed_url?.dub ?? null;
+      return url || null;
+    },
+  },
+];
 
 export const Route = createFileRoute("/watch/$id/$ep")({
   component: WatchPage,
 });
-
-function buildEmbed(server: Server, malId: number, ep: number, lang: Lang): string {
-  switch (server) {
-    case "vidnest":
-      return `https://vidnest.fun/anime/${malId}/${ep}/${lang}`;
-    case "megaplay":
-      return `https://megaplay.buzz/stream/s-2/${malId}-${ep}/${lang}`;
-    case "2anime":
-      return `https://2anime.xyz/embed/${malId}-episode-${ep}`;
-  }
-}
 
 function WatchPage() {
   const { id, ep } = Route.useParams();
   const navigate = useNavigate();
   const malId = Number(id);
   const epNum = Number(ep);
-  const [server, setServer] = useState<Server>("vidnest");
+  const [serverIdx, setServerIdx] = useState(0);
   const [lang, setLang] = useState<Lang>("sub");
+  const [iframeKey, setIframeKey] = useState(0);
+  const [loadState, setLoadState] = useState<"loading" | "ok" | "stalled">("loading");
+  const stallTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const animeQ = useQuery({ queryKey: ["anime", malId], queryFn: () => jikan.anime(malId) });
   const a = animeQ.data?.data;
   const total = a?.episodes ?? null;
+  const title = a ? bestTitle(a) : "";
 
-  const embed = useMemo(() => buildEmbed(server, malId, epNum, lang), [server, malId, epNum, lang]);
+  // MAL → AniList mapping (cached). Drives AniList-keyed embed servers.
+  const anilistQ = useQuery({
+    queryKey: ["anilist", malId],
+    queryFn: () => malToAnilist(malId),
+    staleTime: Infinity,
+  });
+
+  // Anikoto title search → series payload (server-side, rate-limit safe).
+  const anikotoSearchQ = useQuery({
+    queryKey: ["anikoto-search", title],
+    queryFn: () => searchAnikotoByTitle({ data: { title } }),
+    enabled: !!title,
+    staleTime: 1000 * 60 * 60,
+  });
+  const anikotoSeriesQ = useQuery({
+    queryKey: ["anikoto-series", anikotoSearchQ.data?.id],
+    queryFn: () => getAnikotoSeries({ data: { id: String(anikotoSearchQ.data!.id) } }),
+    enabled: !!anikotoSearchQ.data?.id,
+    staleTime: 1000 * 60 * 60,
+  });
+
+  const ctx = useMemo(
+    () => ({
+      malId,
+      anilistId: anilistQ.data ?? null,
+      anikoto: anikotoSeriesQ.data ?? null,
+      ep: epNum,
+      lang,
+    }),
+    [malId, anilistQ.data, anikotoSeriesQ.data, epNum, lang],
+  );
+
+  // Resolve current server's embed, skipping forward if this server can't serve this request.
+  const { embed, activeServer } = useMemo(() => {
+    for (let i = 0; i < SERVERS.length; i++) {
+      const idx = (serverIdx + i) % SERVERS.length;
+      const url = SERVERS[idx].build(ctx);
+      if (url) return { embed: url, activeServer: SERVERS[idx] };
+    }
+    return { embed: null as string | null, activeServer: SERVERS[0] };
+  }, [serverIdx, ctx]);
+
+  // Reset load watcher whenever the embed changes; auto-flag stalled after 12s.
+  useEffect(() => {
+    setLoadState("loading");
+    if (stallTimerRef.current) clearTimeout(stallTimerRef.current);
+    if (!embed) return;
+    stallTimerRef.current = setTimeout(() => {
+      setLoadState(prev => (prev === "loading" ? "stalled" : prev));
+    }, 12000);
+    return () => { if (stallTimerRef.current) clearTimeout(stallTimerRef.current); };
+  }, [embed]);
+
+  const tryNextServer = () => {
+    setServerIdx(i => (i + 1) % SERVERS.length);
+    setIframeKey(k => k + 1);
+  };
+
+  const selectServer = (id: string) => {
+    const idx = SERVERS.findIndex(s => s.id === id);
+    if (idx >= 0) {
+      setServerIdx(idx);
+      setIframeKey(k => k + 1);
+    }
+  };
 
   useEffect(() => {
     if (!a) return;
@@ -68,33 +173,66 @@ function WatchPage() {
       </div>
 
       <div className="overflow-hidden rounded-3xl glass-strong">
-        <div className="aspect-video w-full bg-black">
-          <iframe
-            key={embed}
-            src={embed}
-            allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
-            allowFullScreen
-            referrerPolicy="no-referrer"
-            className="h-full w-full"
-          />
+        <div className="relative aspect-video w-full bg-black">
+          {embed ? (
+            <iframe
+              key={`${embed}-${iframeKey}`}
+              src={embed}
+              allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
+              allowFullScreen
+              referrerPolicy="no-referrer"
+              onLoad={() => setLoadState("ok")}
+              onError={() => tryNextServer()}
+              className="h-full w-full"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-sm text-white/60">
+              No server available for this episode.
+            </div>
+          )}
+          {loadState === "stalled" && (
+            <div className="absolute inset-x-0 bottom-0 flex flex-wrap items-center justify-between gap-2 bg-black/70 px-4 py-2 text-xs text-white/90 backdrop-blur">
+              <span>Stream slow or unavailable on <b>{activeServer.label}</b>.</span>
+              <button
+                onClick={tryNextServer}
+                className="rounded-md bg-gradient-to-r from-neon-cyan to-neon-magenta px-3 py-1 font-semibold text-background"
+              >
+                Try next server →
+              </button>
+            </div>
+          )}
         </div>
         <div className="grid gap-3 p-4 sm:flex sm:flex-wrap sm:items-center sm:justify-between">
           <div className="min-w-0">
             <h1 className="truncate font-display text-lg font-bold text-white">
               {a ? bestTitle(a) : "Loading…"} <span className="text-neon-cyan">· EP {epNum}</span>
             </h1>
+            <p className="mt-0.5 text-[11px] text-white/50">
+              MAL #{malId}
+              {anilistQ.data ? <> · AniList #{anilistQ.data}</> : anilistQ.isLoading ? <> · AniList…</> : null}
+              {anikotoSeriesQ.data ? <> · Anikoto ✓</> : null}
+            </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Toggle value={lang} options={[["sub", "SUB"], ["dub", "DUB"]]} onChange={v => setLang(v as Lang)} />
             <select
-              value={server}
-              onChange={e => setServer(e.target.value as Server)}
+              value={activeServer.id}
+              onChange={e => selectServer(e.target.value)}
               className="rounded-lg bg-white/5 px-3 py-2 text-xs text-white outline-none ring-1 ring-white/10 focus:ring-neon-cyan"
             >
-              <option value="vidnest" className="bg-background">Server: VidNest</option>
-              <option value="megaplay" className="bg-background">Server: MegaPlay</option>
-              <option value="2anime" className="bg-background">Server: 2anime</option>
+              {SERVERS.map(s => {
+                const available = !!s.build(ctx);
+                return (
+                  <option key={s.id} value={s.id} disabled={!available} className="bg-background">
+                    {available ? "Server" : "Unavailable"}: {s.label}
+                  </option>
+                );
+              })}
             </select>
+            <button onClick={tryNextServer}
+              className="rounded-lg glass px-3 py-2 text-xs font-medium text-white hover:bg-white/10">
+              ↻ Next server
+            </button>
             <button onClick={() => goEp(epNum - 1)} disabled={epNum <= 1}
               className="rounded-lg glass px-3 py-2 text-xs font-medium text-white disabled:opacity-40">
               ← Prev
