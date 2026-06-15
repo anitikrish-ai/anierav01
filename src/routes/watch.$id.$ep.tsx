@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { jikan, bestTitle } from "@/lib/jikan";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { saveHistory } from "@/lib/history";
+import { saveHistory, markEpisodeWatched } from "@/lib/history";
 import { malToAnilist } from "@/lib/anilist";
 import { searchAnikotoByTitle, getAnikotoSeries, type AnikotoSeries } from "@/lib/anikoto.functions";
 
@@ -163,6 +163,7 @@ function WatchPage() {
       lang,
       updatedAt: Date.now(),
     });
+    markEpisodeWatched(malId, epNum);
   }, [a, malId, epNum, lang, total]);
 
   const goEp = (next: number) => {
