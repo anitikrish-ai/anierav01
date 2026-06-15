@@ -5,6 +5,8 @@ const BASE = "http://anikotoapi.site";
 export interface AnikotoEpisode {
   number: number;
   title?: string | null;
+  /** HiAnime / Anikoto per-episode id (used for megaplay /stream/s-2/{epId}/{lang}). */
+  episode_id?: string | number | null;
   embed_url?: { sub?: string | null; dub?: string | null } | null;
 }
 
@@ -73,6 +75,7 @@ export const getAnikotoSeries = createServerFn({ method: "GET" })
     const episodes: AnikotoEpisode[] = (raw.episodes ?? []).map((e: any) => ({
       number: Number(e.number ?? e.ep ?? 0),
       title: e.title ?? null,
+      episode_id: e.episode_id ?? e.episodeId ?? e.dataId ?? e.id ?? null,
       embed_url: e.embed_url ?? null,
     }));
     return {
