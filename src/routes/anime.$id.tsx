@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { jikan, bestTitle } from "@/lib/jikan";
 import { AnimeGrid, GridSkeleton } from "@/components/AnimeCard";
 import { useEffect, useState } from "react";
-import { getFavorites, toggleFavorite } from "@/lib/history";
+import { getFavorites, toggleFavorite, getWatchedEpisodes } from "@/lib/history";
 
 export const Route = createFileRoute("/anime/$id")({
   component: AnimePage,
@@ -18,6 +18,8 @@ function AnimePage() {
 
   const [fav, setFav] = useState(false);
   useEffect(() => { setFav(getFavorites().includes(malId)); }, [malId]);
+  const [watched, setWatched] = useState<Set<number>>(new Set());
+  useEffect(() => { setWatched(new Set(getWatchedEpisodes(malId))); }, [malId]);
 
   if (animeQ.isLoading || !animeQ.data) return <div className="h-96 rounded-3xl shimmer" />;
   const a = animeQ.data.data;
@@ -80,8 +82,13 @@ function AnimePage() {
             {episodeList.slice(0, 100).map((ep, i) => (
               <Link key={ep.mal_id ?? i}
                 to="/watch/$id/$ep" params={{ id: String(a.mal_id), ep: String(i + 1) }}
-                className="glass rounded-xl p-3 text-sm text-white/85 transition hover:bg-white/10 hover:text-white">
-                <div className="text-xs text-neon-cyan">EP {i + 1}</div>
+                className={`glass rounded-xl p-3 text-sm transition hover:bg-white/10 hover:text-white ${
+                  watched.has(i + 1) ? "ring-1 ring-neon-cyan/40 text-white" : "text-white/85"
+                }`}>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-neon-cyan">EP {i + 1}</span>
+                  {watched.has(i + 1) && <span className="text-neon-cyan" title="Watched">✓</span>}
+                </div>
                 <div className="mt-1 line-clamp-2 text-[13px]">{ep.title || `Episode ${i + 1}`}</div>
               </Link>
             ))}

@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { jikan, bestTitle, type Anime } from "@/lib/jikan";
 import { AnimeGrid, GridSkeleton } from "@/components/AnimeCard";
 import { getHistory, type HistoryEntry } from "@/lib/history";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -21,36 +21,48 @@ function HomePage() {
   const trending = useQuery({ queryKey: ["top-airing"], queryFn: () => jikan.topAiring(1) });
   const season = useQuery({ queryKey: ["season-now"], queryFn: () => jikan.seasonNow(1) });
   const popular = useQuery({ queryKey: ["top-popular"], queryFn: () => jikan.topPopular(1) });
+  const rated = useQuery({ queryKey: ["top-rated"], queryFn: () => jikan.topRated(1) });
+  const upcoming = useQuery({ queryKey: ["season-upcoming"], queryFn: () => jikan.seasonUpcoming(1) });
 
-  const hero = trending.data?.data?.[0];
+  const heroPool = useMemo(() => trending.data?.data?.slice(0, 5) ?? [], [trending.data]);
 
   return (
     <div className="space-y-12">
-      <Hero anime={hero} loading={trending.isLoading} />
+      <HeroCarousel pool={heroPool} loading={trending.isLoading} />
       <ContinueWatching />
-      <Section title="Trending Now" items={trending.data?.data?.slice(1, 13)} loading={trending.isLoading} />
+      <Section title="Trending Now" items={trending.data?.data?.slice(5, 17)} loading={trending.isLoading} />
       <Section title="This Season" items={season.data?.data?.slice(0, 12)} loading={season.isLoading} />
+      <Section title="Top Rated" items={rated.data?.data?.slice(0, 12)} loading={rated.isLoading} />
+      <Section title="Upcoming Next Season" items={upcoming.data?.data?.slice(0, 12)} loading={upcoming.isLoading} />
       <Section title="All-Time Popular" items={popular.data?.data?.slice(0, 12)} loading={popular.isLoading} />
     </div>
   );
 }
 
-function Hero({ anime, loading }: { anime?: Anime; loading: boolean }) {
-  if (loading || !anime) {
+function HeroCarousel({ pool, loading }: { pool: Anime[]; loading: boolean }) {
+  const [idx, setIdx] = useState(0);
+  useEffect(() => {
+    if (pool.length < 2) return;
+    const t = setInterval(() => setIdx(i => (i + 1) % pool.length), 7000);
+    return () => clearInterval(t);
+  }, [pool.length]);
+  if (loading || !pool.length) {
     return <div className="h-[420px] rounded-3xl shimmer" />;
   }
+  const anime = pool[idx % pool.length];
   const img = anime.images.webp?.large_image_url || anime.images.jpg.large_image_url;
   return (
     <section className="relative overflow-hidden rounded-3xl">
       <div
-        className="absolute inset-0 scale-110 blur-2xl"
+        key={anime.mal_id}
+        className="absolute inset-0 scale-110 blur-2xl transition-opacity duration-700"
         style={{ backgroundImage: `url(${img})`, backgroundSize: "cover", backgroundPosition: "center", opacity: 0.45 }}
       />
       <div className="absolute inset-0 bg-gradient-to-r from-background via-background/60 to-transparent" />
       <div className="relative grid gap-6 p-6 sm:p-10 md:grid-cols-[1fr_280px] md:gap-10">
         <div className="flex flex-col justify-center">
           <span className="mb-3 inline-flex w-fit items-center gap-2 rounded-full glass px-3 py-1 text-xs font-medium text-neon-cyan">
-            <span className="h-1.5 w-1.5 rounded-full bg-neon-cyan glow-cyan" /> #1 Trending
+            <span className="h-1.5 w-1.5 rounded-full bg-neon-cyan glow-cyan" /> #{idx + 1} Trending
           </span>
           <h1 className="font-display text-3xl font-bold leading-tight text-white sm:text-5xl">
             {bestTitle(anime)}
@@ -80,6 +92,18 @@ function Hero({ anime, loading }: { anime?: Anime; loading: boolean }) {
               More Info
             </Link>
           </div>
+          {pool.length > 1 && (
+            <div className="mt-6 flex gap-1.5">
+              {pool.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setIdx(i)}
+                  aria-label={`Slide ${i + 1}`}
+                  className={`h-1.5 rounded-full transition-all ${i === idx ? "w-8 bg-neon-cyan" : "w-3 bg-white/30 hover:bg-white/60"}`}
+                />
+              ))}
+            </div>
+          )}
         </div>
         <div className="hidden md:block">
           <img src={img} alt={bestTitle(anime)} className="aspect-[2/3] w-full rounded-2xl object-cover glass" />

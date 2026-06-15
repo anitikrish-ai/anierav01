@@ -50,12 +50,20 @@ async function jget<T>(path: string): Promise<T> {
 export const jikan = {
   topAiring: (page = 1) => jget<JikanList<Anime>>(`/top/anime?filter=airing&page=${page}`),
   topPopular: (page = 1) => jget<JikanList<Anime>>(`/top/anime?filter=bypopularity&page=${page}`),
+  topRated: (page = 1) => jget<JikanList<Anime>>(`/top/anime?page=${page}`),
   seasonNow: (page = 1) => jget<JikanList<Anime>>(`/seasons/now?page=${page}`),
   seasonUpcoming: (page = 1) => jget<JikanList<Anime>>(`/seasons/upcoming?page=${page}`),
-  search: (q: string, page = 1, genres?: string, year?: string) => {
+  schedules: (filter?: string, page = 1) => {
+    const params = new URLSearchParams({ page: String(page), sfw: "true", limit: "25" });
+    if (filter) params.set("filter", filter);
+    return jget<JikanList<Anime>>(`/schedules?${params.toString()}`);
+  },
+  search: (q: string, page = 1, genres?: string, year?: string, status?: string, type?: string) => {
     const params = new URLSearchParams({ q, page: String(page), sfw: "true", limit: "24" });
     if (genres) params.set("genres", genres);
     if (year) params.set("start_date", `${year}-01-01`);
+    if (status) params.set("status", status);
+    if (type) params.set("type", type);
     return jget<JikanList<Anime>>(`/anime?${params.toString()}`);
   },
   anime: (id: number) => jget<JikanItem<Anime>>(`/anime/${id}/full`),

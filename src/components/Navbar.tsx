@@ -53,6 +53,7 @@ export function Navbar() {
   const links = [
     { to: "/", label: "Home" },
     { to: "/browse", label: "Browse" },
+    { to: "/schedule", label: "Schedule" },
     { to: "/library", label: "Library" },
   ];
 

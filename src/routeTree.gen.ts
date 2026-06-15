@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ScheduleRouteImport } from './routes/schedule'
 import { Route as LibraryRouteImport } from './routes/library'
 import { Route as BrowseRouteImport } from './routes/browse'
 import { Route as AuthRouteImport } from './routes/auth'
@@ -18,6 +19,11 @@ import { Route as AnimeIdRouteImport } from './routes/anime.$id'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as WatchIdEpRouteImport } from './routes/watch.$id.$ep'
 
+const ScheduleRoute = ScheduleRouteImport.update({
+  id: '/schedule',
+  path: '/schedule',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LibraryRoute = LibraryRouteImport.update({
   id: '/library',
   path: '/library',
@@ -63,6 +69,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/browse': typeof BrowseRoute
   '/library': typeof LibraryRoute
+  '/schedule': typeof ScheduleRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/anime/$id': typeof AnimeIdRoute
   '/watch/$id/$ep': typeof WatchIdEpRoute
@@ -72,6 +79,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/browse': typeof BrowseRoute
   '/library': typeof LibraryRoute
+  '/schedule': typeof ScheduleRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/anime/$id': typeof AnimeIdRoute
   '/watch/$id/$ep': typeof WatchIdEpRoute
@@ -83,6 +91,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/browse': typeof BrowseRoute
   '/library': typeof LibraryRoute
+  '/schedule': typeof ScheduleRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/anime/$id': typeof AnimeIdRoute
   '/watch/$id/$ep': typeof WatchIdEpRoute
@@ -94,6 +103,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/browse'
     | '/library'
+    | '/schedule'
     | '/profile'
     | '/anime/$id'
     | '/watch/$id/$ep'
@@ -103,6 +113,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/browse'
     | '/library'
+    | '/schedule'
     | '/profile'
     | '/anime/$id'
     | '/watch/$id/$ep'
@@ -113,6 +124,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/browse'
     | '/library'
+    | '/schedule'
     | '/_authenticated/profile'
     | '/anime/$id'
     | '/watch/$id/$ep'
@@ -124,12 +136,20 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   BrowseRoute: typeof BrowseRoute
   LibraryRoute: typeof LibraryRoute
+  ScheduleRoute: typeof ScheduleRoute
   AnimeIdRoute: typeof AnimeIdRoute
   WatchIdEpRoute: typeof WatchIdEpRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/schedule': {
+      id: '/schedule'
+      path: '/schedule'
+      fullPath: '/schedule'
+      preLoaderRoute: typeof ScheduleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/library': {
       id: '/library'
       path: '/library'
@@ -206,6 +226,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   BrowseRoute: BrowseRoute,
   LibraryRoute: LibraryRoute,
+  ScheduleRoute: ScheduleRoute,
   AnimeIdRoute: AnimeIdRoute,
   WatchIdEpRoute: WatchIdEpRoute,
 }
