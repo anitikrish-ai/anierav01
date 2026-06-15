@@ -17,6 +17,17 @@ interface ServerDef {
 
 const SERVERS: ServerDef[] = [
   {
+    id: "hianime-sub",
+    label: "HiAnime (Episode ID)",
+    build: ({ anikoto, ep, lang }) => {
+      if (!anikoto) return null;
+      const match = anikoto.episodes.find(e => e.number === ep);
+      const epId = match?.episode_id;
+      if (!epId) return null;
+      return `https://megaplay.buzz/stream/s-2/${epId}/${lang}`;
+    },
+  },
+  {
     id: "vidnest-mal",
     label: "VidNest (MAL)",
     build: ({ malId, ep, lang }) => `https://vidnest.fun/anime/${malId}/${ep}/${lang}`,
