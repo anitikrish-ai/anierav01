@@ -230,7 +230,28 @@ function WatchPage() {
 
       <div className="overflow-hidden rounded-3xl glass-strong">
         <div className="relative aspect-video w-full bg-black">
-          {embed ? (
+          {activeServer.id === "hianime-direct" ? (
+            hianimeQ.isLoading ? (
+              <div className="flex h-full w-full items-center justify-center text-sm text-white/60">
+                Resolving HiAnime stream…
+              </div>
+            ) : hianimeQ.data?.sources?.[0]?.file ? (
+              <HlsPlayer
+                key={`${hianimeQ.data.sources[0].file}-${iframeKey}`}
+                src={hianimeQ.data.sources[0].file}
+                tracks={hianimeQ.data.tracks}
+                poster={a?.images.webp?.large_image_url || a?.images.jpg.large_image_url}
+                onEnded={() => goEp(epNum + 1)}
+              />
+            ) : (
+              <div className="flex h-full w-full flex-col items-center justify-center gap-2 p-4 text-center text-sm text-white/60">
+                <span>HiAnime direct stream not found for this episode.</span>
+                <button onClick={tryNextServer} className="rounded-md bg-gradient-to-r from-neon-cyan to-neon-magenta px-3 py-1 text-xs font-semibold text-background">
+                  Try next server →
+                </button>
+              </div>
+            )
+          ) : embed ? (
             <iframe
               key={`${embed}-${iframeKey}`}
               src={embed}
