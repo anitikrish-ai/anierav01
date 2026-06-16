@@ -76,36 +76,62 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => ({
-    meta: [
-      { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "AniEra — Stream Anime in Frosted Glass" },
-      { name: "description", content: "AniEra is a premium anime streaming experience: trending series, seasonal releases, multilingual playback, and a frosted glass UI." },
-      { name: "author", content: "AniEra" },
-      { property: "og:title", content: "AniEra — Stream Anime in Frosted Glass" },
-      { property: "og:description", content: "AniEra is a premium anime streaming experience: trending series, seasonal releases, multilingual playback, and a frosted glass UI." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@AniEra" },
-      { name: "twitter:title", content: "AniEra — Stream Anime in Frosted Glass" },
-      { name: "twitter:description", content: "AniEra is a premium anime streaming experience: trending series, seasonal releases, multilingual playback, and a frosted glass UI." },
-      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/0a27fc47-8f3d-4d69-91dd-68275aeea4ba" },
-      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/0a27fc47-8f3d-4d69-91dd-68275aeea4ba" },
-    ],
-    links: [
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      {
-        rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap",
-      },
-      {
-        rel: "stylesheet",
-        href: appCss,
-      },
-    ],
-  }),
+  head: () => {
+    const gaId = import.meta.env.VITE_GA_ID as string | undefined;
+    return {
+      meta: [
+        { charSet: "utf-8" },
+        { name: "viewport", content: "width=device-width, initial-scale=1" },
+        { title: "AniEra — Anime Streaming, Seasonal Anime 2026, Sub & Dub" },
+        { name: "description", content: "AniEra is a premium anime streaming hub: trending and seasonal anime 2026, episode tracker, sub and dub playback, all wrapped in a frosted-glass UI built for fans." },
+        { name: "author", content: "AniEra" },
+        { name: "theme-color", content: "#0A0A14" },
+        { property: "og:title", content: "AniEra — Anime Streaming, Seasonal Anime 2026, Sub & Dub" },
+        { property: "og:description", content: "Premium anime streaming hub — trending series, seasonal 2026 releases, sub & dub playback, frosted-glass UI." },
+        { property: "og:type", content: "website" },
+        { property: "og:site_name", content: "AniEra" },
+        { name: "twitter:card", content: "summary_large_image" },
+        { name: "twitter:site", content: "@AniEra" },
+        { name: "twitter:title", content: "AniEra — Anime Streaming, Seasonal Anime 2026" },
+        { name: "twitter:description", content: "Trending, seasonal & upcoming anime — sub or dub, in a frosted-glass player." },
+        { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/0a27fc47-8f3d-4d69-91dd-68275aeea4ba" },
+        { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/0a27fc47-8f3d-4d69-91dd-68275aeea4ba" },
+      ],
+      links: [
+        { rel: "preconnect", href: "https://fonts.googleapis.com" },
+        { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+        {
+          rel: "stylesheet",
+          href: "https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap",
+        },
+        { rel: "stylesheet", href: appCss },
+      ],
+      scripts: [
+        {
+          type: "application/ld+json",
+          children: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            name: "AniEra",
+            url: "https://aniera.lovable.app",
+            potentialAction: {
+              "@type": "SearchAction",
+              target: "https://aniera.lovable.app/browse?q={search_term_string}",
+              "query-input": "required name=search_term_string",
+            },
+          }),
+        },
+        ...(gaId
+          ? [
+              { src: `https://www.googletagmanager.com/gtag/js?id=${gaId}`, async: true },
+              {
+                children: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${gaId}');`,
+              },
+            ]
+          : []),
+      ],
+    };
+  },
   shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
