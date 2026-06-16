@@ -19,6 +19,12 @@ interface ServerDef {
 
 const SERVERS: ServerDef[] = [
   {
+    id: "hianime-direct",
+    label: "HiAnime Direct (HLS)",
+    // Sentinel string — actual sources fetched via getHianimeSources server fn.
+    build: () => "hianime-direct://",
+  },
+  {
     id: "hianime-sub",
     label: "HiAnime (Episode ID)",
     build: ({ anikoto, ep, lang }) => {
