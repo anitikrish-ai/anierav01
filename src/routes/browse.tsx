@@ -16,9 +16,13 @@ const searchSchema = z.object({
 export const Route = createFileRoute("/browse")({
   head: () => ({
     meta: [
-      { title: "Browse Anime — AniEra" },
-      { name: "description", content: "Search and filter anime by title, genre and year." },
+      { title: "Browse Anime — Search & Filter | AniEra" },
+      { name: "description", content: "Search and filter anime by title, genre, year, type and status. Stream sub or dub on AniEra's frosted-glass player." },
+      { property: "og:title", content: "Browse Anime — AniEra" },
+      { property: "og:description", content: "Search & filter every anime — by genre, year, status, type." },
+      { property: "og:url", content: "https://aniera.lovable.app/browse" },
     ],
+    links: [{ rel: "canonical", href: "https://aniera.lovable.app/browse" }],
   }),
   validateSearch: searchSchema,
   component: BrowsePage,
