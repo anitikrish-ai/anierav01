@@ -67,6 +67,33 @@ const SERVERS: ServerDef[] = [
 ];
 
 export const Route = createFileRoute("/watch/$id/$ep")({
+  head: ({ params }) => {
+    const url = `https://aniera.lovable.app/watch/${params.id}/${params.ep}`;
+    return {
+      meta: [
+        { title: `Episode ${params.ep} — Watch on AniEra` },
+        { name: "description", content: `Stream episode ${params.ep} on AniEra with sub & dub, multi-server playback, and a frosted-glass player.` },
+        { property: "og:title", content: `Episode ${params.ep} — AniEra` },
+        { property: "og:type", content: "video.episode" },
+        { property: "og:url", content: url },
+        { name: "robots", content: "noindex" },
+      ],
+      links: [{ rel: "canonical", href: url }],
+      scripts: [
+        {
+          type: "application/ld+json",
+          children: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "VideoObject",
+            name: `Episode ${params.ep}`,
+            description: `Anime episode ${params.ep} streaming on AniEra`,
+            uploadDate: new Date().toISOString(),
+            embedUrl: url,
+          }),
+        },
+      ],
+    };
+  },
   component: WatchPage,
 });
 
