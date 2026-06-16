@@ -153,6 +153,15 @@ function WatchPage() {
     [malId, anilistQ.data, anikotoSeriesQ.data, epNum, lang],
   );
 
+  // HiAnime direct sources (only fetched when that server is active).
+  const hianimeQ = useQuery({
+    queryKey: ["hianime-src", title, epNum, lang],
+    queryFn: () => getHianimeSources({ data: { title, ep: epNum, lang } }),
+    enabled: !!title,
+    staleTime: 1000 * 60 * 30,
+    retry: 1,
+  });
+
   // Resolve current server's embed, skipping forward if this server can't serve this request.
   const { embed, activeServer } = useMemo(() => {
     for (let i = 0; i < SERVERS.length; i++) {
