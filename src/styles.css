@@ -114,12 +114,12 @@
   body {
     color: var(--color-foreground);
     font-family: var(--font-sans);
-    background-color: var(--color-background);
+    background-color: #0A0A14;
     background-image:
-      radial-gradient(60% 50% at 15% 10%, oklch(0.45 0.20 280 / 0.55) 0%, transparent 60%),
-      radial-gradient(50% 40% at 90% 20%, oklch(0.55 0.22 200 / 0.45) 0%, transparent 60%),
-      radial-gradient(70% 60% at 50% 100%, oklch(0.45 0.25 330 / 0.40) 0%, transparent 60%),
-      linear-gradient(180deg, oklch(0.10 0.04 280) 0%, oklch(0.08 0.03 270) 100%);
+      radial-gradient(55% 45% at 12% 8%, oklch(0.40 0.22 282 / 0.40) 0%, transparent 60%),
+      radial-gradient(45% 40% at 92% 18%, oklch(0.45 0.20 270 / 0.32) 0%, transparent 60%),
+      radial-gradient(60% 55% at 50% 100%, oklch(0.40 0.22 295 / 0.28) 0%, transparent 60%),
+      linear-gradient(180deg, #0A0A14 0%, #07070F 100%);
     background-attachment: fixed;
   }
 
