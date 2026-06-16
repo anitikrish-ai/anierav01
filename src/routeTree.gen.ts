@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ScheduleRouteImport } from './routes/schedule'
 import { Route as LibraryRouteImport } from './routes/library'
 import { Route as BrowseRouteImport } from './routes/browse'
@@ -19,6 +20,11 @@ import { Route as AnimeIdRouteImport } from './routes/anime.$id'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as WatchIdEpRouteImport } from './routes/watch.$id.$ep'
 
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ScheduleRoute = ScheduleRouteImport.update({
   id: '/schedule',
   path: '/schedule',
@@ -70,6 +76,7 @@ export interface FileRoutesByFullPath {
   '/browse': typeof BrowseRoute
   '/library': typeof LibraryRoute
   '/schedule': typeof ScheduleRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/anime/$id': typeof AnimeIdRoute
   '/watch/$id/$ep': typeof WatchIdEpRoute
@@ -80,6 +87,7 @@ export interface FileRoutesByTo {
   '/browse': typeof BrowseRoute
   '/library': typeof LibraryRoute
   '/schedule': typeof ScheduleRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/anime/$id': typeof AnimeIdRoute
   '/watch/$id/$ep': typeof WatchIdEpRoute
@@ -92,6 +100,7 @@ export interface FileRoutesById {
   '/browse': typeof BrowseRoute
   '/library': typeof LibraryRoute
   '/schedule': typeof ScheduleRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/anime/$id': typeof AnimeIdRoute
   '/watch/$id/$ep': typeof WatchIdEpRoute
@@ -104,6 +113,7 @@ export interface FileRouteTypes {
     | '/browse'
     | '/library'
     | '/schedule'
+    | '/sitemap.xml'
     | '/profile'
     | '/anime/$id'
     | '/watch/$id/$ep'
@@ -114,6 +124,7 @@ export interface FileRouteTypes {
     | '/browse'
     | '/library'
     | '/schedule'
+    | '/sitemap.xml'
     | '/profile'
     | '/anime/$id'
     | '/watch/$id/$ep'
@@ -125,6 +136,7 @@ export interface FileRouteTypes {
     | '/browse'
     | '/library'
     | '/schedule'
+    | '/sitemap.xml'
     | '/_authenticated/profile'
     | '/anime/$id'
     | '/watch/$id/$ep'
@@ -137,12 +149,20 @@ export interface RootRouteChildren {
   BrowseRoute: typeof BrowseRoute
   LibraryRoute: typeof LibraryRoute
   ScheduleRoute: typeof ScheduleRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   AnimeIdRoute: typeof AnimeIdRoute
   WatchIdEpRoute: typeof WatchIdEpRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/schedule': {
       id: '/schedule'
       path: '/schedule'
@@ -227,19 +247,10 @@ const rootRouteChildren: RootRouteChildren = {
   BrowseRoute: BrowseRoute,
   LibraryRoute: LibraryRoute,
   ScheduleRoute: ScheduleRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   AnimeIdRoute: AnimeIdRoute,
   WatchIdEpRoute: WatchIdEpRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
