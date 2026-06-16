@@ -6,6 +6,20 @@ import { useEffect, useState } from "react";
 import { getFavorites, toggleFavorite, getWatchedEpisodes } from "@/lib/history";
 
 export const Route = createFileRoute("/anime/$id")({
+  head: ({ params }) => {
+    const url = `https://aniera.lovable.app/anime/${params.id}`;
+    return {
+      meta: [
+        { title: `Anime #${params.id} — Watch on AniEra` },
+        { name: "description", content: `Stream this anime on AniEra with sub & dub playback, full episode list, and frosted-glass UI.` },
+        { property: "og:title", content: `Watch on AniEra` },
+        { property: "og:description", content: `Stream this anime — sub or dub, full episode tracker.` },
+        { property: "og:type", content: "video.tv_show" },
+        { property: "og:url", content: url },
+      ],
+      links: [{ rel: "canonical", href: url }],
+    };
+  },
   component: AnimePage,
 });
 
