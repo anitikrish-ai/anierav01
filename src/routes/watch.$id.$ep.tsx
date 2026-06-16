@@ -5,6 +5,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { saveHistory, markEpisodeWatched } from "@/lib/history";
 import { malToAnilist } from "@/lib/anilist";
 import { searchAnikotoByTitle, getAnikotoSeries, type AnikotoSeries } from "@/lib/anikoto.functions";
+import { getHianimeSources } from "@/lib/hianime.functions";
+import { HlsPlayer } from "@/components/HlsPlayer";
 
 type Lang = "sub" | "dub";
 
