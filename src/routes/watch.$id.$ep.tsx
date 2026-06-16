@@ -5,6 +5,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { saveHistory, markEpisodeWatched } from "@/lib/history";
 import { malToAnilist } from "@/lib/anilist";
 import { searchAnikotoByTitle, getAnikotoSeries, type AnikotoSeries } from "@/lib/anikoto.functions";
+import { getHianimeSources } from "@/lib/hianime.functions";
+import { HlsPlayer } from "@/components/HlsPlayer";
 
 type Lang = "sub" | "dub";
 
@@ -16,6 +18,12 @@ interface ServerDef {
 }
 
 const SERVERS: ServerDef[] = [
+  {
+    id: "hianime-direct",
+    label: "HiAnime Direct (HLS)",
+    // Sentinel string — actual sources fetched via getHianimeSources server fn.
+    build: () => "hianime-direct://",
+  },
   {
     id: "hianime-sub",
     label: "HiAnime (Episode ID)",
@@ -145,6 +153,15 @@ function WatchPage() {
     [malId, anilistQ.data, anikotoSeriesQ.data, epNum, lang],
   );
 
+  // HiAnime direct sources (only fetched when that server is active).
+  const hianimeQ = useQuery({
+    queryKey: ["hianime-src", title, epNum, lang],
+    queryFn: () => getHianimeSources({ data: { title, ep: epNum, lang } }),
+    enabled: !!title,
+    staleTime: 1000 * 60 * 30,
+    retry: 1,
+  });
+
   // Resolve current server's embed, skipping forward if this server can't serve this request.
   const { embed, activeServer } = useMemo(() => {
     for (let i = 0; i < SERVERS.length; i++) {
@@ -213,7 +230,28 @@ function WatchPage() {
 
       <div className="overflow-hidden rounded-3xl glass-strong">
         <div className="relative aspect-video w-full bg-black">
-          {embed ? (
+          {activeServer.id === "hianime-direct" ? (
+            hianimeQ.isLoading ? (
+              <div className="flex h-full w-full items-center justify-center text-sm text-white/60">
+                Resolving HiAnime stream…
+              </div>
+            ) : hianimeQ.data?.sources?.[0]?.file ? (
+              <HlsPlayer
+                key={`${hianimeQ.data.sources[0].file}-${iframeKey}`}
+                src={hianimeQ.data.sources[0].file}
+                tracks={hianimeQ.data.tracks}
+                poster={a?.images.webp?.large_image_url || a?.images.jpg.large_image_url}
+                onEnded={() => goEp(epNum + 1)}
+              />
+            ) : (
+              <div className="flex h-full w-full flex-col items-center justify-center gap-2 p-4 text-center text-sm text-white/60">
+                <span>HiAnime direct stream not found for this episode.</span>
+                <button onClick={tryNextServer} className="rounded-md bg-gradient-to-r from-neon-cyan to-neon-magenta px-3 py-1 text-xs font-semibold text-background">
+                  Try next server →
+                </button>
+              </div>
+            )
+          ) : embed ? (
             <iframe
               key={`${embed}-${iframeKey}`}
               src={embed}
