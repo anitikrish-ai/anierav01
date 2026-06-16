@@ -8,11 +8,13 @@ import { useEffect, useMemo, useState } from "react";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "AniEra — Stream Anime in Frosted Glass" },
-      { name: "description", content: "Trending, seasonal, and upcoming anime — wrapped in a premium frosted glass UI with multilingual playback." },
-      { property: "og:title", content: "AniEra — Stream Anime in Frosted Glass" },
-      { property: "og:description", content: "Discover trending anime and watch instantly." },
+      { title: "AniEra — Anime Streaming, Seasonal Anime 2026, Sub & Dub" },
+      { name: "description", content: "Stream trending and seasonal anime 2026 on AniEra: top airing series, upcoming episodes, sub & dub playback, watchlist and continue-watching — all in a frosted-glass UI." },
+      { property: "og:title", content: "AniEra — Anime Streaming, Seasonal Anime 2026" },
+      { property: "og:description", content: "Trending, seasonal & upcoming anime — sub or dub, in a frosted-glass player." },
+      { property: "og:url", content: "https://aniera.lovable.app/" },
     ],
+    links: [{ rel: "canonical", href: "https://aniera.lovable.app/" }],
   }),
   component: HomePage,
 });

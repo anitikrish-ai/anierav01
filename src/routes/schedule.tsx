@@ -24,11 +24,13 @@ const searchSchema = z.object({ day: z.string().optional() });
 export const Route = createFileRoute("/schedule")({
   head: () => ({
     meta: [
-      { title: "Airing Schedule — AniEra" },
-      { name: "description", content: "Weekly airing calendar for currently broadcasting anime." },
-      { property: "og:title", content: "Airing Schedule — AniEra" },
+      { title: "Anime Airing Schedule 2026 — Weekly Calendar | AniEra" },
+      { name: "description", content: "Weekly airing calendar for currently broadcasting anime. Track new episodes for the 2026 season, day by day, with countdowns and scores." },
+      { property: "og:title", content: "Anime Airing Schedule — AniEra" },
       { property: "og:description", content: "See what's airing today and across the week." },
+      { property: "og:url", content: "https://aniera.lovable.app/schedule" },
     ],
+    links: [{ rel: "canonical", href: "https://aniera.lovable.app/schedule" }],
   }),
   validateSearch: searchSchema,
   component: SchedulePage,
