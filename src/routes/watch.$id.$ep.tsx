@@ -137,11 +137,19 @@ function WatchPage() {
   const navigate = useNavigate();
   const malId = Number(id);
   const epNum = Number(ep);
-  const [serverIdx, setServerIdx] = useState(0);
-  const [lang, setLang] = useState<Lang>("sub");
+  const [serverIdx, setServerIdx] = useState(() => {
+    if (typeof window === "undefined") return 0;
+    const preferred = getPreferredProvider(malId);
+    const i = preferred ? SERVERS.findIndex(s => s.id === preferred) : -1;
+    return i >= 0 ? i : 0;
+  });
+  const [lang, setLang] = useState<Lang>(() => getPreferredLang());
   const [iframeKey, setIframeKey] = useState(0);
   const [loadState, setLoadState] = useState<"loading" | "ok" | "stalled">("loading");
   const stallTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Resume position for the current episode (seconds).
+  const resume = useMemo(() => getEpisodeProgress(malId, epNum)?.t ?? 0, [malId, epNum]);
 
   const animeQ = useQuery({ queryKey: ["anime", malId], queryFn: () => jikan.anime(malId) });
   const a = animeQ.data?.data;
