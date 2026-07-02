@@ -168,3 +168,20 @@
   background-size: 800px 100%;
   animation: shimmer 1.6s linear infinite;
 }
+
+/* Reduce expensive filters on mobile for smoother scrolling/paints */
+@media (max-width: 640px) {
+  .glass { backdrop-filter: blur(10px) saturate(130%); }
+  .glass-strong { backdrop-filter: blur(14px) saturate(140%); }
+}
+
+/* Respect user motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
