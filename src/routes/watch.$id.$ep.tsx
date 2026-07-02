@@ -338,7 +338,7 @@ function WatchPage() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Toggle value={lang} options={[["sub", "SUB"], ["dub", "DUB"]]} onChange={v => setLang(v as Lang)} />
+            <Toggle value={lang} options={[["sub", "SUB"], ["dub", "DUB"]]} onChange={v => selectLang(v as Lang)} />
             <select
               value={activeServer.id}
               onChange={e => selectServer(e.target.value)}
