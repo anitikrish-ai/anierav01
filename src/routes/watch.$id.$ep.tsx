@@ -286,6 +286,8 @@ function WatchPage() {
                 src={hianimeQ.data.sources[0].file}
                 tracks={hianimeQ.data.tracks}
                 poster={a?.images.webp?.large_image_url || a?.images.jpg.large_image_url}
+                startTime={resume}
+                onProgress={(t, d) => saveEpisodeProgress(malId, epNum, t, d)}
                 onEnded={() => goEp(epNum + 1)}
               />
             ) : (
