@@ -72,3 +72,60 @@ export function toggleEpisodeWatched(malId: number, ep: number): boolean {
   localStorage.setItem(WATCHED_KEY, JSON.stringify(map));
   return !has;
 }
+
+/** Per-episode playback timestamp (seconds) for resume. */
+const PROGRESS_KEY = "aniera:progress";
+type ProgressMap = Record<string, { t: number; d: number; u: number }>;
+
+function readProgress(): ProgressMap {
+  if (typeof window === "undefined") return {};
+  try { return JSON.parse(localStorage.getItem(PROGRESS_KEY) || "{}"); } catch { return {}; }
+}
+
+export function getEpisodeProgress(malId: number, ep: number): { t: number; d: number } | null {
+  const p = readProgress()[`${malId}:${ep}`];
+  return p ? { t: p.t, d: p.d } : null;
+}
+
+export function saveEpisodeProgress(malId: number, ep: number, t: number, d: number) {
+  if (typeof window === "undefined") return;
+  const map = readProgress();
+  map[`${malId}:${ep}`] = { t, d, u: Date.now() };
+  // Keep the map bounded
+  const keys = Object.keys(map);
+  if (keys.length > 500) {
+    const sorted = keys.sort((a, b) => (map[a].u ?? 0) - (map[b].u ?? 0));
+    for (const k of sorted.slice(0, keys.length - 500)) delete map[k];
+  }
+  localStorage.setItem(PROGRESS_KEY, JSON.stringify(map));
+}
+
+/** Persist last-used streaming provider per anime. */
+const PROVIDER_KEY = "aniera:provider";
+export function getPreferredProvider(malId: number): string | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const m = JSON.parse(localStorage.getItem(PROVIDER_KEY) || "{}");
+    return m[String(malId)] ?? m.__default ?? null;
+  } catch { return null; }
+}
+export function setPreferredProvider(malId: number, id: string) {
+  if (typeof window === "undefined") return;
+  try {
+    const m = JSON.parse(localStorage.getItem(PROVIDER_KEY) || "{}");
+    m[String(malId)] = id;
+    m.__default = id;
+    localStorage.setItem(PROVIDER_KEY, JSON.stringify(m));
+  } catch {}
+}
+
+/** Persist last-used language (sub/dub) globally. */
+const LANG_KEY = "aniera:lang";
+export function getPreferredLang(): "sub" | "dub" {
+  if (typeof window === "undefined") return "sub";
+  return (localStorage.getItem(LANG_KEY) as "sub" | "dub") || "sub";
+}
+export function setPreferredLang(l: "sub" | "dub") {
+  if (typeof window === "undefined") return;
+  localStorage.setItem(LANG_KEY, l);
+}

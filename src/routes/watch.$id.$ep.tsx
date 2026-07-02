@@ -2,7 +2,16 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { jikan, bestTitle } from "@/lib/jikan";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { saveHistory, markEpisodeWatched } from "@/lib/history";
+import {
+  saveHistory,
+  markEpisodeWatched,
+  getEpisodeProgress,
+  saveEpisodeProgress,
+  getPreferredProvider,
+  setPreferredProvider,
+  getPreferredLang,
+  setPreferredLang,
+} from "@/lib/history";
 import { malToAnilist } from "@/lib/anilist";
 import { searchAnikotoByTitle, getAnikotoSeries, type AnikotoSeries } from "@/lib/anikoto.functions";
 import { getHianimeSources } from "@/lib/hianime.functions";
@@ -58,6 +67,24 @@ const SERVERS: ServerDef[] = [
       anilistId ? `https://megaplay.buzz/stream/s-2/${anilistId}-${ep}/${lang}` : null,
   },
   {
+    id: "tryembed-al",
+    label: "TryEmbed (AniList)",
+    build: ({ anilistId, ep, lang }) =>
+      anilistId ? `https://tryembed.us.cc/embed/anime/${anilistId}/${ep}/${lang}` : null,
+  },
+  {
+    id: "4animo-al",
+    label: "4Animo (AniList)",
+    build: ({ anilistId, ep, lang }) =>
+      anilistId ? `https://cdn.4animo.xyz/embed/hd-1/ani/${anilistId}/${ep}/${lang}?k=1` : null,
+  },
+  {
+    id: "megaplay-ani-al",
+    label: "MegaPlay ani (AniList)",
+    build: ({ anilistId, ep, lang }) =>
+      anilistId ? `https://megaplay.buzz/stream/ani/${anilistId}/${ep}/${lang}` : null,
+  },
+  {
     id: "2anime",
     label: "2anime",
     build: ({ malId, ep }) => `https://2anime.xyz/embed/${malId}-episode-${ep}`,
@@ -110,11 +137,19 @@ function WatchPage() {
   const navigate = useNavigate();
   const malId = Number(id);
   const epNum = Number(ep);
-  const [serverIdx, setServerIdx] = useState(0);
-  const [lang, setLang] = useState<Lang>("sub");
+  const [serverIdx, setServerIdx] = useState(() => {
+    if (typeof window === "undefined") return 0;
+    const preferred = getPreferredProvider(malId);
+    const i = preferred ? SERVERS.findIndex(s => s.id === preferred) : -1;
+    return i >= 0 ? i : 0;
+  });
+  const [lang, setLang] = useState<Lang>(() => getPreferredLang());
   const [iframeKey, setIframeKey] = useState(0);
   const [loadState, setLoadState] = useState<"loading" | "ok" | "stalled">("loading");
   const stallTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Resume position for the current episode (seconds).
+  const resume = useMemo(() => getEpisodeProgress(malId, epNum)?.t ?? 0, [malId, epNum]);
 
   const animeQ = useQuery({ queryKey: ["anime", malId], queryFn: () => jikan.anime(malId) });
   const a = animeQ.data?.data;
@@ -184,7 +219,11 @@ function WatchPage() {
   }, [embed]);
 
   const tryNextServer = () => {
-    setServerIdx(i => (i + 1) % SERVERS.length);
+    setServerIdx(i => {
+      const next = (i + 1) % SERVERS.length;
+      setPreferredProvider(malId, SERVERS[next].id);
+      return next;
+    });
     setIframeKey(k => k + 1);
   };
 
@@ -192,8 +231,14 @@ function WatchPage() {
     const idx = SERVERS.findIndex(s => s.id === id);
     if (idx >= 0) {
       setServerIdx(idx);
+      setPreferredProvider(malId, id);
       setIframeKey(k => k + 1);
     }
+  };
+
+  const selectLang = (v: Lang) => {
+    setLang(v);
+    setPreferredLang(v);
   };
 
   useEffect(() => {
@@ -241,6 +286,8 @@ function WatchPage() {
                 src={hianimeQ.data.sources[0].file}
                 tracks={hianimeQ.data.tracks}
                 poster={a?.images.webp?.large_image_url || a?.images.jpg.large_image_url}
+                startTime={resume}
+                onProgress={(t, d) => saveEpisodeProgress(malId, epNum, t, d)}
                 onEnded={() => goEp(epNum + 1)}
               />
             ) : (
@@ -291,7 +338,7 @@ function WatchPage() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Toggle value={lang} options={[["sub", "SUB"], ["dub", "DUB"]]} onChange={v => setLang(v as Lang)} />
+            <Toggle value={lang} options={[["sub", "SUB"], ["dub", "DUB"]]} onChange={v => selectLang(v as Lang)} />
             <select
               value={activeServer.id}
               onChange={e => selectServer(e.target.value)}
