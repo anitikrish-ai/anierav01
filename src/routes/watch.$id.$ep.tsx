@@ -67,6 +67,24 @@ const SERVERS: ServerDef[] = [
       anilistId ? `https://megaplay.buzz/stream/s-2/${anilistId}-${ep}/${lang}` : null,
   },
   {
+    id: "tryembed-al",
+    label: "TryEmbed (AniList)",
+    build: ({ anilistId, ep, lang }) =>
+      anilistId ? `https://tryembed.us.cc/embed/anime/${anilistId}/${ep}/${lang}` : null,
+  },
+  {
+    id: "4animo-al",
+    label: "4Animo (AniList)",
+    build: ({ anilistId, ep, lang }) =>
+      anilistId ? `https://cdn.4animo.xyz/embed/hd-1/ani/${anilistId}/${ep}/${lang}?k=1` : null,
+  },
+  {
+    id: "megaplay-ani-al",
+    label: "MegaPlay ani (AniList)",
+    build: ({ anilistId, ep, lang }) =>
+      anilistId ? `https://megaplay.buzz/stream/ani/${anilistId}/${ep}/${lang}` : null,
+  },
+  {
     id: "2anime",
     label: "2anime",
     build: ({ malId, ep }) => `https://2anime.xyz/embed/${malId}-episode-${ep}`,
