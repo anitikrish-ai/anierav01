@@ -219,7 +219,11 @@ function WatchPage() {
   }, [embed]);
 
   const tryNextServer = () => {
-    setServerIdx(i => (i + 1) % SERVERS.length);
+    setServerIdx(i => {
+      const next = (i + 1) % SERVERS.length;
+      setPreferredProvider(malId, SERVERS[next].id);
+      return next;
+    });
     setIframeKey(k => k + 1);
   };
 
@@ -227,8 +231,14 @@ function WatchPage() {
     const idx = SERVERS.findIndex(s => s.id === id);
     if (idx >= 0) {
       setServerIdx(idx);
+      setPreferredProvider(malId, id);
       setIframeKey(k => k + 1);
     }
+  };
+
+  const selectLang = (v: Lang) => {
+    setLang(v);
+    setPreferredLang(v);
   };
 
   useEffect(() => {
