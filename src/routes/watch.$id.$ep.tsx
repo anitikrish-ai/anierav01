@@ -2,7 +2,16 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { jikan, bestTitle } from "@/lib/jikan";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { saveHistory, markEpisodeWatched } from "@/lib/history";
+import {
+  saveHistory,
+  markEpisodeWatched,
+  getEpisodeProgress,
+  saveEpisodeProgress,
+  getPreferredProvider,
+  setPreferredProvider,
+  getPreferredLang,
+  setPreferredLang,
+} from "@/lib/history";
 import { malToAnilist } from "@/lib/anilist";
 import { searchAnikotoByTitle, getAnikotoSeries, type AnikotoSeries } from "@/lib/anikoto.functions";
 import { getHianimeSources } from "@/lib/hianime.functions";
