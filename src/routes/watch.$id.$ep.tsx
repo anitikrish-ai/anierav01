@@ -302,6 +302,7 @@ function WatchPage() {
             <iframe
               key={`${embed}-${iframeKey}`}
               src={embed}
+              sandbox="allow-scripts allow-same-origin allow-presentation allow-forms"
               allow="autoplay; fullscreen; picture-in-picture; encrypted-media"
               allowFullScreen
               referrerPolicy="no-referrer"
