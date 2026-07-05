@@ -379,10 +379,20 @@ function WatchPage() {
               className="rounded-lg glass px-3 py-2 text-xs font-medium text-white disabled:opacity-40">
               ← Prev
             </button>
-            <button onClick={() => goEp(epNum + 1)} disabled={!!total && epNum >= total}
-              className="rounded-lg bg-gradient-to-r from-neon-cyan to-neon-magenta px-3 py-2 text-xs font-semibold text-background disabled:opacity-40">
-              Next →
-            </button>
+            <div className="relative">
+              {showNextHint && (
+                <span
+                  aria-hidden="true"
+                  className="next-ep-hint pointer-events-none absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-[11px] font-bold uppercase"
+                >
+                  Next Episode →
+                </span>
+              )}
+              <button onClick={() => goEp(epNum + 1)} disabled={!!total && epNum >= total}
+                className={`rounded-lg bg-gradient-to-r from-neon-cyan to-neon-magenta px-3 py-2 text-xs font-semibold text-background disabled:opacity-40 ${showNextHint ? "ring-2 ring-neon-cyan/70 shadow-[0_0_20px_rgba(34,211,238,0.6)]" : ""}`}>
+                Next →
+              </button>
+            </div>
           </div>
         </div>
       </div>
