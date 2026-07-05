@@ -190,9 +190,9 @@ function WatchPage() {
 
   // HiAnime direct sources (only fetched when that server is active).
   const hianimeQ = useQuery({
-    queryKey: ["hianime-src", title, epNum, lang],
-    queryFn: () => getHianimeSources({ data: { title, ep: epNum, lang } }),
-    enabled: !!title,
+    queryKey: ["hianime-src", malId, title, epNum, lang],
+    queryFn: () => getHianimeSources({ data: { malId, title, ep: epNum, lang } }),
+    enabled: !!malId,
     staleTime: 1000 * 60 * 30,
     retry: 1,
   });
