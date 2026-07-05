@@ -2,6 +2,32 @@
 @source "../src";
 @import "tw-animate-css";
 
+/*
+ * Anime Ace BB — display face used for logo, nav, headings, buttons, badges.
+ * Self-hosted (WOFF2). Body copy stays on Inter for readability.
+ */
+@font-face {
+  font-family: "Anime Ace BB";
+  src: url("/fonts/animeace-reg.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Anime Ace BB";
+  src: url("/fonts/animeace-bld.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Anime Ace BB";
+  src: url("/fonts/animeace-ital.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 /*
@@ -53,8 +79,8 @@
   --color-neon-cyan: var(--neon-cyan);
   --color-neon-magenta: var(--neon-magenta);
   --color-glass: var(--glass);
-  --font-display: "Syne", ui-sans-serif, system-ui, sans-serif;
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Anime Ace BB", "Bangers", "Syne", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", "Poppins", ui-sans-serif, system-ui, sans-serif;
 }
 
 /*
@@ -123,9 +149,42 @@
     background-attachment: fixed;
   }
 
-  h1, h2, h3, h4 {
+  h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
-    letter-spacing: -0.02em;
+    letter-spacing: 0.01em;
+    font-weight: 700;
+  }
+
+  /* Prominent UI elements use the Anime Ace display face. */
+  button,
+  [role="button"],
+  .btn,
+  nav a,
+  [data-slot="badge"],
+  [data-slot="tab"],
+  [data-slot="tabs-trigger"],
+  label,
+  .badge,
+  .label,
+  .nav-link,
+  .brand,
+  .logo {
+    font-family: var(--font-display);
+    letter-spacing: 0.02em;
+  }
+
+  /* Long-form content forced back to the reading face. */
+  p,
+  li,
+  input,
+  textarea,
+  select,
+  .prose,
+  .body-text,
+  [data-slot="input"],
+  [data-slot="textarea"] {
+    font-family: var(--font-sans);
+    letter-spacing: normal;
   }
 }
 
