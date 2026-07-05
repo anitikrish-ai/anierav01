@@ -79,8 +79,8 @@
   --color-neon-cyan: var(--neon-cyan);
   --color-neon-magenta: var(--neon-magenta);
   --color-glass: var(--glass);
-  --font-display: "Syne", ui-sans-serif, system-ui, sans-serif;
-  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Anime Ace BB", "Bangers", "Syne", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", "Poppins", ui-sans-serif, system-ui, sans-serif;
 }
 
 /*
