@@ -259,8 +259,22 @@ function WatchPage() {
   const goEp = (next: number) => {
     if (next < 1) return;
     if (total && next > total) return;
+    setShowNextHint(false);
     navigate({ to: "/watch/$id/$ep", params: { id, ep: String(next) } });
   };
+
+  // Dismiss the "Next Episode" hint on any user interaction.
+  useEffect(() => {
+    if (!showNextHint) return;
+    const dismiss = () => setShowNextHint(false);
+    const events = ["mousemove", "mousedown", "keydown", "touchstart", "wheel", "scroll"] as const;
+    events.forEach(e => window.addEventListener(e, dismiss, { passive: true, once: true }));
+    return () => events.forEach(e => window.removeEventListener(e, dismiss));
+  }, [showNextHint]);
+
+  // Reset hint when episode changes.
+  useEffect(() => { setShowNextHint(false); }, [epNum, malId]);
+
 
   return (
     <div className="space-y-6">
