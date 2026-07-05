@@ -2,6 +2,32 @@
 @source "../src";
 @import "tw-animate-css";
 
+/*
+ * Anime Ace BB — display face used for logo, nav, headings, buttons, badges.
+ * Self-hosted (WOFF2). Body copy stays on Inter for readability.
+ */
+@font-face {
+  font-family: "Anime Ace BB";
+  src: url("/fonts/animeace-reg.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Anime Ace BB";
+  src: url("/fonts/animeace-bld.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Anime Ace BB";
+  src: url("/fonts/animeace-ital.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 /*
