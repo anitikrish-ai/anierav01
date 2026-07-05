@@ -28,6 +28,27 @@
   font-display: swap;
 }
 
+/* Onsen Japan — accent display font for the "Next Episode" attention hint. */
+@font-face {
+  font-family: "Onsen Japan";
+  src: url("/fonts/onsen-japan.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@keyframes nextEpFloat {
+  0%, 100% { transform: translateY(0) scale(1); text-shadow: 0 0 8px rgba(34,211,238,0.55), 0 0 18px rgba(217,70,239,0.35); }
+  50%      { transform: translateY(-4px) scale(1.04); text-shadow: 0 0 14px rgba(34,211,238,0.9), 0 0 28px rgba(217,70,239,0.6); }
+}
+.next-ep-hint {
+  font-family: "Onsen Japan", "Anime Ace BB", sans-serif;
+  letter-spacing: 0.08em;
+  color: #e5faff;
+  animation: nextEpFloat 1.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 /*

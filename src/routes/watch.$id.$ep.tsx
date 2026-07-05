@@ -146,6 +146,7 @@ function WatchPage() {
   const [lang, setLang] = useState<Lang>(() => getPreferredLang());
   const [iframeKey, setIframeKey] = useState(0);
   const [loadState, setLoadState] = useState<"loading" | "ok" | "stalled">("loading");
+  const [showNextHint, setShowNextHint] = useState(false);
   const stallTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Resume position for the current episode (seconds).
@@ -258,8 +259,22 @@ function WatchPage() {
   const goEp = (next: number) => {
     if (next < 1) return;
     if (total && next > total) return;
+    setShowNextHint(false);
     navigate({ to: "/watch/$id/$ep", params: { id, ep: String(next) } });
   };
+
+  // Dismiss the "Next Episode" hint on any user interaction.
+  useEffect(() => {
+    if (!showNextHint) return;
+    const dismiss = () => setShowNextHint(false);
+    const events = ["mousemove", "mousedown", "keydown", "touchstart", "wheel", "scroll"] as const;
+    events.forEach(e => window.addEventListener(e, dismiss, { passive: true, once: true }));
+    return () => events.forEach(e => window.removeEventListener(e, dismiss));
+  }, [showNextHint]);
+
+  // Reset hint when episode changes.
+  useEffect(() => { setShowNextHint(false); }, [epNum, malId]);
+
 
   return (
     <div className="space-y-6">
@@ -288,7 +303,9 @@ function WatchPage() {
                 poster={a?.images.webp?.large_image_url || a?.images.jpg.large_image_url}
                 startTime={resume}
                 onProgress={(t, d) => saveEpisodeProgress(malId, epNum, t, d)}
-                onEnded={() => goEp(epNum + 1)}
+                onEnded={() => {
+                  if (!total || epNum < total) setShowNextHint(true);
+                }}
               />
             ) : (
               <div className="flex h-full w-full flex-col items-center justify-center gap-2 p-4 text-center text-sm text-white/60">
@@ -362,10 +379,20 @@ function WatchPage() {
               className="rounded-lg glass px-3 py-2 text-xs font-medium text-white disabled:opacity-40">
               ← Prev
             </button>
-            <button onClick={() => goEp(epNum + 1)} disabled={!!total && epNum >= total}
-              className="rounded-lg bg-gradient-to-r from-neon-cyan to-neon-magenta px-3 py-2 text-xs font-semibold text-background disabled:opacity-40">
-              Next →
-            </button>
+            <div className="relative">
+              {showNextHint && (
+                <span
+                  aria-hidden="true"
+                  className="next-ep-hint pointer-events-none absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-[11px] font-bold uppercase"
+                >
+                  Next Episode →
+                </span>
+              )}
+              <button onClick={() => goEp(epNum + 1)} disabled={!!total && epNum >= total}
+                className={`rounded-lg bg-gradient-to-r from-neon-cyan to-neon-magenta px-3 py-2 text-xs font-semibold text-background disabled:opacity-40 ${showNextHint ? "ring-2 ring-neon-cyan/70 shadow-[0_0_20px_rgba(34,211,238,0.6)]" : ""}`}>
+                Next →
+              </button>
+            </div>
           </div>
         </div>
       </div>
