@@ -149,9 +149,42 @@
     background-attachment: fixed;
   }
 
-  h1, h2, h3, h4 {
+  h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
-    letter-spacing: -0.02em;
+    letter-spacing: 0.01em;
+    font-weight: 700;
+  }
+
+  /* Prominent UI elements use the Anime Ace display face. */
+  button,
+  [role="button"],
+  .btn,
+  nav a,
+  [data-slot="badge"],
+  [data-slot="tab"],
+  [data-slot="tabs-trigger"],
+  label,
+  .badge,
+  .label,
+  .nav-link,
+  .brand,
+  .logo {
+    font-family: var(--font-display);
+    letter-spacing: 0.02em;
+  }
+
+  /* Long-form content forced back to the reading face. */
+  p,
+  li,
+  input,
+  textarea,
+  select,
+  .prose,
+  .body-text,
+  [data-slot="input"],
+  [data-slot="textarea"] {
+    font-family: var(--font-sans);
+    letter-spacing: normal;
   }
 }
 
