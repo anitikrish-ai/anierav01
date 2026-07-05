@@ -303,7 +303,9 @@ function WatchPage() {
                 poster={a?.images.webp?.large_image_url || a?.images.jpg.large_image_url}
                 startTime={resume}
                 onProgress={(t, d) => saveEpisodeProgress(malId, epNum, t, d)}
-                onEnded={() => goEp(epNum + 1)}
+                onEnded={() => {
+                  if (!total || epNum < total) setShowNextHint(true);
+                }}
               />
             ) : (
               <div className="flex h-full w-full flex-col items-center justify-center gap-2 p-4 text-center text-sm text-white/60">
