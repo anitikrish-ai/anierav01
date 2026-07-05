@@ -146,6 +146,7 @@ function WatchPage() {
   const [lang, setLang] = useState<Lang>(() => getPreferredLang());
   const [iframeKey, setIframeKey] = useState(0);
   const [loadState, setLoadState] = useState<"loading" | "ok" | "stalled">("loading");
+  const [showNextHint, setShowNextHint] = useState(false);
   const stallTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Resume position for the current episode (seconds).
