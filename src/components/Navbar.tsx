@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
 import { jikan, bestTitle } from "@/lib/jikan";
+import { supabase } from "@/integrations/supabase/client";
 
 export function Navbar() {
   const navigate = useNavigate();
