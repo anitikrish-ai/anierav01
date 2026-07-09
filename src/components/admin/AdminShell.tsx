@@ -10,14 +10,14 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
-const items = [
+const items: { to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean }[] = [
   { to: "/admin", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { to: "/admin/settings", label: "Global Settings", icon: Settings },
   { to: "/admin/theme", label: "Theme & Background", icon: Palette },
   { to: "/admin/providers", label: "API Providers", icon: Plug },
   { to: "/admin/seo", label: "SEO Overrides", icon: Search },
   { to: "/admin/users", label: "Administrators", icon: Users },
-] as const;
+];
 
 export function AdminShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: s => s.location.pathname });
