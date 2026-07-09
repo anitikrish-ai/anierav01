@@ -23,6 +23,7 @@ import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authentic
 import { Route as WatchIdEpRouteImport } from './routes/watch.$id.$ep'
 import { Route as AuthenticatedAdminThemeRouteImport } from './routes/_authenticated/admin.theme'
 import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin.settings'
+import { Route as AuthenticatedAdminProvidersRouteImport } from './routes/_authenticated/admin.providers'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -94,6 +95,12 @@ const AuthenticatedAdminSettingsRoute =
     path: '/settings',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
+const AuthenticatedAdminProvidersRoute =
+  AuthenticatedAdminProvidersRouteImport.update({
+    id: '/providers',
+    path: '/providers',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -105,6 +112,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/profile': typeof AuthenticatedProfileRoute
   '/anime/$id': typeof AnimeIdRoute
+  '/admin/providers': typeof AuthenticatedAdminProvidersRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/theme': typeof AuthenticatedAdminThemeRoute
   '/watch/$id/$ep': typeof WatchIdEpRoute
@@ -119,6 +127,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/anime/$id': typeof AnimeIdRoute
+  '/admin/providers': typeof AuthenticatedAdminProvidersRoute
   '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/admin/theme': typeof AuthenticatedAdminThemeRoute
   '/watch/$id/$ep': typeof WatchIdEpRoute
@@ -136,6 +145,7 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/anime/$id': typeof AnimeIdRoute
+  '/_authenticated/admin/providers': typeof AuthenticatedAdminProvidersRoute
   '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/_authenticated/admin/theme': typeof AuthenticatedAdminThemeRoute
   '/watch/$id/$ep': typeof WatchIdEpRoute
@@ -153,6 +163,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/profile'
     | '/anime/$id'
+    | '/admin/providers'
     | '/admin/settings'
     | '/admin/theme'
     | '/watch/$id/$ep'
@@ -167,6 +178,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/profile'
     | '/anime/$id'
+    | '/admin/providers'
     | '/admin/settings'
     | '/admin/theme'
     | '/watch/$id/$ep'
@@ -183,6 +195,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/_authenticated/profile'
     | '/anime/$id'
+    | '/_authenticated/admin/providers'
     | '/_authenticated/admin/settings'
     | '/_authenticated/admin/theme'
     | '/watch/$id/$ep'
@@ -301,16 +314,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminSettingsRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/providers': {
+      id: '/_authenticated/admin/providers'
+      path: '/providers'
+      fullPath: '/admin/providers'
+      preLoaderRoute: typeof AuthenticatedAdminProvidersRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
   }
 }
 
 interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminProvidersRoute: typeof AuthenticatedAdminProvidersRoute
   AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
   AuthenticatedAdminThemeRoute: typeof AuthenticatedAdminThemeRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminProvidersRoute: AuthenticatedAdminProvidersRoute,
   AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
   AuthenticatedAdminThemeRoute: AuthenticatedAdminThemeRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
