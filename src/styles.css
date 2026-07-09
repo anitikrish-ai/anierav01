@@ -49,6 +49,39 @@
   pointer-events: none;
 }
 
+/* Admin-driven site background overlay (managed via /admin/theme). */
+:root {
+  --admin-accent: #8b5cf6;
+  --admin-bg-image: none;
+  --admin-bg-overlay: 0;
+  --admin-bg-blur: 0px;
+}
+.site-bg-layer {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background-image: var(--admin-bg-image);
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  filter: blur(var(--admin-bg-blur));
+  opacity: 1;
+  pointer-events: none;
+}
+.site-bg-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-color: rgba(7, 7, 15, var(--admin-bg-overlay));
+  pointer-events: none;
+}
+html[data-animations="off"] *,
+html[data-animations="off"] *::before,
+html[data-animations="off"] *::after {
+  animation-duration: 0.001ms !important;
+  transition-duration: 0.001ms !important;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 /*

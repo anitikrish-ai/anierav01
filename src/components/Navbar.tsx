@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
 import { jikan, bestTitle } from "@/lib/jikan";
+import { supabase } from "@/integrations/supabase/client";
 
 export function Navbar() {
   const navigate = useNavigate();
@@ -50,11 +51,23 @@ export function Navbar() {
     }
   };
 
+  const isAdmin = useQuery({
+    queryKey: ["is-admin-nav", user?.id],
+    queryFn: async () => {
+      if (!user) return false;
+      const { data } = await supabase.rpc("has_role", { _user_id: user.id, _role: "admin" });
+      return !!data;
+    },
+    enabled: !!user,
+    staleTime: 60_000,
+  });
+
   const links = [
     { to: "/", label: "Home" },
     { to: "/browse", label: "Browse" },
     { to: "/schedule", label: "Schedule" },
     { to: "/library", label: "Library" },
+    ...(isAdmin.data ? [{ to: "/admin", label: "Admin" }] : []),
   ];
 
   return (

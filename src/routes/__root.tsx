@@ -14,6 +14,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Navbar } from "../components/Navbar";
 import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "sonner";
+import { useApplySiteSettings } from "@/lib/site-settings";
 
 function NotFoundComponent() {
   return (
@@ -169,16 +170,25 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="min-h-screen">
-        <Navbar />
-        <main className="mx-auto max-w-7xl px-4 pb-20 pt-4 sm:px-6">
-          <Outlet />
-        </main>
-        <footer className="border-t border-white/5 py-8 text-center text-xs text-white/40">
-          AniEra · Powered by Jikan, VidNest & MegaPlay · Streams are embedded from third-party sources.
-        </footer>
-        <Toaster theme="dark" position="top-right" richColors />
-      </div>
+      <SiteChrome />
     </QueryClientProvider>
+  );
+}
+
+function SiteChrome() {
+  useApplySiteSettings();
+  return (
+    <div className="min-h-screen">
+      <div className="site-bg-layer" />
+      <div className="site-bg-overlay" />
+      <Navbar />
+      <main className="mx-auto max-w-7xl px-4 pb-20 pt-4 sm:px-6">
+        <Outlet />
+      </main>
+      <footer className="border-t border-white/5 py-8 text-center text-xs text-white/40">
+        AniEra · Powered by Jikan, VidNest & MegaPlay · Streams are embedded from third-party sources.
+      </footer>
+      <Toaster theme="dark" position="top-right" richColors />
+    </div>
   );
 }
