@@ -21,6 +21,7 @@ import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as WatchIdEpRouteImport } from './routes/watch.$id.$ep'
+import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin.settings'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -81,6 +82,12 @@ const WatchIdEpRoute = WatchIdEpRouteImport.update({
   path: '/watch/$id/$ep',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdminSettingsRoute =
+  AuthenticatedAdminSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -92,6 +99,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/profile': typeof AuthenticatedProfileRoute
   '/anime/$id': typeof AnimeIdRoute
+  '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/watch/$id/$ep': typeof WatchIdEpRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
 }
@@ -104,6 +112,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/anime/$id': typeof AnimeIdRoute
+  '/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/watch/$id/$ep': typeof WatchIdEpRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
 }
@@ -119,6 +128,7 @@ export interface FileRoutesById {
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/anime/$id': typeof AnimeIdRoute
+  '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
   '/watch/$id/$ep': typeof WatchIdEpRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
 }
@@ -134,6 +144,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/profile'
     | '/anime/$id'
+    | '/admin/settings'
     | '/watch/$id/$ep'
     | '/admin/'
   fileRoutesByTo: FileRoutesByTo
@@ -146,6 +157,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/profile'
     | '/anime/$id'
+    | '/admin/settings'
     | '/watch/$id/$ep'
     | '/admin'
   id:
@@ -160,6 +172,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin'
     | '/_authenticated/profile'
     | '/anime/$id'
+    | '/_authenticated/admin/settings'
     | '/watch/$id/$ep'
     | '/_authenticated/admin/'
   fileRoutesById: FileRoutesById
@@ -262,14 +275,23 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof WatchIdEpRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin/settings': {
+      id: '/_authenticated/admin/settings'
+      path: '/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AuthenticatedAdminSettingsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
   }
 }
 
 interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }
 
