@@ -18,6 +18,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AnimeIdRouteImport } from './routes/anime.$id'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as WatchIdEpRouteImport } from './routes/watch.$id.$ep'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -64,6 +65,11 @@ const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const WatchIdEpRoute = WatchIdEpRouteImport.update({
   id: '/watch/$id/$ep',
   path: '/watch/$id/$ep',
@@ -77,6 +83,7 @@ export interface FileRoutesByFullPath {
   '/library': typeof LibraryRoute
   '/schedule': typeof ScheduleRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/admin': typeof AuthenticatedAdminRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/anime/$id': typeof AnimeIdRoute
   '/watch/$id/$ep': typeof WatchIdEpRoute
@@ -88,6 +95,7 @@ export interface FileRoutesByTo {
   '/library': typeof LibraryRoute
   '/schedule': typeof ScheduleRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/admin': typeof AuthenticatedAdminRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/anime/$id': typeof AnimeIdRoute
   '/watch/$id/$ep': typeof WatchIdEpRoute
@@ -101,6 +109,7 @@ export interface FileRoutesById {
   '/library': typeof LibraryRoute
   '/schedule': typeof ScheduleRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/anime/$id': typeof AnimeIdRoute
   '/watch/$id/$ep': typeof WatchIdEpRoute
@@ -114,6 +123,7 @@ export interface FileRouteTypes {
     | '/library'
     | '/schedule'
     | '/sitemap.xml'
+    | '/admin'
     | '/profile'
     | '/anime/$id'
     | '/watch/$id/$ep'
@@ -125,6 +135,7 @@ export interface FileRouteTypes {
     | '/library'
     | '/schedule'
     | '/sitemap.xml'
+    | '/admin'
     | '/profile'
     | '/anime/$id'
     | '/watch/$id/$ep'
@@ -137,6 +148,7 @@ export interface FileRouteTypes {
     | '/library'
     | '/schedule'
     | '/sitemap.xml'
+    | '/_authenticated/admin'
     | '/_authenticated/profile'
     | '/anime/$id'
     | '/watch/$id/$ep'
@@ -219,6 +231,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfileRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/watch/$id/$ep': {
       id: '/watch/$id/$ep'
       path: '/watch/$id/$ep'
@@ -230,10 +249,12 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
 }
 
