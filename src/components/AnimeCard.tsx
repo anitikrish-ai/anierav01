@@ -43,12 +43,25 @@ function AnimeCardImpl({ anime }: { anime: Anime }) {
 export const AnimeCard = memo(AnimeCardImpl, (a, b) => a.anime.mal_id === b.anime.mal_id);
 
 export function AnimeGrid({ items }: { items: Anime[] }) {
+  // Jikan can return the same title across pages/filters — de-dupe so React
+  // keys stay unique, and drop malformed rows instead of crashing.
+  const seen = new Set<number>();
+  const safe = (Array.isArray(items) ? items : []).filter(a => {
+    if (!a || typeof a.mal_id !== "number" || seen.has(a.mal_id)) return false;
+    seen.add(a.mal_id);
+    return true;
+  });
   return (
     <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-      {items.map(a => <AnimeCard key={a.mal_id} anime={a} />)}
+      {safe.map((a, i) => (
+        <div key={a.mal_id} className="anim-rise" style={{ animationDelay: `${Math.min(i, 12) * 35}ms` }}>
+          <AnimeCard anime={a} />
+        </div>
+      ))}
     </div>
   );
 }
+
 
 export function CardSkeleton() {
   return <div className="aspect-[2/3] rounded-2xl shimmer" />;

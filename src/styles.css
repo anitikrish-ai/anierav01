@@ -282,6 +282,44 @@ html[data-animations="off"] *::after {
   animation: shimmer 1.6s linear infinite;
 }
 
+/* ---- Subtle motion primitives (GPU-cheap: opacity + transform only) ---- */
+@keyframes riseIn {
+  from { opacity: 0; transform: translate3d(0, 10px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.anim-rise {
+  animation: riseIn 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.anim-fade {
+  animation: fadeIn 0.3s ease-out both;
+}
+/* Page-level entrance for route content */
+.page-enter {
+  animation: riseIn 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Interactive polish */
+button, a, [role="tab"] {
+  transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1),
+              background-color 0.18s ease,
+              color 0.18s ease,
+              box-shadow 0.22s ease,
+              opacity 0.18s ease;
+}
+button:not(:disabled):active,
+a:active {
+  transform: scale(0.97);
+}
+input, select, textarea {
+  transition: box-shadow 0.18s ease, background-color 0.18s ease;
+}
+
+
 /* Reduce expensive filters on mobile for smoother scrolling/paints */
 @media (max-width: 640px) {
   .glass { backdrop-filter: blur(10px) saturate(130%); }

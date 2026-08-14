@@ -1,8 +1,12 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { jikan, bestTitle } from "@/lib/jikan";
 import { GridSkeleton } from "@/components/AnimeCard";
+import { ErrorState, EmptyState } from "@/components/StateBlocks";
+
 
 const DAYS = [
   { id: "monday", label: "Mon" },
@@ -14,10 +18,10 @@ const DAYS = [
   { id: "sunday", label: "Sun" },
 ] as const;
 
-function todayId(): string {
-  if (typeof window === "undefined") return "monday";
-  return DAYS[(new Date().getDay() + 6) % 7].id;
+function localTodayId(): string {
+  return DAYS[(new Date().getDay() + 6) % 7]!.id;
 }
+
 
 const searchSchema = z.object({ day: z.string().optional() });
 
@@ -39,7 +43,10 @@ export const Route = createFileRoute("/schedule")({
 function SchedulePage() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
-  const day = search.day ?? todayId();
+  // Resolved after mount so SSR and first client render agree (no hydration mismatch).
+  const [clientToday, setClientToday] = useState("monday");
+  useEffect(() => setClientToday(localTodayId()), []);
+  const day = search.day ?? clientToday;
 
   const q = useQuery({
     queryKey: ["schedule", day],
@@ -47,8 +54,11 @@ function SchedulePage() {
     staleTime: 1000 * 60 * 30,
   });
 
+  const items = Array.isArray(q.data?.data) ? q.data.data : [];
+
   return (
-    <div className="space-y-6">
+    <div className="page-enter space-y-6">
+
       <div>
         <h1 className="font-display text-3xl font-bold text-white">Airing Schedule</h1>
         <p className="mt-1 text-sm text-white/60">Catch what's broadcasting this week.</p>
@@ -75,9 +85,16 @@ function SchedulePage() {
 
       {q.isLoading ? (
         <GridSkeleton count={12} />
-      ) : q.data?.data?.length ? (
+      ) : q.isError ? (
+        <ErrorState
+          message={(q.error as Error)?.message}
+          onRetry={() => q.refetch()}
+          retrying={q.isFetching}
+        />
+      ) : items.length ? (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {q.data.data.map(a => {
+          {items.map(a => {
+
             const img = a.images.webp?.image_url || a.images.jpg.image_url;
             const time = (a as any).broadcast?.time as string | undefined;
             return (
@@ -111,8 +128,12 @@ function SchedulePage() {
           })}
         </div>
       ) : (
-        <p className="text-white/60">Nothing scheduled for this day.</p>
+        <EmptyState
+          title="Nothing scheduled for this day"
+          hint="Pick another day of the week to see what's broadcasting."
+        />
       )}
+
     </div>
   );
 }
