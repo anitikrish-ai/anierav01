@@ -83,9 +83,16 @@ function SchedulePage() {
 
       {q.isLoading ? (
         <GridSkeleton count={12} />
-      ) : q.data?.data?.length ? (
+      ) : q.isError ? (
+        <ErrorState
+          message={(q.error as Error)?.message}
+          onRetry={() => q.refetch()}
+          retrying={q.isFetching}
+        />
+      ) : items.length ? (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {q.data.data.map(a => {
+          {items.map(a => {
+
             const img = a.images.webp?.image_url || a.images.jpg.image_url;
             const time = (a as any).broadcast?.time as string | undefined;
             return (
