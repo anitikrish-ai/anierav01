@@ -1,4 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { jikan, bestTitle } from "@/lib/jikan";
