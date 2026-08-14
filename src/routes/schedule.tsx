@@ -128,8 +128,12 @@ function SchedulePage() {
           })}
         </div>
       ) : (
-        <p className="text-white/60">Nothing scheduled for this day.</p>
+        <EmptyState
+          title="Nothing scheduled for this day"
+          hint="Pick another day of the week to see what's broadcasting."
+        />
       )}
+
     </div>
   );
 }
