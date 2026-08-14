@@ -14,10 +14,10 @@ const DAYS = [
   { id: "sunday", label: "Sun" },
 ] as const;
 
-function todayId(): string {
-  if (typeof window === "undefined") return "monday";
-  return DAYS[(new Date().getDay() + 6) % 7].id;
+function localTodayId(): string {
+  return DAYS[(new Date().getDay() + 6) % 7]!.id;
 }
+
 
 const searchSchema = z.object({ day: z.string().optional() });
 
