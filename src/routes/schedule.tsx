@@ -39,7 +39,10 @@ export const Route = createFileRoute("/schedule")({
 function SchedulePage() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
-  const day = search.day ?? todayId();
+  // Resolved after mount so SSR and first client render agree (no hydration mismatch).
+  const [clientToday, setClientToday] = useState("monday");
+  useEffect(() => setClientToday(localTodayId()), []);
+  const day = search.day ?? clientToday;
 
   const q = useQuery({
     queryKey: ["schedule", day],
@@ -47,8 +50,11 @@ function SchedulePage() {
     staleTime: 1000 * 60 * 30,
   });
 
+  const items = Array.isArray(q.data?.data) ? q.data.data : [];
+
   return (
-    <div className="space-y-6">
+    <div className="page-enter space-y-6">
+
       <div>
         <h1 className="font-display text-3xl font-bold text-white">Airing Schedule</h1>
         <p className="mt-1 text-sm text-white/60">Catch what's broadcasting this week.</p>
