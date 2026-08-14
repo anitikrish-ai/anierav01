@@ -5,6 +5,8 @@ import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { jikan, bestTitle } from "@/lib/jikan";
 import { GridSkeleton } from "@/components/AnimeCard";
+import { ErrorState, EmptyState } from "@/components/StateBlocks";
+
 
 const DAYS = [
   { id: "monday", label: "Mon" },
