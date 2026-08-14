@@ -3,7 +3,9 @@ import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { jikan } from "@/lib/jikan";
 import { AnimeGrid, GridSkeleton } from "@/components/AnimeCard";
-import { useState } from "react";
+import { ErrorState, EmptyState } from "@/components/StateBlocks";
+import { useEffect, useState } from "react";
+
 
 const searchSchema = z.object({
   q: z.string().optional(),
