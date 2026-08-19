@@ -122,7 +122,7 @@ function CloudLibrary() {
             ? "Add anime from a series page, or import an existing MyAnimeList export."
             : "Move a title into this status from its card, or pick another tab."}
         />
-      ) :
+      ) : (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
           {filtered.map(e => (
             <div key={e.mal_id} className="group relative overflow-hidden rounded-2xl glass">
