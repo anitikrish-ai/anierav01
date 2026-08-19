@@ -8,6 +8,8 @@ import {
   Search,
   Users,
   ShieldCheck,
+  DatabaseBackup,
+  ScrollText,
 } from "lucide-react";
 
 const items: { to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean }[] = [
@@ -17,6 +19,8 @@ const items: { to: string; label: string; icon: typeof LayoutDashboard; exact?: 
   { to: "/admin/providers", label: "API Providers", icon: Plug },
   { to: "/admin/seo", label: "SEO Overrides", icon: Search },
   { to: "/admin/users", label: "Administrators", icon: Users },
+  { to: "/admin/backup", label: "Backup & Restore", icon: DatabaseBackup },
+  { to: "/admin/audit", label: "Audit Trail", icon: ScrollText },
 ];
 
 export function AdminShell({ children }: { children: ReactNode }) {
