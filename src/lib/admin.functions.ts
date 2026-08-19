@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { writeAudit } from "./audit.functions";
 
 /** Assert the caller is an admin. Throws otherwise. */
 async function assertAdmin(context: { supabase: any; userId: string }) {
@@ -56,6 +57,7 @@ export const saveSiteSettings = createServerFn({ method: "POST" })
       .update(data)
       .eq("id", 1);
     if (error) throw new Error(error.message);
+    await writeAudit(context, { action: "update", area: "site_settings", details: { site_title: data.site_title } });
     return { ok: true };
   });
 
@@ -97,6 +99,12 @@ export const saveProvider = createServerFn({ method: "POST" })
       });
       if (error) throw new Error(error.message);
     }
+    await writeAudit(context, {
+      action: data.id ? "update" : "create",
+      area: "api_provider",
+      target_id: data.id ?? data.name,
+      details: { name: data.name, enabled: data.enabled },
+    });
     return { ok: true };
   });
 
@@ -110,6 +118,7 @@ export const deleteProvider = createServerFn({ method: "POST" })
       .delete()
       .eq("id", data.id);
     if (error) throw new Error(error.message);
+    await writeAudit(context, { action: "delete", area: "api_provider", target_id: data.id });
     return { ok: true };
   });
 
@@ -169,6 +178,7 @@ export const saveSeo = createServerFn({ method: "POST" })
       .from("seo_overrides")
       .upsert(payload, { onConflict: "route" });
     if (error) throw new Error(error.message);
+    await writeAudit(context, { action: "upsert", area: "seo_override", target_id: data.route });
     return { ok: true };
   });
 
@@ -180,6 +190,7 @@ export const deleteSeo = createServerFn({ method: "POST" })
     const { error } = await context.supabase
       .from("seo_overrides").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
+    await writeAudit(context, { action: "delete", area: "seo_override", target_id: data.id });
     return { ok: true };
   });
 
@@ -206,6 +217,7 @@ export const grantAdmin = createServerFn({ method: "POST" })
       .from("user_roles")
       .insert({ user_id: data.user_id, role: "admin" });
     if (error && !error.message.includes("duplicate")) throw new Error(error.message);
+    await writeAudit(context, { action: "grant_admin", area: "user_roles", target_id: data.user_id });
     return { ok: true };
   });
 
@@ -225,6 +237,7 @@ export const revokeAdmin = createServerFn({ method: "POST" })
       .eq("user_id", data.user_id)
       .eq("role", "admin");
     if (error) throw new Error(error.message);
+    await writeAudit(context, { action: "revoke_admin", area: "user_roles", target_id: data.user_id });
     return { ok: true };
   });
 

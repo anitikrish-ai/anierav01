@@ -8,6 +8,7 @@ import { jikan } from "@/lib/jikan";
 import { AnimeGrid } from "@/components/AnimeCard";
 import { useAuth } from "@/lib/auth";
 import { listLibrary, deleteEntry, upsertEntry, bulkUpsert } from "@/lib/library.functions";
+import { ErrorState, EmptyState } from "@/components/StateBlocks";
 import { exportJSON, exportMAL, exportCSV, parseListFile, downloadText, type LibEntry, type LibStatus } from "@/lib/listFormats";
 
 export const Route = createFileRoute("/library")({
@@ -106,8 +107,22 @@ function CloudLibrary() {
         })}
       </nav>
 
-      {libQ.isLoading ? <p className="text-white/60">Loading…</p> :
-        filtered.length === 0 ? <p className="text-white/60">Nothing here yet.</p> :
+      {libQ.isLoading ? (
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <div key={i} className="aspect-[2/3] rounded-2xl shimmer" />
+          ))}
+        </div>
+      ) : libQ.error ? (
+        <ErrorState message={(libQ.error as any)?.message} onRetry={() => libQ.refetch()} retrying={libQ.isFetching} />
+      ) : filtered.length === 0 ? (
+        <EmptyState
+          title={tab === "all" ? "Your library is empty" : "Nothing in this list"}
+          hint={tab === "all"
+            ? "Add anime from a series page, or import an existing MyAnimeList export."
+            : "Move a title into this status from its card, or pick another tab."}
+        />
+      ) : (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
           {filtered.map(e => (
             <div key={e.mal_id} className="group relative overflow-hidden rounded-2xl glass">
@@ -135,7 +150,7 @@ function CloudLibrary() {
             </div>
           ))}
         </div>
-      }
+      )}
     </div>
   );
 }
@@ -156,6 +171,8 @@ function LocalLibrary() {
     })),
   });
   const favs = favQueries.map(q => q.data?.data).filter(Boolean) as any[];
+  const favError = favQueries.find(q => q.error)?.error;
+  const favLoading = favQueries.some(q => q.isFetching);
 
   return (
     <div className="space-y-10">
@@ -169,7 +186,9 @@ function LocalLibrary() {
 
       <section>
         <h2 className="mb-4 font-display text-xl font-bold text-white">Continue Watching</h2>
-        {history.length === 0 ? <p className="text-white/60">Nothing yet — start watching something!</p> : (
+        {history.length === 0 ? (
+          <EmptyState title="Nothing watched yet" hint="Pick a series and hit play — your progress shows up here." />
+        ) : (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
             {history.map(e => (
               <Link key={e.malId} to="/watch/$id/$ep" params={{ id: String(e.malId), ep: String(e.episode) }}
@@ -189,9 +208,21 @@ function LocalLibrary() {
 
       <section>
         <h2 className="mb-4 font-display text-xl font-bold text-white">Favorites</h2>
-        {favIds.length === 0 ? <p className="text-white/60">No favorites yet.</p> :
-          favs.length === 0 ? <p className="text-white/60">Loading…</p> :
-          <AnimeGrid items={favs} />}
+        {favIds.length === 0 ? (
+          <EmptyState title="No favorites yet" hint="Tap the heart on any anime to keep it here." />
+        ) : favError ? (
+          <ErrorState
+            message={(favError as any)?.message}
+            onRetry={() => favQueries.forEach(q => q.refetch())}
+            retrying={favLoading}
+          />
+        ) : favs.length === 0 ? (
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+            {favIds.slice(0, 6).map(id => <div key={id} className="aspect-[2/3] rounded-2xl shimmer" />)}
+          </div>
+        ) : (
+          <AnimeGrid items={favs} />
+        )}
       </section>
     </div>
   );
