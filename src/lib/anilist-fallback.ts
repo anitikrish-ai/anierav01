@@ -139,18 +139,31 @@ interface PageResp {
   Page: { pageInfo: { hasNextPage: boolean }; media: AlMedia[] };
 }
 
+const VAR_TYPES: Record<string, string> = {
+  page: "Int",
+  perPage: "Int",
+  search: "String",
+  season: "MediaSeason",
+  seasonYear: "Int",
+  genreIn: "[String]",
+};
+
 async function page(
   vars: Record<string, unknown>,
   filter: string,
   perPage = 24,
 ): Promise<PageResp> {
-  const query = `query ($page: Int, $perPage: Int, $search: String, $season: MediaSeason, $seasonYear: Int, $genreIn: [String]) {
+  const all = { perPage, ...vars };
+  // GraphQL rejects declared-but-unused variables, so declare only what's set.
+  const used = Object.entries(all).filter(([, v]) => v !== undefined);
+  const decl = used.map(([k]) => `$${k}: ${VAR_TYPES[k] ?? "String"}`).join(", ");
+  const query = `query (${decl}) {
     Page(page: $page, perPage: $perPage) {
       pageInfo { hasNextPage }
       media(type: ANIME, isAdult: false, ${filter}) { ${MEDIA_FIELDS} }
     }
   }`;
-  return gql<PageResp>(query, { perPage, ...vars });
+  return gql<PageResp>(query, Object.fromEntries(used));
 }
 
 const WEEKDAYS = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
