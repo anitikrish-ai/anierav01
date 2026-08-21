@@ -121,6 +121,13 @@ async function fetchWithRetry(url: string): Promise<Response> {
   throw lastErr instanceof Error ? lastErr : new Error("Jikan request failed");
 }
 
+/**
+ * Once Jikan has failed hard (MAL outage → HTTP 504), stop paying the retry
+ * cost on every subsequent call for a while and go straight to AniList.
+ */
+let jikanDownUntil = 0;
+const JIKAN_COOLDOWN_MS = 1000 * 60 * 2;
+
 async function jget<T>(path: string): Promise<T> {
   const now = Date.now();
 
@@ -134,8 +141,20 @@ async function jget<T>(path: string): Promise<T> {
   if (pending) return pending as Promise<T>;
 
   const p = (async () => {
-    const res = await fetchWithRetry(`${BASE}${path}`);
-    const json = (await res.json()) as T;
+    let json: T;
+    try {
+      if (Date.now() < jikanDownUntil) throw new Error("Jikan unavailable");
+      const res = await fetchWithRetry(`${BASE}${path}`);
+      json = (await res.json()) as T;
+    } catch (err) {
+      // Jikan is a MyAnimeList proxy and goes down with it. Re-serve the same
+      // shapes from AniList so no page ends up empty.
+      jikanDownUntil = Date.now() + JIKAN_COOLDOWN_MS;
+      const { anilistFallback } = await import("./anilist-fallback");
+      const alt = await anilistFallback(path);
+      if (alt == null) throw err;
+      json = alt as T;
+    }
     const rec: CacheRec = { t: Date.now(), v: json };
     memCache.set(path, rec);
     writeSession(path, rec);
