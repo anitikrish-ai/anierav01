@@ -215,6 +215,15 @@ export async function anilistFallback(path: string): Promise<unknown | null> {
     return list(media, 1, false);
   }
 
+  // MAL genre ids -> AniList genre names (used when Jikan is unavailable).
+  const MAL_GENRES: Record<string, string> = {
+    "1": "Action", "2": "Adventure", "4": "Comedy", "5": "Slice of Life", "7": "Mystery",
+    "8": "Drama", "9": "Ecchi", "10": "Fantasy", "14": "Horror", "22": "Romance",
+    "24": "Sci-Fi", "26": "Girls Love", "28": "Boys Love", "30": "Sports",
+    "36": "Slice of Life", "37": "Supernatural", "41": "Thriller", "46": "Action",
+    "47": "Comedy", "62": "Fantasy",
+  };
+
   // /anime?q=...&genres=&status=&type=&start_date=
   if (p === "/anime") {
     const q = sp.get("q");
@@ -229,12 +238,16 @@ export async function anilistFallback(path: string): Promise<unknown | null> {
       if (map[status]) parts.push(`status: ${map[status]}`);
     }
     if (type) parts.push(`format: ${type.toUpperCase()}`);
+    const genreId = sp.get("genres");
+    const genreName = genreId ? MAL_GENRES[genreId] : undefined;
+    if (genreName) parts.push("genre_in: $genreIn");
     parts.push(q ? "sort: SEARCH_MATCH" : "sort: POPULARITY_DESC");
     const r = await page(
       {
         page: pageNum,
         search: q || undefined,
         seasonYear: startDate ? Number(startDate.slice(0, 4)) : undefined,
+        genreIn: genreName ? [genreName] : undefined,
       },
       parts.join(", "),
       24,
