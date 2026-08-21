@@ -144,7 +144,7 @@ async function page(
   filter: string,
   perPage = 24,
 ): Promise<PageResp> {
-  const query = `query ($page: Int, $perPage: Int, $search: String, $season: MediaSeason, $seasonYear: Int, $genre: String, $year: Int) {
+  const query = `query ($page: Int, $perPage: Int, $search: String, $season: MediaSeason, $seasonYear: Int, $genreIn: [String]) {
     Page(page: $page, perPage: $perPage) {
       pageInfo { hasNextPage }
       media(type: ANIME, isAdult: false, ${filter}) { ${MEDIA_FIELDS} }
