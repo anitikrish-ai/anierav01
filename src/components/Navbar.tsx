@@ -55,7 +55,12 @@ export function Navbar() {
     queryKey: ["is-admin-nav", user?.id],
     queryFn: async () => {
       if (!user) return false;
-      const { data } = await supabase.rpc("has_role", { _user_id: user.id, _role: "admin" });
+      const { data } = await supabase
+        .from("user_roles")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .maybeSingle();
       return !!data;
     },
     enabled: !!user,
