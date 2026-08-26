@@ -4,6 +4,9 @@ import { jikan, bestTitle } from "@/lib/jikan";
 import { AnimeGrid, GridSkeleton } from "@/components/AnimeCard";
 import { useEffect, useState } from "react";
 import { getFavorites, toggleFavorite, getWatchedEpisodes } from "@/lib/history";
+import { AiringCountdown } from "@/components/AiringCountdown";
+import { Reviews } from "@/components/Reviews";
+
 
 export const Route = createFileRoute("/anime/$id")({
   head: ({ params }) => {
