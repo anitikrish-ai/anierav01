@@ -17,6 +17,8 @@ export type Database = {
       anime_reviews: {
         Row: {
           anime_title: string
+          author_avatar: string | null
+          author_name: string
           body: string
           created_at: string
           id: string
@@ -28,6 +30,8 @@ export type Database = {
         }
         Insert: {
           anime_title: string
+          author_avatar?: string | null
+          author_name?: string
           body: string
           created_at?: string
           id?: string
@@ -39,6 +43,8 @@ export type Database = {
         }
         Update: {
           anime_title?: string
+          author_avatar?: string | null
+          author_name?: string
           body?: string
           created_at?: string
           id?: string
