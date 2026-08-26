@@ -190,7 +190,12 @@ export const jikan = {
   anime: (id: number) => jget<JikanItem<Anime>>(`/anime/${id}/full`),
   episodes: (id: number, page = 1) => jget<JikanList<Episode>>(`/anime/${id}/episodes?page=${page}`),
   recommendations: (id: number) => jget<JikanList<{ entry: Anime }>>(`/anime/${id}/recommendations`),
+  relations: (id: number) =>
+    jget<JikanList<{ relation: string; entry: { mal_id: number; type: string; name: string; url: string }[] }>>(
+      `/anime/${id}/relations`,
+    ),
   genres: () => jget<JikanList<{ mal_id: number; name: string; count: number }>>(`/genres/anime`),
+
 };
 
 export function bestTitle(a: Anime) {
