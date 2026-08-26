@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      anime_reviews: {
+        Row: {
+          anime_title: string
+          body: string
+          created_at: string
+          id: string
+          mal_id: number
+          rating: number | null
+          spoiler: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          anime_title: string
+          body: string
+          created_at?: string
+          id?: string
+          mal_id: number
+          rating?: number | null
+          spoiler?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          anime_title?: string
+          body?: string
+          created_at?: string
+          id?: string
+          mal_id?: number
+          rating?: number | null
+          spoiler?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       api_providers: {
         Row: {
           base_url: string
