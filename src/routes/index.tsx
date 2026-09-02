@@ -76,10 +76,10 @@ function HeroCarousel({ pool, loading }: { pool: Anime[]; loading: boolean }) {
             {anime.episodes && <span className="rounded-md bg-white/10 px-2 py-1">{anime.episodes} eps</span>}
             {anime.year && <span className="rounded-md bg-white/10 px-2 py-1">{anime.year}</span>}
           </div>
-          <p className="mt-4 line-clamp-3 max-w-2xl text-sm text-white/70 sm:text-base">
+          <p className="anim-rise mt-4 line-clamp-3 max-w-2xl text-sm text-white/70 sm:text-base" style={{ animationDelay: "160ms" }}>
             {anime.synopsis}
           </p>
-          <div className="mt-6 flex flex-wrap gap-3">
+          <div className="anim-rise mt-6 flex flex-wrap gap-3" style={{ animationDelay: "210ms" }}>
             <Link
               to="/watch/$id/$ep"
               params={{ id: String(anime.mal_id), ep: "1" }}
