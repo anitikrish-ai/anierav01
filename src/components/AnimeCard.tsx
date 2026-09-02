@@ -10,7 +10,7 @@ function AnimeCardImpl({ anime }: { anime: Anime }) {
     <Link
       to="/anime/$id"
       params={{ id: String(anime.mal_id) }}
-      className="group relative block overflow-hidden rounded-2xl glass transition-transform duration-300 hover:-translate-y-1"
+      className="sheen group relative block overflow-hidden rounded-2xl glass transition-transform duration-300 hover:-translate-y-1.5 hover:glow-cyan"
       style={{ contentVisibility: "auto", containIntrinsicSize: "300px 450px" } as React.CSSProperties}
     >
       <div className="aspect-[2/3] overflow-hidden">
