@@ -109,7 +109,13 @@ function HeroCarousel({ pool, loading }: { pool: Anime[]; loading: boolean }) {
           )}
         </div>
         <div className="hidden md:block">
-          <img src={img} alt={bestTitle(anime)} className="aspect-[2/3] w-full rounded-2xl object-cover glass" />
+          <img
+            key={anime.mal_id}
+            src={img}
+            alt={bestTitle(anime)}
+            fetchPriority="high"
+            className="anim-pop aspect-[2/3] w-full rounded-2xl object-cover glass"
+          />
         </div>
       </div>
     </section>
