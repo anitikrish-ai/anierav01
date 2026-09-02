@@ -22,7 +22,7 @@ function AnimeCardImpl({ anime }: { anime: Anime }) {
           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
       </div>
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent p-3 pt-10">
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent p-3 pt-10 transition-transform duration-300 group-hover:-translate-y-0.5">
         <h3 className="truncate text-sm font-semibold text-white">{title}</h3>
         <div className="mt-1 flex items-center justify-between text-[11px] text-white/70">
           <span>{anime.type ?? "—"} · {anime.episodes ?? "?"} ep</span>
