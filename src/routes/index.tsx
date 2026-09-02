@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { jikan, bestTitle, type Anime } from "@/lib/jikan";
 import { AnimeGrid, GridSkeleton } from "@/components/AnimeCard";
-import { getHistory, type HistoryEntry } from "@/lib/history";
+import { getHistory, getEpisodeProgress, type HistoryEntry } from "@/lib/history";
 import { useEffect, useMemo, useState } from "react";
 
 export const Route = createFileRoute("/")({
@@ -126,30 +126,63 @@ function Section({ title, items, loading }: { title: string; items?: Anime[]; lo
   );
 }
 
+function fmtTime(s: number) {
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  const h = Math.floor(m / 60);
+  return h > 0
+    ? `${h}:${String(m % 60).padStart(2, "0")}:${String(sec).padStart(2, "0")}`
+    : `${m}:${String(sec).padStart(2, "0")}`;
+}
+
 function ContinueWatching() {
   const [items, setItems] = useState<HistoryEntry[]>([]);
-  useEffect(() => { setItems(getHistory()); }, []);
+  const [progress, setProgress] = useState<Record<string, { t: number; d: number }>>({});
+  useEffect(() => {
+    const list = getHistory();
+    setItems(list);
+    const map: Record<string, { t: number; d: number }> = {};
+    for (const e of list) {
+      const p = getEpisodeProgress(e.malId, e.episode);
+      if (p && p.d > 0) map[`${e.malId}:${e.episode}`] = p;
+    }
+    setProgress(map);
+  }, []);
   if (!items.length) return null;
   return (
     <section>
       <h2 className="mb-4 font-display text-2xl font-bold text-white">Continue Watching</h2>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-        {items.slice(0, 6).map(e => (
-          <Link
-            key={e.malId}
-            to="/watch/$id/$ep"
-            params={{ id: String(e.malId), ep: String(e.episode) }}
-            className="group relative block overflow-hidden rounded-2xl glass transition hover:-translate-y-1 hover:glow-cyan"
-          >
-            <div className="aspect-[2/3] overflow-hidden">
-              <img src={e.image} alt={e.title} className="h-full w-full object-cover transition group-hover:scale-110" />
-            </div>
-            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 to-transparent p-3 pt-8">
-              <h3 className="truncate text-sm font-semibold text-white">{e.title}</h3>
-              <p className="text-[11px] text-white/70">Ep {e.episode}{e.totalEpisodes ? ` / ${e.totalEpisodes}` : ""} · {e.lang.toUpperCase()}</p>
-            </div>
-          </Link>
-        ))}
+        {items.slice(0, 6).map(e => {
+          const p = progress[`${e.malId}:${e.episode}`];
+          const pct = p ? Math.min(100, Math.round((p.t / p.d) * 100)) : 0;
+          return (
+            <Link
+              key={e.malId}
+              to="/watch/$id/$ep"
+              params={{ id: String(e.malId), ep: String(e.episode) }}
+              className="group relative block overflow-hidden rounded-2xl glass transition hover:-translate-y-1 hover:glow-cyan"
+            >
+              <div className="aspect-[2/3] overflow-hidden">
+                <img src={e.image} alt={e.title} className="h-full w-full object-cover transition group-hover:scale-110" />
+              </div>
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 to-transparent p-3 pt-8">
+                <h3 className="truncate text-sm font-semibold text-white">{e.title}</h3>
+                <p className="text-[11px] text-white/70">Ep {e.episode}{e.totalEpisodes ? ` / ${e.totalEpisodes}` : ""} · {e.lang.toUpperCase()}</p>
+                {p && (
+                  <>
+                    <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-white/20">
+                      <div className="h-full rounded-full bg-gradient-to-r from-neon-cyan to-neon-magenta" style={{ width: `${pct}%` }} />
+                    </div>
+                    <p className="mt-1 text-[10px] text-white/60">
+                      {pct >= 95 ? "Finished" : `Resume at ${fmtTime(p.t)}`}
+                    </p>
+                  </>
+                )}
+              </div>
+            </Link>
+          );
+        })}
       </div>
     </section>
   );

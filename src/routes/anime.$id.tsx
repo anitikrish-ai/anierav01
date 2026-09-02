@@ -32,6 +32,7 @@ function AnimePage() {
   const animeQ = useQuery({ queryKey: ["anime", malId], queryFn: () => jikan.anime(malId) });
   const epsQ = useQuery({ queryKey: ["episodes", malId], queryFn: () => jikan.episodes(malId), enabled: !!animeQ.data });
   const recQ = useQuery({ queryKey: ["rec", malId], queryFn: () => jikan.recommendations(malId), enabled: !!animeQ.data });
+  const relQ = useQuery({ queryKey: ["rel", malId], queryFn: () => jikan.relations(malId), enabled: !!animeQ.data });
 
   const [fav, setFav] = useState(false);
   useEffect(() => { setFav(getFavorites().includes(malId)); }, [malId]);
@@ -64,6 +65,7 @@ function AnimePage() {
               {a.status && <span className="rounded-md bg-white/10 px-2 py-1">{a.status}</span>}
               {a.year && <span className="rounded-md bg-white/10 px-2 py-1">{a.year}</span>}
               {a.duration && <span className="rounded-md bg-white/10 px-2 py-1">{a.duration}</span>}
+              <AiringCountdown malId={malId} />
             </div>
             <div className="mt-3 flex flex-wrap gap-2">
               {a.genres.map(g => (
@@ -121,6 +123,35 @@ function AnimePage() {
           )}
         </section>
       ) : null}
+
+      {relQ.data?.data?.length ? (
+        <section>
+          <h2 className="mb-4 font-display text-2xl font-bold text-white">Franchise & Related</h2>
+          <div className="space-y-4">
+            {relQ.data.data.map((rel, i) => (
+              <div key={`${rel.relation}-${i}`} className="glass rounded-2xl p-4">
+                <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-neon-cyan">{rel.relation}</h3>
+                <div className="flex flex-wrap gap-2">
+                  {rel.entry.map(e =>
+                    e.type === "anime" ? (
+                      <Link key={e.mal_id} to="/anime/$id" params={{ id: String(e.mal_id) }}
+                        className="rounded-full bg-white/10 px-3 py-1 text-xs text-white/85 transition hover:bg-white/20 hover:text-white">
+                        {e.name}
+                      </Link>
+                    ) : (
+                      <span key={`${e.type}-${e.mal_id}`} className="rounded-full bg-white/5 px-3 py-1 text-xs text-white/50">
+                        {e.name}
+                      </span>
+                    ),
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      <Reviews malId={malId} animeTitle={bestTitle(a)} />
     </div>
   );
 }
