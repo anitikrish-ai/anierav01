@@ -126,9 +126,28 @@ function Section({ title, items, loading }: { title: string; items?: Anime[]; lo
   );
 }
 
+function fmtTime(s: number) {
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  const h = Math.floor(m / 60);
+  return h > 0
+    ? `${h}:${String(m % 60).padStart(2, "0")}:${String(sec).padStart(2, "0")}`
+    : `${m}:${String(sec).padStart(2, "0")}`;
+}
+
 function ContinueWatching() {
   const [items, setItems] = useState<HistoryEntry[]>([]);
-  useEffect(() => { setItems(getHistory()); }, []);
+  const [progress, setProgress] = useState<Record<string, { t: number; d: number }>>({});
+  useEffect(() => {
+    const list = getHistory();
+    setItems(list);
+    const map: Record<string, { t: number; d: number }> = {};
+    for (const e of list) {
+      const p = getEpisodeProgress(e.malId, e.episode);
+      if (p && p.d > 0) map[`${e.malId}:${e.episode}`] = p;
+    }
+    setProgress(map);
+  }, []);
   if (!items.length) return null;
   return (
     <section>
