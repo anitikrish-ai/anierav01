@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { jikan, bestTitle, type Anime } from "@/lib/jikan";
 import { AnimeGrid, GridSkeleton } from "@/components/AnimeCard";
 import { getHistory, getEpisodeProgress, type HistoryEntry } from "@/lib/history";
+import { Reveal } from "@/components/Reveal";
 import { useEffect, useMemo, useState } from "react";
 
 export const Route = createFileRoute("/")({
@@ -62,23 +63,23 @@ function HeroCarousel({ pool, loading }: { pool: Anime[]; loading: boolean }) {
       />
       <div className="absolute inset-0 bg-gradient-to-r from-background via-background/60 to-transparent" />
       <div className="relative grid gap-6 p-6 sm:p-10 md:grid-cols-[1fr_280px] md:gap-10">
-        <div className="flex flex-col justify-center">
-          <span className="mb-3 inline-flex w-fit items-center gap-2 rounded-full glass px-3 py-1 text-xs font-medium text-neon-cyan">
-            <span className="h-1.5 w-1.5 rounded-full bg-neon-cyan glow-cyan" /> #{idx + 1} Trending
+        <div key={anime.mal_id} className="flex flex-col justify-center">
+          <span className="anim-rise mb-3 inline-flex w-fit items-center gap-2 rounded-full glass px-3 py-1 text-xs font-medium text-neon-cyan">
+            <span className="h-1.5 w-1.5 rounded-full bg-neon-cyan glow-cyan anim-glow" /> #{idx + 1} Trending
           </span>
-          <h1 className="font-display text-3xl font-bold leading-tight text-white sm:text-5xl">
+          <h1 className="anim-rise font-display text-3xl font-bold leading-tight text-white sm:text-5xl" style={{ animationDelay: "60ms" }}>
             {bestTitle(anime)}
           </h1>
-          <div className="mt-3 flex flex-wrap gap-2 text-xs text-white/70">
+          <div className="anim-rise mt-3 flex flex-wrap gap-2 text-xs text-white/70" style={{ animationDelay: "110ms" }}>
             {anime.score && <span className="rounded-md bg-white/10 px-2 py-1">★ {anime.score.toFixed(1)}</span>}
             {anime.type && <span className="rounded-md bg-white/10 px-2 py-1">{anime.type}</span>}
             {anime.episodes && <span className="rounded-md bg-white/10 px-2 py-1">{anime.episodes} eps</span>}
             {anime.year && <span className="rounded-md bg-white/10 px-2 py-1">{anime.year}</span>}
           </div>
-          <p className="mt-4 line-clamp-3 max-w-2xl text-sm text-white/70 sm:text-base">
+          <p className="anim-rise mt-4 line-clamp-3 max-w-2xl text-sm text-white/70 sm:text-base" style={{ animationDelay: "160ms" }}>
             {anime.synopsis}
           </p>
-          <div className="mt-6 flex flex-wrap gap-3">
+          <div className="anim-rise mt-6 flex flex-wrap gap-3" style={{ animationDelay: "210ms" }}>
             <Link
               to="/watch/$id/$ep"
               params={{ id: String(anime.mal_id), ep: "1" }}
@@ -108,7 +109,13 @@ function HeroCarousel({ pool, loading }: { pool: Anime[]; loading: boolean }) {
           )}
         </div>
         <div className="hidden md:block">
-          <img src={img} alt={bestTitle(anime)} className="aspect-[2/3] w-full rounded-2xl object-cover glass" />
+          <img
+            key={anime.mal_id}
+            src={img}
+            alt={bestTitle(anime)}
+            fetchPriority="high"
+            className="anim-pop aspect-[2/3] w-full rounded-2xl object-cover glass"
+          />
         </div>
       </div>
     </section>
@@ -118,9 +125,10 @@ function HeroCarousel({ pool, loading }: { pool: Anime[]; loading: boolean }) {
 function Section({ title, items, loading }: { title: string; items?: Anime[]; loading: boolean }) {
   return (
     <section>
-      <div className="mb-4 flex items-end justify-between">
+      <Reveal variant="slide-left" className="mb-4 flex items-end justify-between">
         <h2 className="font-display text-2xl font-bold text-white">{title}</h2>
-      </div>
+        <span className="h-px flex-1 translate-y-[-6px] bg-gradient-to-r from-neon-cyan/40 to-transparent ml-4" />
+      </Reveal>
       {loading || !items ? <GridSkeleton /> : <AnimeGrid items={items} />}
     </section>
   );
@@ -153,15 +161,15 @@ function ContinueWatching() {
     <section>
       <h2 className="mb-4 font-display text-2xl font-bold text-white">Continue Watching</h2>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-        {items.slice(0, 6).map(e => {
+        {items.slice(0, 6).map((e, i) => {
           const p = progress[`${e.malId}:${e.episode}`];
           const pct = p ? Math.min(100, Math.round((p.t / p.d) * 100)) : 0;
           return (
+            <Reveal key={e.malId} variant="scale" delay={i * 45}>
             <Link
-              key={e.malId}
               to="/watch/$id/$ep"
               params={{ id: String(e.malId), ep: String(e.episode) }}
-              className="group relative block overflow-hidden rounded-2xl glass transition hover:-translate-y-1 hover:glow-cyan"
+              className="sheen group relative block overflow-hidden rounded-2xl glass transition hover:-translate-y-1.5 hover:glow-cyan"
             >
               <div className="aspect-[2/3] overflow-hidden">
                 <img src={e.image} alt={e.title} className="h-full w-full object-cover transition group-hover:scale-110" />
@@ -172,7 +180,10 @@ function ContinueWatching() {
                 {p && (
                   <>
                     <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-white/20">
-                      <div className="h-full rounded-full bg-gradient-to-r from-neon-cyan to-neon-magenta" style={{ width: `${pct}%` }} />
+                      <div
+                        className="h-full origin-left rounded-full bg-gradient-to-r from-neon-cyan to-neon-magenta transition-transform duration-700 ease-out"
+                        style={{ width: "100%", transform: `scaleX(${pct / 100})` }}
+                      />
                     </div>
                     <p className="mt-1 text-[10px] text-white/60">
                       {pct >= 95 ? "Finished" : `Resume at ${fmtTime(p.t)}`}
@@ -181,6 +192,7 @@ function ContinueWatching() {
                 )}
               </div>
             </Link>
+            </Reveal>
           );
         })}
       </div>
