@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { jikan, bestTitle, type Anime } from "@/lib/jikan";
 import { AnimeGrid, GridSkeleton } from "@/components/AnimeCard";
-import { getHistory, type HistoryEntry } from "@/lib/history";
+import { getHistory, getEpisodeProgress, type HistoryEntry } from "@/lib/history";
 import { useEffect, useMemo, useState } from "react";
 
 export const Route = createFileRoute("/")({
