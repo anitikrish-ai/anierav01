@@ -63,14 +63,14 @@ function HeroCarousel({ pool, loading }: { pool: Anime[]; loading: boolean }) {
       />
       <div className="absolute inset-0 bg-gradient-to-r from-background via-background/60 to-transparent" />
       <div className="relative grid gap-6 p-6 sm:p-10 md:grid-cols-[1fr_280px] md:gap-10">
-        <div className="flex flex-col justify-center">
-          <span className="mb-3 inline-flex w-fit items-center gap-2 rounded-full glass px-3 py-1 text-xs font-medium text-neon-cyan">
-            <span className="h-1.5 w-1.5 rounded-full bg-neon-cyan glow-cyan" /> #{idx + 1} Trending
+        <div key={anime.mal_id} className="flex flex-col justify-center">
+          <span className="anim-rise mb-3 inline-flex w-fit items-center gap-2 rounded-full glass px-3 py-1 text-xs font-medium text-neon-cyan">
+            <span className="h-1.5 w-1.5 rounded-full bg-neon-cyan glow-cyan anim-glow" /> #{idx + 1} Trending
           </span>
-          <h1 className="font-display text-3xl font-bold leading-tight text-white sm:text-5xl">
+          <h1 className="anim-rise font-display text-3xl font-bold leading-tight text-white sm:text-5xl" style={{ animationDelay: "60ms" }}>
             {bestTitle(anime)}
           </h1>
-          <div className="mt-3 flex flex-wrap gap-2 text-xs text-white/70">
+          <div className="anim-rise mt-3 flex flex-wrap gap-2 text-xs text-white/70" style={{ animationDelay: "110ms" }}>
             {anime.score && <span className="rounded-md bg-white/10 px-2 py-1">★ {anime.score.toFixed(1)}</span>}
             {anime.type && <span className="rounded-md bg-white/10 px-2 py-1">{anime.type}</span>}
             {anime.episodes && <span className="rounded-md bg-white/10 px-2 py-1">{anime.episodes} eps</span>}
