@@ -161,7 +161,7 @@ function ContinueWatching() {
     <section>
       <h2 className="mb-4 font-display text-2xl font-bold text-white">Continue Watching</h2>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-        {items.slice(0, 6).map(e => {
+        {items.slice(0, 6).map((e, i) => {
           const p = progress[`${e.malId}:${e.episode}`];
           const pct = p ? Math.min(100, Math.round((p.t / p.d) * 100)) : 0;
           return (
