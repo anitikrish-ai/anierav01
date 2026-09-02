@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { getFavorites, toggleFavorite, getWatchedEpisodes } from "@/lib/history";
 import { AiringCountdown } from "@/components/AiringCountdown";
 import { Reviews } from "@/components/Reviews";
+import { Reveal } from "@/components/Reveal";
 
 
 export const Route = createFileRoute("/anime/$id")({
@@ -49,7 +50,7 @@ function AnimePage() {
     : eps;
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-10 page-enter">
       <section className="relative overflow-hidden rounded-3xl">
         <div className="absolute inset-0 scale-110 blur-2xl" style={{ backgroundImage: `url(${img})`, backgroundSize: "cover", opacity: 0.45 }} />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/30" />
@@ -93,7 +94,7 @@ function AnimePage() {
       </section>
 
       <section>
-        <h2 className="mb-4 font-display text-2xl font-bold text-white">Episodes</h2>
+        <Reveal variant="slide-left" as="span"><h2 className="mb-4 block font-display text-2xl font-bold text-white">Episodes</h2></Reveal>
         {episodeList.length === 0 ? (
           <p className="text-white/60">No episode data available.</p>
         ) : (
@@ -101,7 +102,7 @@ function AnimePage() {
             {episodeList.slice(0, 100).map((ep, i) => (
               <Link key={ep.mal_id ?? i}
                 to="/watch/$id/$ep" params={{ id: String(a.mal_id), ep: String(i + 1) }}
-                className={`glass rounded-xl p-3 text-sm transition hover:bg-white/10 hover:text-white ${
+                className={`sheen glass rounded-xl p-3 text-sm transition hover:-translate-y-0.5 hover:bg-white/10 hover:text-white ${
                   watched.has(i + 1) ? "ring-1 ring-neon-cyan/40 text-white" : "text-white/85"
                 }`}>
                 <div className="flex items-center justify-between text-xs">
@@ -117,7 +118,7 @@ function AnimePage() {
 
       {recQ.data?.data?.length ? (
         <section>
-          <h2 className="mb-4 font-display text-2xl font-bold text-white">You Might Also Like</h2>
+          <Reveal variant="slide-left" as="span"><h2 className="mb-4 block font-display text-2xl font-bold text-white">You Might Also Like</h2></Reveal>
           {recQ.isLoading ? <GridSkeleton /> : (
             <AnimeGrid items={recQ.data.data.slice(0, 12).map((r: any) => r.entry)} />
           )}
@@ -126,10 +127,10 @@ function AnimePage() {
 
       {relQ.data?.data?.length ? (
         <section>
-          <h2 className="mb-4 font-display text-2xl font-bold text-white">Franchise & Related</h2>
+          <Reveal variant="slide-left" as="span"><h2 className="mb-4 block font-display text-2xl font-bold text-white">Franchise &amp; Related</h2></Reveal>
           <div className="space-y-4">
             {relQ.data.data.map((rel, i) => (
-              <div key={`${rel.relation}-${i}`} className="glass rounded-2xl p-4">
+              <Reveal key={`${rel.relation}-${i}`} variant="rise" delay={i * 50} className="glass block rounded-2xl p-4">
                 <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-neon-cyan">{rel.relation}</h3>
                 <div className="flex flex-wrap gap-2">
                   {rel.entry.map(e =>
@@ -145,7 +146,7 @@ function AnimePage() {
                     ),
                   )}
                 </div>
-              </div>
+              </Reveal>
             ))}
           </div>
         </section>
