@@ -32,6 +32,7 @@ function AnimePage() {
   const animeQ = useQuery({ queryKey: ["anime", malId], queryFn: () => jikan.anime(malId) });
   const epsQ = useQuery({ queryKey: ["episodes", malId], queryFn: () => jikan.episodes(malId), enabled: !!animeQ.data });
   const recQ = useQuery({ queryKey: ["rec", malId], queryFn: () => jikan.recommendations(malId), enabled: !!animeQ.data });
+  const relQ = useQuery({ queryKey: ["rel", malId], queryFn: () => jikan.relations(malId), enabled: !!animeQ.data });
 
   const [fav, setFav] = useState(false);
   useEffect(() => { setFav(getFavorites().includes(malId)); }, [malId]);
