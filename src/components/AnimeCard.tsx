@@ -2,6 +2,7 @@ import { memo } from "react";
 import { Link } from "@tanstack/react-router";
 import type { Anime } from "@/lib/jikan";
 import { bestTitle } from "@/lib/jikan";
+import { Reveal } from "@/components/Reveal";
 
 function AnimeCardImpl({ anime }: { anime: Anime }) {
   const img = anime.images.webp?.large_image_url || anime.images.jpg.large_image_url;
