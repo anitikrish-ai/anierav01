@@ -165,11 +165,11 @@ function ContinueWatching() {
           const p = progress[`${e.malId}:${e.episode}`];
           const pct = p ? Math.min(100, Math.round((p.t / p.d) * 100)) : 0;
           return (
+            <Reveal key={e.malId} variant="scale" delay={i * 45}>
             <Link
-              key={e.malId}
               to="/watch/$id/$ep"
               params={{ id: String(e.malId), ep: String(e.episode) }}
-              className="group relative block overflow-hidden rounded-2xl glass transition hover:-translate-y-1 hover:glow-cyan"
+              className="sheen group relative block overflow-hidden rounded-2xl glass transition hover:-translate-y-1.5 hover:glow-cyan"
             >
               <div className="aspect-[2/3] overflow-hidden">
                 <img src={e.image} alt={e.title} className="h-full w-full object-cover transition group-hover:scale-110" />
