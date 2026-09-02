@@ -180,7 +180,10 @@ function ContinueWatching() {
                 {p && (
                   <>
                     <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-white/20">
-                      <div className="h-full rounded-full bg-gradient-to-r from-neon-cyan to-neon-magenta" style={{ width: `${pct}%` }} />
+                      <div
+                        className="h-full origin-left rounded-full bg-gradient-to-r from-neon-cyan to-neon-magenta transition-transform duration-700 ease-out"
+                        style={{ width: "100%", transform: `scaleX(${pct / 100})` }}
+                      />
                     </div>
                     <p className="mt-1 text-[10px] text-white/60">
                       {pct >= 95 ? "Finished" : `Resume at ${fmtTime(p.t)}`}
