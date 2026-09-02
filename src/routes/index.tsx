@@ -192,6 +192,7 @@ function ContinueWatching() {
                 )}
               </div>
             </Link>
+            </Reveal>
           );
         })}
       </div>
