@@ -65,6 +65,7 @@ function AnimePage() {
               {a.status && <span className="rounded-md bg-white/10 px-2 py-1">{a.status}</span>}
               {a.year && <span className="rounded-md bg-white/10 px-2 py-1">{a.year}</span>}
               {a.duration && <span className="rounded-md bg-white/10 px-2 py-1">{a.duration}</span>}
+              <AiringCountdown malId={malId} />
             </div>
             <div className="mt-3 flex flex-wrap gap-2">
               {a.genres.map(g => (
