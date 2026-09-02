@@ -118,9 +118,10 @@ function HeroCarousel({ pool, loading }: { pool: Anime[]; loading: boolean }) {
 function Section({ title, items, loading }: { title: string; items?: Anime[]; loading: boolean }) {
   return (
     <section>
-      <div className="mb-4 flex items-end justify-between">
+      <Reveal variant="slide-left" className="mb-4 flex items-end justify-between">
         <h2 className="font-display text-2xl font-bold text-white">{title}</h2>
-      </div>
+        <span className="h-px flex-1 translate-y-[-6px] bg-gradient-to-r from-neon-cyan/40 to-transparent ml-4" />
+      </Reveal>
       {loading || !items ? <GridSkeleton /> : <AnimeGrid items={items} />}
     </section>
   );
