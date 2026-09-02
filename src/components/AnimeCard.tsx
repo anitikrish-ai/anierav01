@@ -54,9 +54,9 @@ export function AnimeGrid({ items }: { items: Anime[] }) {
   return (
     <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
       {safe.map((a, i) => (
-        <div key={a.mal_id} className="anim-rise" style={{ animationDelay: `${Math.min(i, 12) * 35}ms` }}>
+        <Reveal key={a.mal_id} variant="rise" delay={Math.min(i % 12, 11) * 40}>
           <AnimeCard anime={a} />
-        </div>
+        </Reveal>
       ))}
     </div>
   );
