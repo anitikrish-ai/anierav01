@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { jikan, bestTitle, type Anime } from "@/lib/jikan";
 import { AnimeGrid, GridSkeleton } from "@/components/AnimeCard";
 import { getHistory, getEpisodeProgress, type HistoryEntry } from "@/lib/history";
+import { Reveal } from "@/components/Reveal";
 import { useEffect, useMemo, useState } from "react";
 
 export const Route = createFileRoute("/")({
