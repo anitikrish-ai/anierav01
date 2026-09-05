@@ -37,11 +37,12 @@ export function Navbar() {
 
   const sugg = useQuery({
     queryKey: ["search-suggest", debounced],
-    queryFn: () => jikan.search(debounced, 1),
+    queryFn: () => jikan.search({ q: debounced, limit: 8 }),
     enabled: debounced.length >= 2,
     staleTime: 1000 * 60,
   });
   const results = sugg.data?.data?.slice(0, 6) ?? [];
+
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
