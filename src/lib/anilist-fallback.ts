@@ -294,18 +294,36 @@ export async function anilistFallback(path: string): Promise<unknown | null> {
     const genreIds = (sp.get("genres") ?? "").split(",").filter(Boolean);
     const genreNames = (await Promise.all(genreIds.map(malGenreName))).filter(Boolean) as string[];
     if (genreNames.length) parts.push("genre_in: $genreIn");
-    parts.push(q ? "sort: SEARCH_MATCH" : "sort: POPULARITY_DESC");
+    const minScore = Number(sp.get("min_score"));
+    if (Number.isFinite(minScore) && minScore > 0) parts.push("averageScore_greater: $scoreGreater");
+    const ORDER: Record<string, string> = {
+      score: "SCORE_DESC",
+      popularity: "POPULARITY_DESC",
+      start_date: "START_DATE_DESC",
+      title: "TITLE_ROMAJI",
+      episodes: "EPISODES_DESC",
+    };
+    const orderBy = sp.get("order_by");
+    parts.push(
+      orderBy && ORDER[orderBy]
+        ? `sort: ${ORDER[orderBy]}`
+        : q
+          ? "sort: SEARCH_MATCH"
+          : "sort: POPULARITY_DESC",
+    );
     const r = await page(
       {
         page: pageNum,
         search: q || undefined,
         seasonYear: startDate ? Number(startDate.slice(0, 4)) : undefined,
         genreIn: genreNames.length ? genreNames : undefined,
+        scoreGreater: Number.isFinite(minScore) && minScore > 0 ? Math.round(minScore * 10) : undefined,
       },
       parts.join(", "),
       Number(sp.get("limit") || 24),
     );
     return list(r.Page.media, pageNum, r.Page.pageInfo.hasNextPage);
+
   }
 
 
