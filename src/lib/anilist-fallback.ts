@@ -182,6 +182,48 @@ function nextSeason(): { season: string; year: number } {
 }
 
 /**
+ * MAL genre ids are what the UI sends; AniList filters by genre *name*.
+ * Jikan's /genres/anime endpoint stays up even when MAL search is down, so
+ * use it as the source of truth and fall back to a static map.
+ */
+const STATIC_GENRES: Record<string, string> = {
+  "1": "Action", "2": "Adventure", "4": "Comedy", "5": "Slice of Life", "7": "Mystery",
+  "8": "Drama", "9": "Ecchi", "10": "Fantasy", "14": "Horror", "17": "Martial Arts",
+  "18": "Mecha", "19": "Music", "22": "Romance", "23": "School", "24": "Sci-Fi",
+  "25": "Shoujo", "26": "Girls Love", "27": "Shounen", "28": "Boys Love", "29": "Space",
+  "30": "Sports", "31": "Super Power", "32": "Vampire", "35": "Harem",
+  "36": "Slice of Life", "37": "Supernatural", "38": "Military", "39": "Police",
+  "40": "Psychological", "41": "Thriller", "42": "Seinen", "43": "Josei",
+};
+
+let genreMapPromise: Promise<Record<string, string>> | null = null;
+
+async function genreMap(): Promise<Record<string, string>> {
+  if (!genreMapPromise) {
+    genreMapPromise = (async () => {
+      try {
+        const res = await fetch("https://api.jikan.moe/v4/genres/anime", {
+          headers: { Accept: "application/json" },
+        });
+        if (!res.ok) throw new Error(String(res.status));
+        const json = (await res.json()) as { data: { mal_id: number; name: string }[] };
+        const out: Record<string, string> = { ...STATIC_GENRES };
+        for (const g of json.data ?? []) out[String(g.mal_id)] = g.name;
+        return out;
+      } catch {
+        return STATIC_GENRES;
+      }
+    })();
+  }
+  return genreMapPromise;
+}
+
+async function malGenreName(value: string): Promise<string | undefined> {
+  if (!/^\d+$/.test(value)) return value; // already a name
+  return (await genreMap())[value];
+}
+
+/**
  * Serve a Jikan path from AniList. Returns null when the path has no
  * sensible AniList equivalent, so the caller can surface the original error.
  */
