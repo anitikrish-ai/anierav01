@@ -358,7 +358,52 @@ export async function anilistFallback(path: string): Promise<unknown | null> {
     };
   }
 
+  // /anime/{id}/relations
+  const rels = p.match(/^\/anime\/(\d+)\/relations$/);
+  if (rels) {
+    const data = await gql<{
+      Media: {
+        relations: {
+          edges: {
+            relationType: string | null;
+            node: { id: number; idMal: number | null; type: string | null; format: string | null; siteUrl: string | null; title: { romaji: string | null; english: string | null } };
+          }[];
+        } | null;
+      } | null;
+    }>(
+      `query ($idMal: Int) {
+        Media(idMal: $idMal, type: ANIME) {
+          relations {
+            edges {
+              relationType(version: 2)
+              node { id idMal type format siteUrl title { romaji english } }
+            }
+          }
+        }
+      }`,
+      { idMal: Number(rels[1]) },
+    );
+    const edges = data.Media?.relations?.edges ?? [];
+    const grouped = new Map<string, { mal_id: number; type: string; name: string; url: string }[]>();
+    for (const e of edges) {
+      if (!e.node.idMal || e.node.type !== "ANIME") continue;
+      const rel = (e.relationType ?? "OTHER")
+        .toLowerCase()
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, c => c.toUpperCase());
+      const entry = {
+        mal_id: e.node.idMal,
+        type: "anime",
+        name: e.node.title.english || e.node.title.romaji || "Untitled",
+        url: e.node.siteUrl ?? `https://anilist.co/anime/${e.node.id}`,
+      };
+      grouped.set(rel, [...(grouped.get(rel) ?? []), entry]);
+    }
+    return { data: [...grouped].map(([relation, entry]) => ({ relation, entry })) };
+  }
+
   // /genres/anime
+
   if (p === "/genres/anime") {
     const data = await gql<{ GenreCollection: string[] }>(`query { GenreCollection }`, {});
     return {
