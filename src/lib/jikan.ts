@@ -126,7 +126,14 @@ async function fetchWithRetry(url: string): Promise<Response> {
  * cost on every subsequent call for a while and go straight to AniList.
  */
 let jikanDownUntil = 0;
-const JIKAN_COOLDOWN_MS = 1000 * 60 * 2;
+const JIKAN_COOLDOWN_MS = 1000 * 60 * 5;
+
+/** 4xx (bad query, not found) means Jikan is healthy — don't trip the breaker. */
+function isOutage(err: unknown): boolean {
+  const m = err instanceof Error ? err.message : "";
+  const code = Number(/Jikan (\d+)/.exec(m)?.[1]);
+  return !Number.isFinite(code) || code >= 500 || code === 429;
+}
 
 async function jget<T>(path: string): Promise<T> {
   const now = Date.now();
@@ -149,7 +156,7 @@ async function jget<T>(path: string): Promise<T> {
     } catch (err) {
       // Jikan is a MyAnimeList proxy and goes down with it. Re-serve the same
       // shapes from AniList so no page ends up empty.
-      jikanDownUntil = Date.now() + JIKAN_COOLDOWN_MS;
+      if (isOutage(err)) jikanDownUntil = Date.now() + JIKAN_COOLDOWN_MS;
       const { anilistFallback } = await import("./anilist-fallback");
       const alt = await anilistFallback(path);
       if (alt == null) throw err;
@@ -167,6 +174,18 @@ async function jget<T>(path: string): Promise<T> {
   return p;
 }
 
+export interface SearchFilters {
+  q?: string;
+  page?: number;
+  genres?: string;
+  year?: string;
+  status?: string;
+  type?: string;
+  minScore?: string;
+  orderBy?: string;
+  sort?: "asc" | "desc";
+  limit?: number;
+}
 
 export const jikan = {
   topAiring: (page = 1) => jget<JikanList<Anime>>(`/top/anime?filter=airing&page=${page}`),
@@ -179,12 +198,21 @@ export const jikan = {
     if (filter) params.set("filter", filter);
     return jget<JikanList<Anime>>(`/schedules?${params.toString()}`);
   },
-  search: (q: string, page = 1, genres?: string, year?: string, status?: string, type?: string) => {
-    const params = new URLSearchParams({ q, page: String(page), sfw: "true", limit: "24" });
-    if (genres) params.set("genres", genres);
-    if (year) params.set("start_date", `${year}-01-01`);
-    if (status) params.set("status", status);
-    if (type) params.set("type", type);
+  /** Advanced search — every field optional, empty values are dropped. */
+  search: (f: SearchFilters) => {
+    const params = new URLSearchParams({
+      page: String(f.page ?? 1),
+      sfw: "true",
+      limit: String(f.limit ?? 24),
+    });
+    if (f.q) params.set("q", f.q);
+    if (f.genres) params.set("genres", f.genres);
+    if (f.year) params.set("start_date", `${f.year}-01-01`);
+    if (f.status) params.set("status", f.status);
+    if (f.type) params.set("type", f.type);
+    if (f.minScore) params.set("min_score", f.minScore);
+    if (f.orderBy) params.set("order_by", f.orderBy);
+    if (f.sort) params.set("sort", f.sort);
     return jget<JikanList<Anime>>(`/anime?${params.toString()}`);
   },
   anime: (id: number) => jget<JikanItem<Anime>>(`/anime/${id}/full`),
@@ -197,6 +225,7 @@ export const jikan = {
   genres: () => jget<JikanList<{ mal_id: number; name: string; count: number }>>(`/genres/anime`),
 
 };
+
 
 export function bestTitle(a: Anime) {
   return a.title_english || a.title;

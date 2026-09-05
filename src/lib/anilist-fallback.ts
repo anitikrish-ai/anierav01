@@ -146,7 +146,9 @@ const VAR_TYPES: Record<string, string> = {
   season: "MediaSeason",
   seasonYear: "Int",
   genreIn: "[String]",
+  scoreGreater: "Int",
 };
+
 
 async function page(
   vars: Record<string, unknown>,
@@ -179,6 +181,48 @@ function nextSeason(): { season: string; year: number } {
   const order = ["WINTER", "SPRING", "SUMMER", "FALL"];
   const i = order.indexOf(season);
   return i === 3 ? { season: "WINTER", year: year + 1 } : { season: order[i + 1]!, year };
+}
+
+/**
+ * MAL genre ids are what the UI sends; AniList filters by genre *name*.
+ * Jikan's /genres/anime endpoint stays up even when MAL search is down, so
+ * use it as the source of truth and fall back to a static map.
+ */
+const STATIC_GENRES: Record<string, string> = {
+  "1": "Action", "2": "Adventure", "4": "Comedy", "5": "Slice of Life", "7": "Mystery",
+  "8": "Drama", "9": "Ecchi", "10": "Fantasy", "14": "Horror", "17": "Martial Arts",
+  "18": "Mecha", "19": "Music", "22": "Romance", "23": "School", "24": "Sci-Fi",
+  "25": "Shoujo", "26": "Girls Love", "27": "Shounen", "28": "Boys Love", "29": "Space",
+  "30": "Sports", "31": "Super Power", "32": "Vampire", "35": "Harem",
+  "36": "Slice of Life", "37": "Supernatural", "38": "Military", "39": "Police",
+  "40": "Psychological", "41": "Thriller", "42": "Seinen", "43": "Josei",
+};
+
+let genreMapPromise: Promise<Record<string, string>> | null = null;
+
+async function genreMap(): Promise<Record<string, string>> {
+  if (!genreMapPromise) {
+    genreMapPromise = (async () => {
+      try {
+        const res = await fetch("https://api.jikan.moe/v4/genres/anime", {
+          headers: { Accept: "application/json" },
+        });
+        if (!res.ok) throw new Error(String(res.status));
+        const json = (await res.json()) as { data: { mal_id: number; name: string }[] };
+        const out: Record<string, string> = { ...STATIC_GENRES };
+        for (const g of json.data ?? []) out[String(g.mal_id)] = g.name;
+        return out;
+      } catch {
+        return STATIC_GENRES;
+      }
+    })();
+  }
+  return genreMapPromise;
+}
+
+async function malGenreName(value: string): Promise<string | undefined> {
+  if (!/^\d+$/.test(value)) return value; // already a name
+  return (await genreMap())[value];
 }
 
 /**
@@ -216,26 +260,24 @@ export async function anilistFallback(path: string): Promise<unknown | null> {
   // /schedules?filter=<weekday>
   if (p === "/schedules") {
     const day = sp.get("filter");
-    const r = await page({ page: 1 }, "status: RELEASING, sort: POPULARITY_DESC", 50);
-    let media = r.Page.media.filter(m => m.nextAiringEpisode);
+    // Pull a deeper slice so each weekday has a full line-up, not 3 shows.
+    const pages = await Promise.all(
+      [1, 2, 3].map(n =>
+        page({ page: n }, "status: RELEASING, sort: POPULARITY_DESC", 50).catch(() => null),
+      ),
+    );
+    let media = pages
+      .flatMap(r => r?.Page.media ?? [])
+      .filter(m => m.nextAiringEpisode);
     if (day) {
       media = media.filter(m => {
         const d = new Date(m.nextAiringEpisode!.airingAt * 1000);
         return WEEKDAYS[d.getDay()] === day.toLowerCase();
       });
     }
-    media.sort((a, b) => (a.nextAiringEpisode!.airingAt - b.nextAiringEpisode!.airingAt));
+    media.sort((a, b) => a.nextAiringEpisode!.airingAt - b.nextAiringEpisode!.airingAt);
     return list(media, 1, false);
   }
-
-  // MAL genre ids -> AniList genre names (used when Jikan is unavailable).
-  const MAL_GENRES: Record<string, string> = {
-    "1": "Action", "2": "Adventure", "4": "Comedy", "5": "Slice of Life", "7": "Mystery",
-    "8": "Drama", "9": "Ecchi", "10": "Fantasy", "14": "Horror", "22": "Romance",
-    "24": "Sci-Fi", "26": "Girls Love", "28": "Boys Love", "30": "Sports",
-    "36": "Slice of Life", "37": "Supernatural", "41": "Thriller", "46": "Action",
-    "47": "Comedy", "62": "Fantasy",
-  };
 
   // /anime?q=...&genres=&status=&type=&start_date=
   if (p === "/anime") {
@@ -250,23 +292,42 @@ export async function anilistFallback(path: string): Promise<unknown | null> {
       const map: Record<string, string> = { airing: "RELEASING", complete: "FINISHED", upcoming: "NOT_YET_RELEASED" };
       if (map[status]) parts.push(`status: ${map[status]}`);
     }
-    if (type) parts.push(`format: ${type.toUpperCase()}`);
-    const genreId = sp.get("genres");
-    const genreName = genreId ? MAL_GENRES[genreId] : undefined;
-    if (genreName) parts.push("genre_in: $genreIn");
-    parts.push(q ? "sort: SEARCH_MATCH" : "sort: POPULARITY_DESC");
+    if (type) parts.push(`format: ${type.toUpperCase().replace(/\s+/g, "_")}`);
+    const genreIds = (sp.get("genres") ?? "").split(",").filter(Boolean);
+    const genreNames = (await Promise.all(genreIds.map(malGenreName))).filter(Boolean) as string[];
+    if (genreNames.length) parts.push("genre_in: $genreIn");
+    const minScore = Number(sp.get("min_score"));
+    if (Number.isFinite(minScore) && minScore > 0) parts.push("averageScore_greater: $scoreGreater");
+    const ORDER: Record<string, string> = {
+      score: "SCORE_DESC",
+      popularity: "POPULARITY_DESC",
+      start_date: "START_DATE_DESC",
+      title: "TITLE_ROMAJI",
+      episodes: "EPISODES_DESC",
+    };
+    const orderBy = sp.get("order_by");
+    parts.push(
+      orderBy && ORDER[orderBy]
+        ? `sort: ${ORDER[orderBy]}`
+        : q
+          ? "sort: SEARCH_MATCH"
+          : "sort: POPULARITY_DESC",
+    );
     const r = await page(
       {
         page: pageNum,
         search: q || undefined,
         seasonYear: startDate ? Number(startDate.slice(0, 4)) : undefined,
-        genreIn: genreName ? [genreName] : undefined,
+        genreIn: genreNames.length ? genreNames : undefined,
+        scoreGreater: Number.isFinite(minScore) && minScore > 0 ? Math.round(minScore * 10) : undefined,
       },
       parts.join(", "),
-      24,
+      Number(sp.get("limit") || 24),
     );
     return list(r.Page.media, pageNum, r.Page.pageInfo.hasNextPage);
+
   }
+
 
   // /anime/{id}/full
   const full = p.match(/^\/anime\/(\d+)\/full$/);
@@ -317,7 +378,52 @@ export async function anilistFallback(path: string): Promise<unknown | null> {
     };
   }
 
+  // /anime/{id}/relations
+  const rels = p.match(/^\/anime\/(\d+)\/relations$/);
+  if (rels) {
+    const data = await gql<{
+      Media: {
+        relations: {
+          edges: {
+            relationType: string | null;
+            node: { id: number; idMal: number | null; type: string | null; format: string | null; siteUrl: string | null; title: { romaji: string | null; english: string | null } };
+          }[];
+        } | null;
+      } | null;
+    }>(
+      `query ($idMal: Int) {
+        Media(idMal: $idMal, type: ANIME) {
+          relations {
+            edges {
+              relationType(version: 2)
+              node { id idMal type format siteUrl title { romaji english } }
+            }
+          }
+        }
+      }`,
+      { idMal: Number(rels[1]) },
+    );
+    const edges = data.Media?.relations?.edges ?? [];
+    const grouped = new Map<string, { mal_id: number; type: string; name: string; url: string }[]>();
+    for (const e of edges) {
+      if (!e.node.idMal || e.node.type !== "ANIME") continue;
+      const rel = (e.relationType ?? "OTHER")
+        .toLowerCase()
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, c => c.toUpperCase());
+      const entry = {
+        mal_id: e.node.idMal,
+        type: "anime",
+        name: e.node.title.english || e.node.title.romaji || "Untitled",
+        url: e.node.siteUrl ?? `https://anilist.co/anime/${e.node.id}`,
+      };
+      grouped.set(rel, [...(grouped.get(rel) ?? []), entry]);
+    }
+    return { data: [...grouped].map(([relation, entry]) => ({ relation, entry })) };
+  }
+
   // /genres/anime
+
   if (p === "/genres/anime") {
     const data = await gql<{ GenreCollection: string[] }>(`query { GenreCollection }`, {});
     return {
