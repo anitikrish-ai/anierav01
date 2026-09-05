@@ -216,26 +216,24 @@ export async function anilistFallback(path: string): Promise<unknown | null> {
   // /schedules?filter=<weekday>
   if (p === "/schedules") {
     const day = sp.get("filter");
-    const r = await page({ page: 1 }, "status: RELEASING, sort: POPULARITY_DESC", 50);
-    let media = r.Page.media.filter(m => m.nextAiringEpisode);
+    // Pull a deeper slice so each weekday has a full line-up, not 3 shows.
+    const pages = await Promise.all(
+      [1, 2, 3].map(n =>
+        page({ page: n }, "status: RELEASING, sort: POPULARITY_DESC", 50).catch(() => null),
+      ),
+    );
+    let media = pages
+      .flatMap(r => r?.Page.media ?? [])
+      .filter(m => m.nextAiringEpisode);
     if (day) {
       media = media.filter(m => {
         const d = new Date(m.nextAiringEpisode!.airingAt * 1000);
         return WEEKDAYS[d.getDay()] === day.toLowerCase();
       });
     }
-    media.sort((a, b) => (a.nextAiringEpisode!.airingAt - b.nextAiringEpisode!.airingAt));
+    media.sort((a, b) => a.nextAiringEpisode!.airingAt - b.nextAiringEpisode!.airingAt);
     return list(media, 1, false);
   }
-
-  // MAL genre ids -> AniList genre names (used when Jikan is unavailable).
-  const MAL_GENRES: Record<string, string> = {
-    "1": "Action", "2": "Adventure", "4": "Comedy", "5": "Slice of Life", "7": "Mystery",
-    "8": "Drama", "9": "Ecchi", "10": "Fantasy", "14": "Horror", "22": "Romance",
-    "24": "Sci-Fi", "26": "Girls Love", "28": "Boys Love", "30": "Sports",
-    "36": "Slice of Life", "37": "Supernatural", "41": "Thriller", "46": "Action",
-    "47": "Comedy", "62": "Fantasy",
-  };
 
   // /anime?q=...&genres=&status=&type=&start_date=
   if (p === "/anime") {
@@ -250,23 +248,24 @@ export async function anilistFallback(path: string): Promise<unknown | null> {
       const map: Record<string, string> = { airing: "RELEASING", complete: "FINISHED", upcoming: "NOT_YET_RELEASED" };
       if (map[status]) parts.push(`status: ${map[status]}`);
     }
-    if (type) parts.push(`format: ${type.toUpperCase()}`);
-    const genreId = sp.get("genres");
-    const genreName = genreId ? MAL_GENRES[genreId] : undefined;
-    if (genreName) parts.push("genre_in: $genreIn");
+    if (type) parts.push(`format: ${type.toUpperCase().replace(/\s+/g, "_")}`);
+    const genreIds = (sp.get("genres") ?? "").split(",").filter(Boolean);
+    const genreNames = (await Promise.all(genreIds.map(malGenreName))).filter(Boolean) as string[];
+    if (genreNames.length) parts.push("genre_in: $genreIn");
     parts.push(q ? "sort: SEARCH_MATCH" : "sort: POPULARITY_DESC");
     const r = await page(
       {
         page: pageNum,
         search: q || undefined,
         seasonYear: startDate ? Number(startDate.slice(0, 4)) : undefined,
-        genreIn: genreName ? [genreName] : undefined,
+        genreIn: genreNames.length ? genreNames : undefined,
       },
       parts.join(", "),
-      24,
+      Number(sp.get("limit") || 24),
     );
     return list(r.Page.media, pageNum, r.Page.pageInfo.hasNextPage);
   }
+
 
   // /anime/{id}/full
   const full = p.match(/^\/anime\/(\d+)\/full$/);
