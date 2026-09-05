@@ -146,7 +146,9 @@ const VAR_TYPES: Record<string, string> = {
   season: "MediaSeason",
   seasonYear: "Int",
   genreIn: "[String]",
+  scoreGreater: "Int",
 };
+
 
 async function page(
   vars: Record<string, unknown>,
