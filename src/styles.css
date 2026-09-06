@@ -410,16 +410,3 @@ input, select, textarea {
   }
 }
 
-
-/* ---- Accessibility: consistent, visible keyboard focus everywhere ---- */
-:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
-  outline: 2px solid var(--color-neon-cyan);
-  outline-offset: 2px;
-  border-radius: 0.5rem;
-}
-:where(a, button, input, select, textarea):focus:not(:focus-visible) {
-  outline: none;
-}
-
-/* Never let long titles or wide media break the layout on small screens */
-html, body { overflow-x: clip; }
