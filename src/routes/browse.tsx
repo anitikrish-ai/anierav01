@@ -6,16 +6,28 @@ import { AnimeGrid, GridSkeleton } from "@/components/AnimeCard";
 import { ErrorState, EmptyState } from "@/components/StateBlocks";
 import { useEffect, useState } from "react";
 
+/**
+ * URL params arrive JSON-parsed, so `?genre=1` is a number and `?q=naruto` a
+ * string. Coerce everything to the string/number shape the API layer expects
+ * instead of throwing and blanking the page.
+ */
+const str = z
+  .union([z.string(), z.number(), z.boolean()])
+  .transform(v => String(v))
+  .optional()
+  .catch(undefined);
+
 const searchSchema = z.object({
-  q: z.string().optional(),
-  genre: z.string().optional(),
-  year: z.string().optional(),
-  status: z.string().optional(),
-  type: z.string().optional(),
-  minScore: z.string().optional(),
-  order: z.string().optional(),
-  page: z.number().optional(),
+  q: str,
+  genre: str,
+  year: str,
+  status: str,
+  type: str,
+  minScore: str,
+  order: str,
+  page: z.coerce.number().int().positive().optional().catch(undefined),
 });
+
 
 export const Route = createFileRoute("/browse")({
   head: () => ({
