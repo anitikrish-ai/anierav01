@@ -156,7 +156,7 @@ function BrowsePage() {
           e.preventDefault();
           apply();
         }}
-        className="glass flex flex-wrap items-center gap-3 rounded-2xl p-4"
+        className="glass grid grid-cols-2 gap-3 rounded-2xl p-4 sm:grid-cols-3 lg:grid-cols-4"
       >
         <input
           type="search"
@@ -164,7 +164,7 @@ function BrowsePage() {
           onChange={e => setQ(e.target.value)}
           placeholder="Search anime titles…"
           aria-label="Search anime"
-          className={`min-w-[200px] flex-1 placeholder:text-white/40 ${field}`}
+          className={`col-span-2 placeholder:text-white/40 lg:col-span-2 ${field}`}
         />
         <select value={genre} onChange={e => setGenre(e.target.value)} aria-label="Genre" className={field}>
           <option value="">All genres</option>
@@ -211,23 +211,41 @@ function BrowsePage() {
           max={2030}
           value={year}
           onChange={e => setYear(e.target.value)}
-          className={`w-28 placeholder:text-white/40 ${field}`}
+          className={`placeholder:text-white/40 ${field}`}
         />
-        {hasFilter && (
+        <div className="col-span-2 flex flex-wrap items-center gap-2 sm:col-span-3 lg:col-span-4">
+          {activeChips.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2">
+              {activeChips.map(c => (
+                <button
+                  key={c.key}
+                  type="button"
+                  onClick={c.clear}
+                  aria-label={`Remove filter ${c.label}`}
+                  className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs text-white/80 transition hover:bg-white/20 hover:text-white"
+                >
+                  {c.label}
+                  <span aria-hidden="true">✕</span>
+                </button>
+              ))}
+            </div>
+          )}
+          {hasFilter && (
+            <button
+              type="button"
+              onClick={reset}
+              className="rounded-lg bg-white/5 px-4 py-2 text-sm text-white/70 transition hover:bg-white/10 hover:text-white"
+            >
+              Clear all
+            </button>
+          )}
           <button
-            type="button"
-            onClick={reset}
-            className="rounded-lg bg-white/5 px-4 py-2 text-sm text-white/70 hover:bg-white/10 hover:text-white"
+            type="submit"
+            className="ml-auto rounded-lg bg-gradient-to-r from-neon-cyan to-neon-magenta px-5 py-2 text-sm font-semibold text-background transition hover:brightness-110 active:scale-[0.98]"
           >
-            Reset
+            Apply Filters
           </button>
-        )}
-        <button
-          type="submit"
-          className="ml-auto rounded-lg bg-gradient-to-r from-neon-cyan to-neon-magenta px-4 py-2 text-sm font-semibold text-background transition hover:scale-105"
-        >
-          Apply Filters
-        </button>
+        </div>
       </form>
 
       {!hasFilter ? (
@@ -244,6 +262,7 @@ function BrowsePage() {
           retrying={results.isFetching}
         />
       ) : items.length ? (
+
         <>
           <div className={results.isFetching ? "opacity-60 transition-opacity" : "transition-opacity"}>
             <AnimeGrid items={items} />
