@@ -6,15 +6,27 @@ import { AnimeGrid, GridSkeleton } from "@/components/AnimeCard";
 import { ErrorState, EmptyState } from "@/components/StateBlocks";
 import { useEffect, useState } from "react";
 
+/** URL values may arrive as numbers (e.g. ?genre=1) — coerce everything safely. */
+const str = z
+  .union([z.string(), z.number()])
+  .optional()
+  .transform(v => (v === undefined || v === "" ? undefined : String(v)));
+
 const searchSchema = z.object({
-  q: z.string().optional(),
-  genre: z.string().optional(),
-  year: z.string().optional(),
-  status: z.string().optional(),
-  type: z.string().optional(),
-  minScore: z.string().optional(),
-  order: z.string().optional(),
-  page: z.number().optional(),
+  q: str,
+  genre: str,
+  year: str,
+  status: str,
+  type: str,
+  minScore: str,
+  order: str,
+  page: z
+    .union([z.string(), z.number()])
+    .optional()
+    .transform(v => {
+      const n = typeof v === "string" ? parseInt(v, 10) : v;
+      return n && Number.isFinite(n) && n > 0 ? n : undefined;
+    }),
 });
 
 export const Route = createFileRoute("/browse")({
