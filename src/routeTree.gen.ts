@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as XApiPanel8f3c2a1bRouteImport } from './routes/x-api-panel-8f3c2a1b'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ScheduleRouteImport } from './routes/schedule'
 import { Route as LibraryRouteImport } from './routes/library'
@@ -29,6 +30,11 @@ import { Route as AuthenticatedAdminProvidersRouteImport } from './routes/_authe
 import { Route as AuthenticatedAdminBackupRouteImport } from './routes/_authenticated/admin.backup'
 import { Route as AuthenticatedAdminAuditRouteImport } from './routes/_authenticated/admin.audit'
 
+const XApiPanel8f3c2a1bRoute = XApiPanel8f3c2a1bRouteImport.update({
+  id: '/x-api-panel-8f3c2a1b',
+  path: '/x-api-panel-8f3c2a1b',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
@@ -134,6 +140,7 @@ export interface FileRoutesByFullPath {
   '/library': typeof LibraryRoute
   '/schedule': typeof ScheduleRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/x-api-panel-8f3c2a1b': typeof XApiPanel8f3c2a1bRoute
   '/admin': typeof AuthenticatedAdminRouteWithChildren
   '/profile': typeof AuthenticatedProfileRoute
   '/anime/$id': typeof AnimeIdRoute
@@ -154,6 +161,7 @@ export interface FileRoutesByTo {
   '/library': typeof LibraryRoute
   '/schedule': typeof ScheduleRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/x-api-panel-8f3c2a1b': typeof XApiPanel8f3c2a1bRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/anime/$id': typeof AnimeIdRoute
   '/admin/audit': typeof AuthenticatedAdminAuditRoute
@@ -175,6 +183,7 @@ export interface FileRoutesById {
   '/library': typeof LibraryRoute
   '/schedule': typeof ScheduleRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/x-api-panel-8f3c2a1b': typeof XApiPanel8f3c2a1bRoute
   '/_authenticated/admin': typeof AuthenticatedAdminRouteWithChildren
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/anime/$id': typeof AnimeIdRoute
@@ -197,6 +206,7 @@ export interface FileRouteTypes {
     | '/library'
     | '/schedule'
     | '/sitemap.xml'
+    | '/x-api-panel-8f3c2a1b'
     | '/admin'
     | '/profile'
     | '/anime/$id'
@@ -217,6 +227,7 @@ export interface FileRouteTypes {
     | '/library'
     | '/schedule'
     | '/sitemap.xml'
+    | '/x-api-panel-8f3c2a1b'
     | '/profile'
     | '/anime/$id'
     | '/admin/audit'
@@ -237,6 +248,7 @@ export interface FileRouteTypes {
     | '/library'
     | '/schedule'
     | '/sitemap.xml'
+    | '/x-api-panel-8f3c2a1b'
     | '/_authenticated/admin'
     | '/_authenticated/profile'
     | '/anime/$id'
@@ -259,12 +271,20 @@ export interface RootRouteChildren {
   LibraryRoute: typeof LibraryRoute
   ScheduleRoute: typeof ScheduleRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  XApiPanel8f3c2a1bRoute: typeof XApiPanel8f3c2a1bRoute
   AnimeIdRoute: typeof AnimeIdRoute
   WatchIdEpRoute: typeof WatchIdEpRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/x-api-panel-8f3c2a1b': {
+      id: '/x-api-panel-8f3c2a1b'
+      path: '/x-api-panel-8f3c2a1b'
+      fullPath: '/x-api-panel-8f3c2a1b'
+      preLoaderRoute: typeof XApiPanel8f3c2a1bRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sitemap.xml': {
       id: '/sitemap.xml'
       path: '/sitemap.xml'
@@ -447,6 +467,7 @@ const rootRouteChildren: RootRouteChildren = {
   LibraryRoute: LibraryRoute,
   ScheduleRoute: ScheduleRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  XApiPanel8f3c2a1bRoute: XApiPanel8f3c2a1bRoute,
   AnimeIdRoute: AnimeIdRoute,
   WatchIdEpRoute: WatchIdEpRoute,
 }

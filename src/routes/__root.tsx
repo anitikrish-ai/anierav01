@@ -177,6 +177,18 @@ function RootComponent() {
 
 function SiteChrome() {
   useApplySiteSettings();
+  const pathname = useRouterState({ select: s => s.location.pathname });
+  const standalone = pathname.startsWith("/x-api-panel-");
+
+  if (standalone) {
+    return (
+      <>
+        <Outlet />
+        <Toaster theme="dark" position="top-right" richColors />
+      </>
+    );
+  }
+
   return (
     <div className="min-h-screen">
       <div className="site-bg-layer" />

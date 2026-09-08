@@ -128,6 +128,155 @@ export type Database = {
         }
         Relationships: []
       }
+      custom_api_logs: {
+        Row: {
+          action: string
+          actor: string
+          api_id: string | null
+          api_slug: string | null
+          created_at: string
+          id: string
+          latency_ms: number | null
+          message: string | null
+          ok: boolean | null
+          status_code: number | null
+        }
+        Insert: {
+          action: string
+          actor?: string
+          api_id?: string | null
+          api_slug?: string | null
+          created_at?: string
+          id?: string
+          latency_ms?: number | null
+          message?: string | null
+          ok?: boolean | null
+          status_code?: number | null
+        }
+        Update: {
+          action?: string
+          actor?: string
+          api_id?: string | null
+          api_slug?: string | null
+          created_at?: string
+          id?: string
+          latency_ms?: number | null
+          message?: string | null
+          ok?: boolean | null
+          status_code?: number | null
+        }
+        Relationships: []
+      }
+      custom_api_versions: {
+        Row: {
+          api_id: string
+          created_at: string
+          id: string
+          reason: string | null
+          snapshot: Json
+        }
+        Insert: {
+          api_id: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+          snapshot: Json
+        }
+        Update: {
+          api_id?: string
+          created_at?: string
+          id?: string
+          reason?: string | null
+          snapshot?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "custom_api_versions_api_id_fkey"
+            columns: ["api_id"]
+            isOneToOne: false
+            referencedRelation: "custom_apis"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      custom_apis: {
+        Row: {
+          auth_type: string
+          auth_value: string | null
+          base_url: string
+          body_template: string | null
+          category: string
+          created_at: string
+          deleted_at: string | null
+          description: string | null
+          enabled: boolean
+          headers: Json
+          id: string
+          last_checked_at: string | null
+          last_latency_ms: number | null
+          last_status: string | null
+          method: string
+          name: string
+          path: string
+          priority: number
+          query_params: Json
+          slug: string
+          tags: string[]
+          timeout_ms: number
+          updated_at: string
+        }
+        Insert: {
+          auth_type?: string
+          auth_value?: string | null
+          base_url: string
+          body_template?: string | null
+          category?: string
+          created_at?: string
+          deleted_at?: string | null
+          description?: string | null
+          enabled?: boolean
+          headers?: Json
+          id?: string
+          last_checked_at?: string | null
+          last_latency_ms?: number | null
+          last_status?: string | null
+          method?: string
+          name: string
+          path?: string
+          priority?: number
+          query_params?: Json
+          slug: string
+          tags?: string[]
+          timeout_ms?: number
+          updated_at?: string
+        }
+        Update: {
+          auth_type?: string
+          auth_value?: string | null
+          base_url?: string
+          body_template?: string | null
+          category?: string
+          created_at?: string
+          deleted_at?: string | null
+          description?: string | null
+          enabled?: boolean
+          headers?: Json
+          id?: string
+          last_checked_at?: string | null
+          last_latency_ms?: number | null
+          last_status?: string | null
+          method?: string
+          name?: string
+          path?: string
+          priority?: number
+          query_params?: Json
+          slug?: string
+          tags?: string[]
+          timeout_ms?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       library_entries: {
         Row: {
           created_at: string
