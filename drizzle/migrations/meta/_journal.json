@@ -8,6 +8,13 @@
       "when": 1788849295878,
       "tag": "0000_create_custom_api_registry",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1788970253884,
+      "tag": "0001_proxy_endpoints_and_logs",
+      "breakpoints": true
     }
   ]
 }
