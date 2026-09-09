@@ -335,6 +335,7 @@ export type Database = {
           display_name: string | null
           id: string
           mal_username: string | null
+          proxy_endpoint_id: string | null
           updated_at: string
         }
         Insert: {
@@ -343,6 +344,7 @@ export type Database = {
           display_name?: string | null
           id: string
           mal_username?: string | null
+          proxy_endpoint_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -351,7 +353,95 @@ export type Database = {
           display_name?: string | null
           id?: string
           mal_username?: string | null
+          proxy_endpoint_id?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      proxy_endpoints: {
+        Row: {
+          created_at: string
+          display_ip: string | null
+          enabled: boolean
+          id: string
+          label: string
+          last_checked_at: string | null
+          last_status: string | null
+          notes: string | null
+          priority: number
+          region: string | null
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          display_ip?: string | null
+          enabled?: boolean
+          id?: string
+          label: string
+          last_checked_at?: string | null
+          last_status?: string | null
+          notes?: string | null
+          priority?: number
+          region?: string | null
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          display_ip?: string | null
+          enabled?: boolean
+          id?: string
+          label?: string
+          last_checked_at?: string | null
+          last_status?: string | null
+          notes?: string | null
+          priority?: number
+          region?: string | null
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
+      }
+      proxy_request_logs: {
+        Row: {
+          client_ip: string | null
+          created_at: string
+          id: string
+          latency_ms: number | null
+          message: string | null
+          ok: boolean | null
+          proxy_id: string | null
+          proxy_label: string | null
+          status_code: number | null
+          target_host: string | null
+          user_id: string | null
+        }
+        Insert: {
+          client_ip?: string | null
+          created_at?: string
+          id?: string
+          latency_ms?: number | null
+          message?: string | null
+          ok?: boolean | null
+          proxy_id?: string | null
+          proxy_label?: string | null
+          status_code?: number | null
+          target_host?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          client_ip?: string | null
+          created_at?: string
+          id?: string
+          latency_ms?: number | null
+          message?: string | null
+          ok?: boolean | null
+          proxy_id?: string | null
+          proxy_label?: string | null
+          status_code?: number | null
+          target_host?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
