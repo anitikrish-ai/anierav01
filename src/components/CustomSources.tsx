@@ -22,14 +22,15 @@ function extract(body: string): Item[] {
 }
 
 /** Shows results from admin-added custom APIs. Hidden when none are enabled. */
-export function CustomSources({ query, heading = "Extra sources" }: { query: string; heading?: string }) {
+export function CustomSources({ query = "", heading = "Extra sources", searchable = false }: { query?: string; heading?: string; searchable?: boolean }) {
+  const [own, setOwn] = useState("");
   const listFn = useServerFn(listEnabledCustomApis);
   const callFn = useServerFn(callCustomApi);
   const [proxyId] = useProxyPref();
   const apis = useQuery({ queryKey: ["custom-apis"], queryFn: () => listFn(), staleTime: 300_000 });
   const [slug, setSlug] = useState<string | null>(null);
   const active = slug ?? apis.data?.[0]?.slug ?? null;
-  const q = query.trim();
+  const q = (searchable && own.trim() ? own : query).trim();
 
   const res = useQuery({
     queryKey: ["custom-api-call", active, q, proxyId],
@@ -59,6 +60,14 @@ export function CustomSources({ query, heading = "Extra sources" }: { query: str
           ))}
         </div>
       </div>
+      {searchable && (
+        <input
+          value={own}
+          onChange={e => setOwn(e.target.value)}
+          placeholder="Search this source…"
+          className="mb-3 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white"
+        />
+      )}
       {!q ? (
         <p className="text-sm text-white/50">Search for a title to see results from this source.</p>
       ) : res.isLoading ? (

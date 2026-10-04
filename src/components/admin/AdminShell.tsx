@@ -10,6 +10,8 @@ import {
   ShieldCheck,
   DatabaseBackup,
   ScrollText,
+  Globe,
+  Boxes,
 } from "lucide-react";
 
 const items: { to: string; label: string; icon: typeof LayoutDashboard; exact?: boolean }[] = [
@@ -17,8 +19,10 @@ const items: { to: string; label: string; icon: typeof LayoutDashboard; exact?: 
   { to: "/admin/settings", label: "Global Settings", icon: Settings },
   { to: "/admin/theme", label: "Theme & Background", icon: Palette },
   { to: "/admin/providers", label: "API Providers", icon: Plug },
+  { to: "/admin/apis", label: "Custom APIs", icon: Boxes },
+  { to: "/admin/proxies", label: "Proxies & Logs", icon: Globe },
   { to: "/admin/seo", label: "SEO Overrides", icon: Search },
-  { to: "/admin/users", label: "Administrators", icon: Users },
+  { to: "/admin/users", label: "Users & Roles", icon: Users },
   { to: "/admin/backup", label: "Backup & Restore", icon: DatabaseBackup },
   { to: "/admin/audit", label: "Audit Trail", icon: ScrollText },
 ];
