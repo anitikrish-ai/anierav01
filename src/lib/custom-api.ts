@@ -44,6 +44,7 @@ export const callCustomApi = createServerFn({ method: "POST" })
       .object({
         slug: z.string().min(1).max(60),
         query: z.string().max(500).default(""),
+        proxyId: z.string().uuid().nullable().optional(),
       })
       .parse(d),
   )
@@ -56,7 +57,7 @@ export const callCustomApi = createServerFn({ method: "POST" })
       .eq("enabled", true)
       .is("deleted_at", null)
       .maybeSingle();
-    if (error || !a) return { ok: false as const, status: 404, body: "API not found or disabled" };
+    if (error || !a) return { ok: false as const, status: 404, body: "API not found or disabled", viaProxy: null };
 
     const started = Date.now();
     try {
@@ -69,20 +70,27 @@ export const callCustomApi = createServerFn({ method: "POST" })
       if (a.auth_type === "api_key_header" && a.auth_value) headers["X-API-Key"] = a.auth_value;
       if (a.auth_type === "query_key" && a.auth_value) url.searchParams.set("api_key", a.auth_value);
 
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), a.timeout_ms ?? 10000);
-      const res = await fetch(url.toString(), {
-        method: a.method ?? "GET",
-        headers,
-        body:
-          a.method !== "GET" && a.body_template
-            ? String(a.body_template).replace("{query}", data.query)
-            : undefined,
-        signal: controller.signal,
+      const method = String(a.method ?? "GET").toUpperCase();
+      const body =
+        method !== "GET" && a.body_template
+          ? String(a.body_template).replace("{query}", data.query)
+          : undefined;
+      const { proxiedFetch, clientIpFrom } = await import("./proxy.server");
+      const { getRequest } = await import("@tanstack/react-start/server");
+      let clientIp: string | null = null;
+      try { clientIp = clientIpFrom(getRequest().headers); } catch { /* no request */ }
+      const r = await proxiedFetch({
+        target: url.toString(),
+        // relays only support simple GET passthrough
+        proxyId: method === "GET" ? data.proxyId ?? null : null,
+        init: { method, headers, body },
+        timeoutMs: a.timeout_ms ?? 10000,
+        clientIp,
       });
-      clearTimeout(timer);
+      if (r.status === 0) throw new Error(r.body);
+      const res = { ok: r.ok, status: r.status };
       const latency = Date.now() - started;
-      const text = (await res.text()).slice(0, 100000);
+      const text = r.body.slice(0, 100000);
       await db.from("custom_api_logs").insert({
         api_id: a.id,
         api_slug: a.slug,
@@ -92,7 +100,7 @@ export const callCustomApi = createServerFn({ method: "POST" })
         latency_ms: latency,
         actor: "app",
       });
-      return { ok: res.ok, status: res.status, body: text };
+      return { ok: res.ok, status: res.status, body: text, viaProxy: r.viaProxy };
     } catch (e: any) {
       const message = String(e?.message ?? e).slice(0, 300);
       await db.from("custom_api_logs").insert({
@@ -103,6 +111,6 @@ export const callCustomApi = createServerFn({ method: "POST" })
         message,
         actor: "app",
       });
-      return { ok: false as const, status: 0, body: message };
+      return { ok: false as const, status: 0, body: message, viaProxy: null };
     }
   });
