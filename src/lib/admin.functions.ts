@@ -268,3 +268,95 @@ export const getAdminStats = createServerFn({ method: "GET" })
       admins: admRes.count ?? 0,
     };
   });
+
+/* ---------------- Users by email ---------------- */
+
+export const listAllUsers = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 500 });
+    if (error) throw new Error(error.message);
+    const { data: roles } = await (supabaseAdmin as any).from("user_roles").select("user_id, role");
+    const { data: profiles } = await (supabaseAdmin as any).from("profiles").select("id, display_name");
+    return data.users.map(u => ({
+      id: u.id,
+      email: u.email ?? "",
+      created_at: u.created_at,
+      last_sign_in_at: u.last_sign_in_at ?? null,
+      display_name: (profiles ?? []).find((p: any) => p.id === u.id)?.display_name ?? null,
+      roles: (roles ?? []).filter((r: any) => r.user_id === u.id).map((r: any) => r.role as string),
+    }));
+  });
+
+const RoleEnum = z.enum(["admin", "moderator", "user"]);
+
+export const setUserRole = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) =>
+    z.object({
+      email: z.string().trim().email().max(255),
+      role: RoleEnum,
+      grant: z.boolean(),
+    }).parse(d),
+  )
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: list, error } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+    if (error) throw new Error(error.message);
+    const user = list.users.find(u => (u.email ?? "").toLowerCase() === data.email.toLowerCase());
+    if (!user) throw new Error("No account with that email. They must sign up first.");
+    if (!data.grant && data.role === "admin" && user.id === context.userId) {
+      throw new Error("You cannot revoke your own admin role");
+    }
+    const db = supabaseAdmin as any;
+    const { error: e2 } = data.grant
+      ? await db.from("user_roles").upsert({ user_id: user.id, role: data.role }, { onConflict: "user_id,role", ignoreDuplicates: true })
+      : await db.from("user_roles").delete().eq("user_id", user.id).eq("role", data.role);
+    if (e2) throw new Error(e2.message);
+    await writeAudit(context, { action: data.grant ? "grant_role" : "revoke_role", area: "user_roles", target_id: user.id, details: { role: data.role, email: data.email } });
+    return { ok: true };
+  });
+
+/* ---------------- Custom APIs (panel-added) ---------------- */
+
+export const listCustomApisAdmin = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data, error } = await (supabaseAdmin as any)
+      .from("custom_apis")
+      .select("id, slug, name, category, description, base_url, path, method, enabled, priority, tags, last_status, last_latency_ms, last_checked_at")
+      .is("deleted_at", null)
+      .order("priority", { ascending: true });
+    if (error) throw new Error(error.message);
+    return (data ?? []) as any[];
+  });
+
+export const toggleCustomApiAdmin = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid(), enabled: z.boolean() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await (supabaseAdmin as any).from("custom_apis").update({ enabled: data.enabled }).eq("id", data.id);
+    if (error) throw new Error(error.message);
+    await writeAudit(context, { action: data.enabled ? "enable" : "disable", area: "custom_api", target_id: data.id });
+    return { ok: true };
+  });
+
+export const softDeleteCustomApiAdmin = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await (supabaseAdmin as any)
+      .from("custom_apis").update({ deleted_at: new Date().toISOString(), enabled: false }).eq("id", data.id);
+    if (error) throw new Error(error.message);
+    await writeAudit(context, { action: "soft_delete", area: "custom_api", target_id: data.id });
+    return { ok: true };
+  });
