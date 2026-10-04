@@ -1,4 +1,4 @@
-import { createServerFn } from "@tanstack/react-start";
+import { createServerFn, getRequest } from "@tanstack/react-start";
 import { z } from "zod";
 
 /**
@@ -76,7 +76,6 @@ export const callCustomApi = createServerFn({ method: "POST" })
           ? String(a.body_template).replace("{query}", data.query)
           : undefined;
       const { proxiedFetch, clientIpFrom } = await import("./proxy.server");
-      const { getRequest } = await import("@tanstack/react-start/server");
       let clientIp: string | null = null;
       try { clientIp = clientIpFrom(getRequest().headers); } catch { /* no request */ }
       const r = await proxiedFetch({
