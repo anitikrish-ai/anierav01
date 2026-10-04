@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { CustomSources } from "@/components/CustomSources";
 import { useEffect, useState } from "react";
 
 import { useQuery } from "@tanstack/react-query";
@@ -134,6 +135,7 @@ function SchedulePage() {
         />
       )}
 
+      <CustomSources searchable heading="Extra sources" />
     </div>
   );
 }

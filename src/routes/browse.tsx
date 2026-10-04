@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { CustomSources } from "@/components/CustomSources";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { z } from "zod";
 import { jikan } from "@/lib/jikan";
@@ -274,6 +275,7 @@ function BrowsePage() {
           hint="Try a different spelling, or loosen the filters."
         />
       )}
+      <CustomSources query={search.q ?? ""} searchable heading="Extra sources" />
     </div>
   );
 }

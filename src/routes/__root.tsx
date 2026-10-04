@@ -1,4 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ProxyChooser } from "@/components/ProxyChooser";
 import {
   Outlet,
   Link,
@@ -198,8 +199,9 @@ function SiteChrome() {
       <main className="mx-auto max-w-7xl px-4 pb-20 pt-4 sm:px-6">
         <Outlet />
       </main>
-      <footer className="border-t border-white/5 py-8 text-center text-xs text-white/40">
-        AniEra · Powered by Jikan, VidNest & MegaPlay · Streams are embedded from third-party sources.
+      <footer className="space-y-3 border-t border-white/5 py-8 text-center text-xs text-white/40">
+        <ProxyChooser />
+        <div>AniEra · Powered by Jikan, VidNest & MegaPlay · Streams are embedded from third-party sources.</div>
       </footer>
       <Toaster theme="dark" position="top-right" richColors />
     </div>

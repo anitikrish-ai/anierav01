@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { CustomSources } from "@/components/CustomSources";
 import { useQuery } from "@tanstack/react-query";
 import { jikan, bestTitle } from "@/lib/jikan";
 import { AnimeGrid, GridSkeleton } from "@/components/AnimeCard";
@@ -151,6 +152,8 @@ function AnimePage() {
           </div>
         </section>
       ) : null}
+
+      <CustomSources query={bestTitle(a)} heading="More from extra sources" />
 
       <Reviews malId={malId} animeTitle={bestTitle(a)} />
     </div>
