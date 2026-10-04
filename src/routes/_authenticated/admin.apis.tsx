@@ -69,7 +69,7 @@ function ApisPage() {
                 <button onClick={() => { if (confirm(`Delete ${a.name}?`)) delMut.mutate(a.id); }} className="flex items-center gap-1 rounded bg-red-500/20 px-2 py-1 text-xs text-red-200 hover:bg-red-500/30"><Trash2 className="h-3.5 w-3.5" /></button>
               </div>
               {result?.slug === a.slug && (
-                <pre className="mt-2 max-h-64 overflow-auto rounded-lg bg-black/40 p-3 text-[11px] text-white/80">{result.text}</pre>
+                <pre className="mt-2 max-h-64 overflow-auto rounded-lg bg-black/40 p-3 text-[11px] text-white/80">{result?.text}</pre>
               )}
             </li>
           ))}

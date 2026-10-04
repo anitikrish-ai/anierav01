@@ -83,7 +83,7 @@ function UsersPage() {
               </div>
               <div className="flex flex-wrap gap-1">
                 {u.roles.length === 0 && <span className="text-[11px] text-white/40">no roles</span>}
-                {u.roles.map(r => (
+                {u.roles.map((r: string) => (
                   <button
                     key={r}
                     title={`Revoke ${r}`}
