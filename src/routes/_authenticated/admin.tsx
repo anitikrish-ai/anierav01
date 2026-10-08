@@ -38,10 +38,11 @@ function AdminLayout() {
             instructions.
           </p>
           <button
-            onClick={() => router.invalidate()}
-            className="mt-4 rounded-lg bg-white/10 px-4 py-2 text-sm text-white hover:bg-white/20"
+            onClick={() => { router.invalidate(); q.refetch(); }}
+            disabled={q.isFetching}
+            className="mt-4 rounded-lg bg-white/10 px-4 py-2 text-sm text-white hover:bg-white/20 disabled:opacity-50"
           >
-            Re-check
+            {q.isFetching ? "Checking…" : "Re-check"}
           </button>
         </div>
       </div>
