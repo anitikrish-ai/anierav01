@@ -410,3 +410,81 @@ input, select, textarea {
   }
 }
 
+
+/* ===== Liquid Glass: two layers. Glass = navigation/controls; content = flat. ===== */
+:root {
+  --glass-bg: rgba(255, 255, 255, 0.14);
+  --glass-border: rgba(255, 255, 255, 0.25);
+  --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  --glass-blur: blur(20px) saturate(180%);
+  --surface: oklch(0.18 0.03 280);
+  --surface-border: oklch(1 0 0 / 0.08);
+  --z-sticky: 10; --z-nav: 20; --z-dropdown: 30; --z-modal: 40; --z-toast: 50;
+  --nav-h: 64px;
+}
+html { scroll-behavior: smooth; scroll-padding-top: calc(var(--nav-h) + 12px); }
+body { overflow-x: clip; }
+
+@utility liquid-glass {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--glass-shadow), var(--glass-highlight);
+}
+/* Flat content surface — cards, panels, media frames. */
+@utility surface {
+  background: var(--surface);
+  border: 1px solid var(--surface-border);
+}
+.glass-press { transition: transform 160ms cubic-bezier(.22,1,.36,1), box-shadow 160ms; }
+.glass-press:active { transform: scale(.97); }
+.nav-hidden { transform: translateY(-110%); }
+.skip-link { position: absolute; left: 12px; top: -60px; z-index: 60; padding: 10px 16px; border-radius: 999px; background: var(--primary); color: var(--primary-foreground); }
+.skip-link:focus { top: 12px; }
+:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+@media (max-width: 767px) {
+  :root { --glass-blur: blur(16px) saturate(170%); }
+  .has-tabbar { padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
+}
+
+/* Light theme (manual, or system when the person prefers light). */
+html[data-theme="light"] { color-scheme: light; }
+@media (prefers-color-scheme: light) { html:not([data-theme="dark"]):not([data-theme="light"]) { color-scheme: light; } }
+html[data-theme="light"] {
+  --background: oklch(0.97 0.01 280); --foreground: oklch(0.2 0.03 280);
+  --card: oklch(1 0 0); --card-foreground: oklch(0.2 0.03 280);
+  --muted-foreground: oklch(0.45 0.03 280); --border: oklch(0 0 0 / 0.1);
+  --popover: oklch(1 0 0); --popover-foreground: oklch(0.2 0.03 280);
+  --secondary: oklch(0.93 0.02 280); --secondary-foreground: oklch(0.2 0.03 280);
+  --glass-bg: rgba(255, 255, 255, 0.55); --glass: rgba(255,255,255,.55);
+  --glass-border: rgba(255, 255, 255, 0.6);
+  --surface: oklch(1 0 0); --surface-border: oklch(0 0 0 / 0.08);
+}
+html[data-theme="light"] body {
+  background-color: oklch(0.97 0.01 280);
+  background-image:
+    radial-gradient(55% 45% at 12% 8%, oklch(0.80 0.12 282 / 0.45) 0%, transparent 60%),
+    radial-gradient(45% 40% at 92% 18%, oklch(0.85 0.10 220 / 0.4) 0%, transparent 60%),
+    linear-gradient(180deg, oklch(0.98 0.01 280), oklch(0.95 0.02 290));
+}
+/* Map hard-coded light-on-dark text to readable tokens in light theme (content outside images). */
+html[data-theme="light"] :where(.text-white):not(.on-media, .on-media *) { color: var(--foreground); }
+html[data-theme="light"] :where(.text-white\/80, .text-white\/70, .text-white\/60):not(.on-media *) { color: oklch(0.38 0.03 280); }
+html[data-theme="light"] :where(.text-white\/50, .text-white\/40):not(.on-media *) { color: oklch(0.45 0.03 280); }
+html[data-theme="light"] :where(.bg-white\/5, .bg-white\/10):not(.on-media *) { background-color: oklch(0 0 0 / 0.06); }
+html[data-theme="light"] :where(.border-white\/5, .border-white\/10) { border-color: oklch(0 0 0 / 0.1); }
+html[data-theme="light"] .site-bg-overlay { background-color: rgba(255,255,255, var(--admin-bg-overlay)); }
+
+/* Accessibility fallbacks */
+@media (prefers-reduced-transparency: reduce) {
+  .liquid-glass, .glass, .glass-strong { backdrop-filter: none; background: oklch(0.18 0.03 280 / 0.92); }
+  html[data-theme="light"] :is(.liquid-glass, .glass, .glass-strong) { background: rgba(255,255,255,.92); }
+}
+@supports not (backdrop-filter: blur(1px)) {
+  .liquid-glass, .glass, .glass-strong { background: oklch(0.18 0.03 280 / 0.92); }
+}
+@media (prefers-contrast: more) {
+  .liquid-glass, .glass, .glass-strong { backdrop-filter: none; background: var(--background); border: 2px solid var(--foreground); box-shadow: none; }
+  .surface { border-width: 2px; border-color: var(--foreground); }
+}
