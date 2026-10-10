@@ -23,7 +23,8 @@ export function Navbar() {
     const onScroll = () => {
       const y = window.scrollY;
       setScrolled(y > 8);
-      setHidden(y > 120 && y > last + 4 ? true : y < last - 4 ? false : (h => h) as never);
+      if (y > 120 && y > last + 4) setHidden(true);
+      else if (y < last - 4 || y < 120) setHidden(false);
       last = y;
     };
     onScroll();
