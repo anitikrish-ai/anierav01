@@ -14,11 +14,17 @@ export function ThemeControl() {
     } catch { /* System appearance works when storage is unavailable. */ }
   }, []);
   useEffect(() => {
-    document.documentElement.dataset.theme = theme;
+    const mq = window.matchMedia("(prefers-color-scheme: light)");
+    const apply = () => {
+      document.documentElement.dataset.theme = theme === "system" ? (mq.matches ? "light" : "dark") : theme;
+    };
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
   }, [theme]);
   const Icon = theme === "system" ? Monitor : theme === "light" ? Sun : Moon;
   return (
-    <Button variant="ghost" size="icon" aria-label={`Appearance: ${theme}. Change appearance`} title={`Appearance: ${theme}`} onClick={() => {
+    <Button variant="ghost" size="icon" className="glass-press min-h-11 min-w-11 shrink-0 rounded-full" aria-label={`Appearance: ${theme}. Change appearance`} title={`Appearance: ${theme}`} onClick={() => {
       const next = themes[(themes.indexOf(theme) + 1) % themes.length];
       setTheme(next);
       try { localStorage.setItem("aniera:theme", next); } catch { /* Non-persistent preference is still usable. */ }

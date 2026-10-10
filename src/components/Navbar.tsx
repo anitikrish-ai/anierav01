@@ -4,6 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
 import { jikan, bestTitle } from "@/lib/jikan";
 import { supabase } from "@/integrations/supabase/client";
+import { ThemeControl } from "@/components/ThemeControl";
+import { Home, Compass, CalendarDays, Library, Shield } from "lucide-react";
 
 export function Navbar() {
   const navigate = useNavigate();
@@ -12,11 +14,19 @@ export function Navbar() {
   const [debounced, setDebounced] = useState("");
   const pathname = useRouterState({ select: s => s.location.pathname });
   const [scrolled, setScrolled] = useState(false);
+  const [hidden, setHidden] = useState(false);
   const { user, signedIn } = useAuth();
   const wrapRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
+    let last = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      setScrolled(y > 8);
+      if (y > 120 && y > last + 4) setHidden(true);
+      else if (y < last - 4 || y < 120) setHidden(false);
+      last = y;
+    };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -69,19 +79,19 @@ export function Navbar() {
   });
 
   const links = [
-    { to: "/", label: "Home" },
-    { to: "/browse", label: "Browse" },
-    { to: "/schedule", label: "Schedule" },
-    { to: "/library", label: "Library" },
-    ...(isAdmin.data ? [{ to: "/admin", label: "Admin" }] : []),
+    { to: "/", label: "Home", icon: Home },
+    { to: "/browse", label: "Browse", icon: Compass },
+    { to: "/schedule", label: "Schedule", icon: CalendarDays },
+    { to: "/library", label: "Library", icon: Library },
+    ...(isAdmin.data ? [{ to: "/admin", label: "Admin", icon: Shield }] : []),
   ];
 
   return (
+    <>
     <header
-      className={`sticky top-0 z-50 transition-all duration-300 ${
-        scrolled ? "glass-strong" : "bg-transparent"
-      }`}
+      className={`sticky top-0 z-[20] px-2 pt-2 transition-transform duration-300 ease-[cubic-bezier(.22,1,.36,1)] sm:px-4 ${hidden && !open ? "nav-hidden" : ""}`}
     >
+      <div className={`mx-auto max-w-7xl rounded-[28px] transition-shadow ${scrolled ? "liquid-glass" : ""}`}>
       <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3 sm:px-6">
         <Link to="/" className="flex shrink-0 items-center gap-2">
           <div className="grid h-8 w-8 place-items-center rounded-xl bg-gradient-to-br from-neon-cyan to-neon-magenta glow-cyan">
@@ -109,8 +119,8 @@ export function Navbar() {
 
         <div ref={wrapRef} className="relative ml-auto min-w-0 flex-1 max-w-md">
         <form onSubmit={submit}>
-          <div className="glass flex items-center gap-2 rounded-full px-4 py-2">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0 text-white/60">
+          <div className="liquid-glass flex min-h-11 items-center gap-2 rounded-full px-4 py-2">
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="shrink-0 text-white/60">
               <circle cx="11" cy="11" r="7" /><path d="m20 20-3-3" />
             </svg>
             <input
@@ -118,6 +128,7 @@ export function Navbar() {
               onChange={e => { setQ(e.target.value); setOpen(true); }}
               onFocus={() => setOpen(true)}
               placeholder="Search anime…"
+              aria-label="Search anime"
               className="min-w-0 flex-1 bg-transparent text-sm text-white placeholder:text-white/40 focus:outline-none"
             />
           </div>
@@ -161,6 +172,7 @@ export function Navbar() {
           )}
         </div>
 
+        <ThemeControl />
         {signedIn ? (
           <Link to="/profile" className="shrink-0 rounded-full glass p-1 pr-3 transition hover:bg-white/10" title="Profile">
             <div className="flex items-center gap-2">
@@ -182,6 +194,20 @@ export function Navbar() {
           </Link>
         )}
       </div>
+      </div>
     </header>
+    <nav aria-label="Primary" className="liquid-glass fixed inset-x-3 z-[20] flex justify-around rounded-[28px] p-1.5 md:hidden" style={{ bottom: "calc(12px + env(safe-area-inset-bottom))" }}>
+      {links.map(l => {
+        const active = l.to === "/" ? pathname === "/" : pathname.startsWith(l.to);
+        const Icon = l.icon;
+        return (
+          <Link key={l.to} to={l.to} aria-current={active ? "page" : undefined}
+            className={`glass-press flex min-h-11 min-w-11 flex-1 flex-col items-center justify-center gap-0.5 rounded-[20px] text-[10px] font-medium ${active ? "bg-white/15 text-white" : "text-white/70"}`}>
+            <Icon className="h-5 w-5" aria-hidden="true" />{l.label}
+          </Link>
+        );
+      })}
+    </nav>
+    </>
   );
 }

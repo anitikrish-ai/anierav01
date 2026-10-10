@@ -195,11 +195,12 @@ function SiteChrome() {
     <div className="min-h-screen">
       <div className="site-bg-layer" />
       <div className="site-bg-overlay" />
+      <a href="#main" className="skip-link">Skip to content</a>
       <Navbar />
-      <main className="mx-auto max-w-7xl px-4 pb-20 pt-4 sm:px-6">
+      <main id="main" tabIndex={-1} className="has-tabbar mx-auto max-w-7xl px-4 pb-20 pt-4 sm:px-6">
         <Outlet />
       </main>
-      <footer className="space-y-3 border-t border-white/5 py-8 text-center text-xs text-white/40">
+      <footer className="has-tabbar space-y-3 border-t border-white/5 py-8 text-center text-xs text-white/40">
         <ProxyChooser />
         <div>AniEra · Powered by Jikan, VidNest & MegaPlay · Streams are embedded from third-party sources.</div>
       </footer>
