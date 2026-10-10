@@ -107,8 +107,8 @@ export function Navbar() {
               <Link
                 key={l.to}
                 to={l.to}
-                className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
-                  active ? "bg-white/10 text-white" : "text-white/70 hover:bg-white/5 hover:text-white"
+                className={`glass-press rounded-full px-3 py-1.5 text-sm font-medium ${
+                  active ? "liquid-glass text-white" : "text-white/70 hover:bg-white/5 hover:text-white"
                 }`}
               >
                 {l.label}
@@ -196,14 +196,28 @@ export function Navbar() {
       </div>
       </div>
     </header>
-    <nav aria-label="Primary" className="liquid-glass fixed inset-x-3 z-[20] flex justify-around rounded-[28px] p-1.5 md:hidden" style={{ bottom: "calc(12px + env(safe-area-inset-bottom))" }}>
+    <svg width="0" height="0" aria-hidden="true" className="absolute">
+      <filter id="liquid-lens" x="0" y="0" width="100%" height="100%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.008 0.012" numOctaves="2" seed="7" result="n" />
+        <feGaussianBlur in="n" stdDeviation="2" result="nb" />
+        <feDisplacementMap in="SourceGraphic" in2="nb" scale="38" xChannelSelector="R" yChannelSelector="G" />
+      </filter>
+    </svg>
+    <nav aria-label="Primary" className="liquid-glass bounce-in fixed inset-x-3 z-[20] grid rounded-[28px] p-1.5 md:hidden" style={{ bottom: "calc(12px + env(safe-area-inset-bottom))", gridTemplateColumns: `repeat(${links.length}, minmax(0,1fr))` }}>
+      {(() => {
+        const idx = links.findIndex(l => l.to === "/" ? pathname === "/" : pathname.startsWith(l.to));
+        return idx < 0 ? null : (
+          <span aria-hidden="true" className="tab-pill absolute bottom-1.5 left-1.5 top-1.5 rounded-[20px] bg-white/15 shadow-[inset_0_1px_0_rgba(255,255,255,.35)]"
+            style={{ width: `calc((100% - 12px) / ${links.length})`, transform: `translateX(${idx * 100}%)` }} />
+        );
+      })()}
       {links.map(l => {
         const active = l.to === "/" ? pathname === "/" : pathname.startsWith(l.to);
         const Icon = l.icon;
         return (
           <Link key={l.to} to={l.to} aria-current={active ? "page" : undefined}
-            className={`glass-press flex min-h-11 min-w-11 flex-1 flex-col items-center justify-center gap-0.5 rounded-[20px] text-[10px] font-medium ${active ? "bg-white/15 text-white" : "text-white/70"}`}>
-            <Icon className="h-5 w-5" aria-hidden="true" />{l.label}
+            className={`glass-press relative flex min-h-11 flex-col items-center justify-center gap-0.5 rounded-[20px] text-[10px] font-medium ${active ? "text-white" : "text-white/70"}`}>
+            <Icon className={`h-5 w-5 transition-transform duration-500 ease-[var(--ease-spring)] ${active ? "-translate-y-0.5 scale-110" : ""}`} aria-hidden="true" />{l.label}
           </Link>
         );
       })}
