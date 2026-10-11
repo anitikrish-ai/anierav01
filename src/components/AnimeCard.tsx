@@ -11,7 +11,7 @@ function AnimeCardImpl({ anime }: { anime: Anime }) {
     <Link
       to="/anime/$id"
       params={{ id: String(anime.mal_id) }}
-      className="sheen group relative block overflow-hidden rounded-2xl surface transition-transform duration-300 hover:-translate-y-1.5 hover:glow-cyan"
+      className="sheen card-lift group relative block overflow-hidden rounded-2xl surface"
       style={{ contentVisibility: "auto", containIntrinsicSize: "300px 450px" } as React.CSSProperties}
     >
       <div className="aspect-[2/3] overflow-hidden">
@@ -20,10 +20,10 @@ function AnimeCardImpl({ anime }: { anime: Anime }) {
           alt={title}
           loading="lazy"
           decoding="async"
-          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
         />
       </div>
-      <div className="on-media pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent p-3 pt-10 transition-transform duration-300 group-hover:-translate-y-0.5">
+      <div className="on-media pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent p-3 pt-10">
         <h3 className="truncate text-sm font-semibold text-white">{title}</h3>
         <div className="mt-1 flex items-center justify-between text-[11px] text-white/70">
           <span>{anime.type ?? "—"} · {anime.episodes ?? "?"} ep</span>

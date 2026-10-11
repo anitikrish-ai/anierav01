@@ -1,0 +1,11 @@
+{
+  "duration": { "instant": "100ms", "fast": "200ms", "base": "300ms", "slow": "500ms" },
+  "easing": {
+    "standard": "cubic-bezier(0.4, 0, 0.2, 1)",
+    "out": "cubic-bezier(0.22, 1, 0.36, 1)",
+    "in": "cubic-bezier(0.4, 0, 1, 1)",
+    "spring": "linear(0, .009, .035 2.1%, .141 4.4%, .723 12.9%, .938 16.7%, 1.017 19.5%, 1.077 22.6%, 1.101 25.6%, 1.097 28.9%, 1.054 35.6%, 1.007 44.6%, .991 51.5%, 1.003 68.8%, 1)"
+  },
+  "distance": { "sm": "8px", "md": "16px", "lg": "24px" },
+  "stagger": { "step": "40ms", "maxChildren": 12 }
+}

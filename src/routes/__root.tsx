@@ -17,6 +17,7 @@ import { Navbar } from "../components/Navbar";
 import { supabase } from "@/integrations/supabase/client";
 import { Toaster } from "sonner";
 import { useApplySiteSettings } from "@/lib/site-settings";
+import { initGlassPointer } from "@/lib/glass-pointer";
 
 function NotFoundComponent() {
   return (
@@ -177,6 +178,7 @@ function RootComponent() {
 
 function SiteChrome() {
   useApplySiteSettings();
+  useEffect(() => initGlassPointer(), []);
   const pathname = useRouterState({ select: s => s.location.pathname });
   const standalone = pathname.startsWith("/x-api-panel-");
 

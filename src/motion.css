@@ -1,0 +1,163 @@
+/*
+ * AniEra motion system. Single source of truth for every duration, easing,
+ * distance and keyframe. Spec: docs/MOTION.md. Tokens: docs/motion-tokens.json.
+ *
+ * Rules: animate transform + opacity only. Durations come from the scale only.
+ * One signature easing (--ease-spring). Every animation has a reduced-motion
+ * behaviour at the bottom of this file.
+ */
+:root {
+  /* Duration scale */
+  --dur-instant: 100ms; /* press / state feedback */
+  --dur-fast: 200ms;    /* hover, micro-interactions, exits */
+  --dur-base: 300ms;    /* reveals, page entrance */
+  --dur-slow: 500ms;    /* large scene changes, spring settle */
+
+  /* Easing vocabulary */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);   /* state changes */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);      /* entrances (decelerate) */
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);           /* exits (accelerate) */
+  /* Signature: the single spring. Used for press, tab pill, glass lift. */
+  --ease-spring: linear(0, .009, .035 2.1%, .141 4.4%, .723 12.9%, .938 16.7%, 1.017 19.5%, 1.077 22.6%, 1.101 25.6%, 1.097 28.9%, 1.054 35.6%, 1.007 44.6%, .991 51.5%, 1.003 68.8%, 1);
+
+  /* Travel distances */
+  --dist-sm: 8px;
+  --dist-md: 16px;
+  --dist-lg: 24px;
+
+  /* Stagger: 40ms per child, capped at 12 children (see AnimeGrid) */
+  --stagger: 40ms;
+}
+
+/* ---------- Keyframes (transform + opacity only) ---------- */
+@keyframes riseIn {
+  from { opacity: 0; transform: translate3d(0, var(--dist-sm), 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes popIn {
+  from { opacity: 0; transform: scale3d(0.94, 0.94, 1); }
+  to   { opacity: 1; transform: scale3d(1, 1, 1); }
+}
+@keyframes floatY {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50%      { transform: translate3d(0, -4px, 0); }
+}
+@keyframes glowPulse { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+@keyframes sheenSweep {
+  from { transform: translate3d(-120%, 0, 0) skewX(-18deg); }
+  to   { transform: translate3d(220%, 0, 0) skewX(-18deg); }
+}
+@keyframes shimmerSlide {
+  from { transform: translate3d(-100%, 0, 0); }
+  to   { transform: translate3d(100%, 0, 0); }
+}
+@keyframes vtOut { to { opacity: 0; transform: scale(0.985); } }
+@keyframes vtIn  { from { opacity: 0; transform: translateY(var(--dist-sm)) scale(1.01); } }
+
+/* ---------- Entrances ---------- */
+.anim-rise  { animation: riseIn var(--dur-base) var(--ease-out) both; }
+.anim-fade  { animation: fadeIn var(--dur-base) var(--ease-out) both; }
+.anim-pop   { animation: popIn var(--dur-base) var(--ease-out) both; }
+.page-enter { animation: riseIn var(--dur-base) var(--ease-out) both; }
+.bounce-in  { animation: riseIn var(--dur-slow) var(--ease-spring) both; }
+
+/* Ambient loops: only the hero badge and live indicators may loop. */
+.anim-float { animation: floatY 4.5s var(--ease-standard) infinite; }
+.anim-glow  { animation: glowPulse 2.4s var(--ease-standard) infinite; }
+
+/* Stagger helper: <el style="--i:3"> */
+.stagger > * { animation-delay: calc(min(var(--i, 0), 11) * var(--stagger)); }
+
+/* ---------- Scroll reveal (Reveal.tsx) ---------- */
+.reveal {
+  transition:
+    opacity var(--dur-slow) var(--ease-out),
+    transform var(--dur-slow) var(--ease-out);
+}
+.reveal[data-shown="true"] { opacity: 1; transform: none; }
+.reveal-rise        { opacity: 0; transform: translate3d(0, var(--dist-md), 0); }
+.reveal-fade        { opacity: 0; }
+.reveal-scale       { opacity: 0; transform: scale3d(0.96, 0.96, 1); }
+.reveal-slide-left  { opacity: 0; transform: translate3d(calc(var(--dist-lg) * -1), 0, 0); }
+.reveal-slide-right { opacity: 0; transform: translate3d(var(--dist-lg), 0, 0); }
+
+/* ---------- Signature moves ---------- */
+
+/* card-lift: poster cards. Lift + glow fade (glow is a pseudo, opacity only). */
+.card-lift { position: relative; transition: transform var(--dur-fast) var(--ease-out); }
+.card-lift::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 1;
+  box-shadow: 0 0 0 1px oklch(0.72 0.18 270 / 0.55), 0 12px 40px oklch(0.62 0.21 282 / 0.45);
+  opacity: 0; transition: opacity var(--dur-fast) var(--ease-out);
+}
+@media (hover: hover) {
+  .card-lift:hover { transform: translate3d(0, -6px, 0); }
+  .card-lift:hover::before { opacity: 1; }
+}
+.card-lift:active { transform: translate3d(0, -2px, 0) scale(0.985); transition-duration: var(--dur-instant); }
+
+/* glass-press: glass controls. The only place the spring is used on hover. */
+.glass-press {
+  transition:
+    transform var(--dur-slow) var(--ease-spring),
+    background-color var(--dur-fast) var(--ease-standard);
+}
+@media (hover: hover) {
+  .glass-press:hover { transform: translate3d(0, -2px, 0) scale(1.04); }
+}
+.glass-press:active { transform: scale(0.94); transition-duration: var(--dur-instant); }
+
+/* sheen: hover light sweep on posters */
+.sheen { position: relative; overflow: hidden; }
+.sheen::after {
+  content: ""; position: absolute; inset: 0 auto 0 0; width: 45%; pointer-events: none;
+  background: linear-gradient(100deg, transparent, oklch(1 0 0 / 0.16), transparent);
+  transform: translate3d(-120%, 0, 0) skewX(-18deg); opacity: 0;
+}
+@media (hover: hover) {
+  .sheen:hover::after { opacity: 1; animation: sheenSweep 0.85s var(--ease-out); }
+}
+
+/* link-sweep: underline for text links */
+.link-sweep { position: relative; }
+.link-sweep::after {
+  content: ""; position: absolute; left: 0; bottom: -2px; height: 1.5px; width: 100%;
+  background: linear-gradient(90deg, var(--color-neon-cyan, currentColor), var(--color-neon-magenta, currentColor));
+  transform: scaleX(0); transform-origin: right;
+  transition: transform var(--dur-base) var(--ease-out);
+}
+.link-sweep:hover::after { transform: scaleX(1); transform-origin: left; }
+
+/* Global interactive feedback */
+button, a, [role="tab"] {
+  transition:
+    transform var(--dur-fast) var(--ease-out),
+    background-color var(--dur-fast) var(--ease-standard),
+    color var(--dur-fast) var(--ease-standard),
+    box-shadow var(--dur-fast) var(--ease-standard),
+    opacity var(--dur-fast) var(--ease-standard);
+}
+button:not(:disabled):active, a:active { transform: scale(0.97); transition-duration: var(--dur-instant); }
+input, select, textarea {
+  transition: box-shadow var(--dur-fast) var(--ease-standard), background-color var(--dur-fast) var(--ease-standard);
+}
+
+/* Route transitions (TanStack defaultViewTransition). Exit faster than enter. */
+::view-transition-old(root) { animation: vtOut var(--dur-fast) var(--ease-in) both; }
+::view-transition-new(root) { animation: vtIn var(--dur-base) var(--ease-out) both; }
+
+/* Segmented/tab pill */
+.tab-pill { transition: transform var(--dur-slow) var(--ease-spring), width var(--dur-slow) var(--ease-spring); }
+
+/* ---------- Reduced motion contract ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .anim-rise, .anim-pop, .page-enter, .bounce-in { animation: fadeIn var(--dur-fast) linear both; }
+  .anim-float, .anim-glow, .next-ep-hint { animation: none; }
+  .reveal { transition: opacity var(--dur-fast) linear; }
+  .reveal-rise, .reveal-scale, .reveal-slide-left, .reveal-slide-right { transform: none; }
+  .card-lift:hover, .glass-press:hover, .glass-press:active { transform: none; }
+  .sheen:hover::after { animation: none; opacity: 0; }
+  .shimmer::after { animation: none; }
+  ::view-transition-old(root), ::view-transition-new(root) { animation: none; }
+}
