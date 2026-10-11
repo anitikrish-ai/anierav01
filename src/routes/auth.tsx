@@ -5,7 +5,12 @@ import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/auth")({
-  head: () => ({ meta: [{ title: "Sign in — AniEra" }] }),
+  head: () => ({ meta: [
+      { name: "description", content: "Sign in to AniEra to sync your anime library and viewing progress." },
+      { property: "og:title", content: "Sign in — AniEra" },
+      { property: "og:description", content: "Sign in to AniEra to sync your anime library and viewing progress." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Sign in — AniEra" }] }),
   component: AuthPage,
 });
 

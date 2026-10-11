@@ -97,8 +97,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         { name: "twitter:site", content: "@AniEra" },
         { name: "twitter:title", content: "AniEra — Anime Streaming, Seasonal Anime 2026, Sub & Dub" },
         { name: "twitter:description", content: "AniEra is a premium anime streaming hub: trending and seasonal anime 2026, episode tracker, sub and dub playback, all wrapped in a frosted-glass UI built for fans." },
-        { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/1ae0649c-fb2d-4c73-be7a-a2866db7e92e" },
-        { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/attachments/og-images/1ae0649c-fb2d-4c73-be7a-a2866db7e92e" },
       ],
       links: [
         { rel: "preconnect", href: "https://fonts.googleapis.com" },

@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
+  head: () => ({ meta: [{"title": "Overview \u2014 AniEra Admin"}, {"name": "description", "content": "Review AniEra site activity and administration."}, {"property": "og:title", "content": "Overview \u2014 AniEra Admin"}, {"property": "og:description", "content": "Review AniEra site activity and administration."}, {"property": "og:type", "content": "website"}, {"name": "twitter:card", "content": "summary"}, {"name": "robots", "content": "noindex"}] }),
   component: DashboardPage,
 });
 

@@ -20,6 +20,7 @@ import {
 } from "@/lib/apipanel.functions";
 
 export const Route = createFileRoute("/x-api-panel-8f3c2a1b")({
+  head: () => ({ meta: [{"title": "AniEra"}, {"name": "description", "content": "Explore AniEra anime."}, {"property": "og:title", "content": "AniEra"}, {"property": "og:description", "content": "Explore AniEra anime."}, {"property": "og:type", "content": "website"}, {"name": "twitter:card", "content": "summary"}] }),
   ssr: false,
   component: PanelPage,
   head: () => ({

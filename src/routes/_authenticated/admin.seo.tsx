@@ -18,6 +18,7 @@ type Seo = {
 };
 
 export const Route = createFileRoute("/_authenticated/admin/seo")({
+  head: () => ({ meta: [{"title": "Search Visibility \u2014 AniEra Admin"}, {"name": "description", "content": "Manage AniEra search visibility settings."}, {"property": "og:title", "content": "Search Visibility \u2014 AniEra Admin"}, {"property": "og:description", "content": "Manage AniEra search visibility settings."}, {"property": "og:type", "content": "website"}, {"name": "twitter:card", "content": "summary"}, {"name": "robots", "content": "noindex"}] }),
   component: SeoPage,
 });
 

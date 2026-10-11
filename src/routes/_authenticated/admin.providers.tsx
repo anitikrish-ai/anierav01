@@ -24,6 +24,7 @@ type Provider = {
 };
 
 export const Route = createFileRoute("/_authenticated/admin/providers")({
+  head: () => ({ meta: [{"title": "Providers \u2014 AniEra Admin"}, {"name": "description", "content": "Manage AniEra playback providers."}, {"property": "og:title", "content": "Providers \u2014 AniEra Admin"}, {"property": "og:description", "content": "Manage AniEra playback providers."}, {"property": "og:type", "content": "website"}, {"name": "twitter:card", "content": "summary"}, {"name": "robots", "content": "noindex"}] }),
   component: ProvidersPage,
 });
 

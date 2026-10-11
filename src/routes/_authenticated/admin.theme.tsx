@@ -8,6 +8,7 @@ import { useSiteSettings, type SiteSettings } from "@/lib/site-settings";
 import { AdminHeader, AdminCard } from "@/components/admin/AdminShell";
 
 export const Route = createFileRoute("/_authenticated/admin/theme")({
+  head: () => ({ meta: [{"title": "Appearance \u2014 AniEra Admin"}, {"name": "description", "content": "Manage AniEra site appearance."}, {"property": "og:title", "content": "Appearance \u2014 AniEra Admin"}, {"property": "og:description", "content": "Manage AniEra site appearance."}, {"property": "og:type", "content": "website"}, {"name": "twitter:card", "content": "summary"}, {"name": "robots", "content": "noindex"}] }),
   component: ThemePage,
 });
 

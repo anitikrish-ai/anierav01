@@ -8,7 +8,12 @@ import { getMyProfile, updateMyProfile, importFromMal, bulkUpsert, listLibrary }
 import { exportJSON, exportMAL, exportCSV, parseListFile, downloadText, type LibEntry } from "@/lib/listFormats";
 
 export const Route = createFileRoute("/_authenticated/profile")({
-  head: () => ({ meta: [{ title: "Profile — AniEra" }] }),
+  head: () => ({ meta: [
+      { name: "description", content: "Manage your AniEra account and profile preferences." },
+      { property: "og:title", content: "Profile — AniEra" },
+      { property: "og:description", content: "Manage your AniEra account and profile preferences." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Profile — AniEra" }] }),
   component: ProfilePage,
 });
 

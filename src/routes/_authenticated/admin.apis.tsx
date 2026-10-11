@@ -9,7 +9,12 @@ import { callCustomApi } from "@/lib/custom-api";
 import { AdminHeader, AdminCard } from "@/components/admin/AdminShell";
 
 export const Route = createFileRoute("/_authenticated/admin/apis")({
-  head: () => ({ meta: [{ title: "Custom APIs · Admin" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [
+      { name: "description", content: "Manage AniEra custom API sources." },
+      { property: "og:title", content: "Custom APIs · Admin" },
+      { property: "og:description", content: "Manage AniEra custom API sources." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Custom APIs · Admin" }, { name: "robots", content: "noindex" }] }),
   component: ApisPage,
 });
 

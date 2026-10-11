@@ -10,6 +10,10 @@ import { downloadText } from "@/lib/listFormats";
 export const Route = createFileRoute("/_authenticated/admin/backup")({
   head: () => ({
     meta: [
+      { property: "og:title", content: "Backup & Restore — AniEra Admin" },
+      { property: "og:description", content: "Export and restore AniEra site configuration." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Backup & Restore — AniEra Admin" },
       { name: "description", content: "Export and restore AniEra site configuration." },
       { name: "robots", content: "noindex" },

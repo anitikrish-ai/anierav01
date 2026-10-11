@@ -8,7 +8,12 @@ import { listAllUsers, setUserRole } from "@/lib/admin.functions";
 import { AdminHeader, AdminCard } from "@/components/admin/AdminShell";
 
 export const Route = createFileRoute("/_authenticated/admin/users")({
-  head: () => ({ meta: [{ title: "Users & Roles · Admin" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [
+      { name: "description", content: "Manage AniEra users and roles." },
+      { property: "og:title", content: "Users & Roles · Admin" },
+      { property: "og:description", content: "Manage AniEra users and roles." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Users & Roles · Admin" }, { name: "robots", content: "noindex" }] }),
   component: UsersPage,
 });
 

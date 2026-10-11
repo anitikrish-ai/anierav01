@@ -9,6 +9,8 @@ import { useEffect, useMemo, useState } from "react";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "AniEra — Anime Streaming, Seasonal Anime 2026, Sub & Dub" },
       { name: "description", content: "Stream trending and seasonal anime 2026 on AniEra: top airing series, upcoming episodes, sub & dub playback, watchlist and continue-watching — all in a frosted-glass UI." },
       { property: "og:title", content: "AniEra — Anime Streaming, Seasonal Anime 2026" },
