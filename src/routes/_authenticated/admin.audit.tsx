@@ -10,6 +10,10 @@ import { EmptyState, ErrorState } from "@/components/StateBlocks";
 export const Route = createFileRoute("/_authenticated/admin/audit")({
   head: () => ({
     meta: [
+      { property: "og:title", content: "Audit Trail — AniEra Admin" },
+      { property: "og:description", content: "Review recent administrator activity on AniEra." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Audit Trail — AniEra Admin" },
       { name: "description", content: "Review recent administrator activity on AniEra." },
       { name: "robots", content: "noindex" },

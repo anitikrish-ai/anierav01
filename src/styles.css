@@ -508,9 +508,6 @@ html[data-theme="light"] .site-bg-overlay { background-color: rgba(255,255,255, 
 
 /* ===== Real liquid glass: refraction lens, specular rim, inner glow ===== */
 .liquid-glass { position: relative; isolation: isolate; }
-@supports (backdrop-filter: url(#x)) {
-  .liquid-glass { backdrop-filter: url(#liquid-lens) blur(14px) saturate(190%) brightness(1.06); }
-}
 .liquid-glass::before {
   content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: -1;
   padding: 1px;
@@ -529,4 +526,68 @@ html[data-theme="light"] .site-bg-overlay { background-color: rgba(255,255,255, 
 }
 @media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
   .liquid-glass::before, .liquid-glass::after { display: none; }
+}
+
+/* Navigation owns its positioning: glass must never override fixed bars. */
+:root {
+  --nav-control-bg: oklch(1 0 0 / 0.06);
+  --nav-active-bg: oklch(1 0 0 / 0.13);
+  --nav-frost: oklch(0.18 0.025 280 / 0.86);
+  --nav-rim: oklch(1 0 0 / 0.25);
+  --nav-shadow: 0 8px 32px oklch(0 0 0 / 0.18);
+}
+html[data-theme="light"] {
+  --nav-control-bg: oklch(0 0 0 / 0.035);
+  --nav-active-bg: oklch(0 0 0 / 0.07);
+  --nav-frost: oklch(1 0 0 / 0.92);
+  --nav-rim: oklch(1 0 0 / 0.65);
+}
+.site-header { position: sticky; top: 0; z-index: var(--z-nav); padding: 8px 12px 0; }
+.site-nav-surface { max-width: 1280px; margin-inline: auto; border-radius: 28px; background: var(--nav-frost); border-color: var(--nav-rim); box-shadow: var(--nav-shadow), var(--glass-highlight); }
+.site-nav-row { display: flex; align-items: center; gap: 16px; min-height: 64px; padding: 8px 16px; position: relative; }
+.site-brand { display: flex; align-items: center; gap: 8px; flex-shrink: 0; min-height: 44px; color: var(--foreground); }
+.site-brand-mark { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 12px; background: var(--primary); color: var(--primary-foreground); font-family: var(--font-display); font-weight: 700; }
+.site-desktop-links { display: none; gap: 4px; }
+.site-nav-link { border-radius: 999px; padding-inline: 12px; color: var(--muted-foreground); font-size: 12px; }
+.site-nav-link[aria-current="page"] { background: var(--nav-active-bg); color: var(--foreground); }
+.site-nav-actions { display: flex; align-items: center; gap: 8px; margin-left: auto; flex-shrink: 0; }
+.site-profile-link, .site-search-toggle { border-radius: 999px; }
+.site-search { display: none; }
+.site-search[data-expanded="true"] { display: block; position: absolute; top: calc(100% + 12px); left: 0; right: 0; }
+.site-search-field { display: flex; align-items: center; gap: 8px; min-height: 48px; padding-left: 16px; border-radius: 24px; background: var(--popover); border: 1px solid var(--border); }
+.site-search-results { position: absolute; top: calc(100% + 8px); inset-inline: 0; max-height: min(520px, 60dvh); overflow-y: auto; overscroll-behavior: contain; border-radius: 20px; background: var(--popover); border: 1px solid var(--border); box-shadow: var(--nav-shadow); }
+.site-mobile-nav { position: fixed; inset-inline: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: var(--z-nav); display: flex; gap: 8px; padding: 8px; border-radius: 28px; background: var(--nav-frost); border-color: var(--nav-rim); box-shadow: var(--nav-shadow), var(--glass-highlight); }
+.site-mobile-link { flex: 1 1 0; min-width: 0; min-height: 52px; padding: 6px 0; display: flex; flex-direction: column; gap: 4px; border-radius: 20px; color: var(--muted-foreground); font-size: 9px; }
+.site-mobile-link[aria-current="page"] { background: var(--nav-active-bg); color: var(--foreground); }
+.site-mobile-link svg { width: 20px; height: 20px; transition: transform 300ms var(--ease-out); }
+.site-mobile-link[aria-current="page"] svg { transform: translateY(-1px); }
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  .site-nav-link:hover, .site-mobile-link:hover { transform: translateY(-2px); }
+}
+@media (min-width: 768px) {
+  .site-search, .site-search[data-expanded="true"] { display: block; position: relative; inset: auto; margin-left: auto; flex: 1; max-width: 320px; min-width: 160px; }
+  .site-search-field { background: var(--nav-control-bg); }
+  .site-search-toggle { display: none; }
+}
+@media (min-width: 1024px) {
+  .site-desktop-links { display: flex; }
+  .site-mobile-nav { display: none; }
+  .site-nav-actions { margin-left: 0; }
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+  .has-tabbar { padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
+}
+@supports not (backdrop-filter: blur(1px)) {
+  .liquid-glass { background: var(--nav-frost); }
+  html[data-theme="light"] .liquid-glass { background: var(--popover); }
+}
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  .site-nav-surface, .site-mobile-nav { backdrop-filter: none; background: var(--popover); }
+}
+@media (prefers-contrast: more) {
+  .site-nav-surface, .site-mobile-nav { border: 2px solid var(--foreground); box-shadow: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .site-mobile-link[aria-current="page"] svg { transform: none; }
 }

@@ -14,7 +14,12 @@ import {
 import { AdminHeader, AdminCard } from "@/components/admin/AdminShell";
 
 export const Route = createFileRoute("/_authenticated/admin/proxies")({
-  head: () => ({ meta: [{ title: "Proxies & Logs · Admin" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [
+      { name: "description", content: "Manage AniEra proxy endpoints and request logs." },
+      { property: "og:title", content: "Proxies & Logs · Admin" },
+      { property: "og:description", content: "Manage AniEra proxy endpoints and request logs." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Proxies & Logs · Admin" }, { name: "robots", content: "noindex" }] }),
   component: ProxiesPage,
 });
 

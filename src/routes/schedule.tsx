@@ -29,6 +29,8 @@ const searchSchema = z.object({ day: z.string().optional() });
 export const Route = createFileRoute("/schedule")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { title: "Anime Airing Schedule 2026 — Weekly Calendar | AniEra" },
       { name: "description", content: "Weekly airing calendar for currently broadcasting anime. Track new episodes for the 2026 season, day by day, with countdowns and scores." },
       { property: "og:title", content: "Anime Airing Schedule — AniEra" },

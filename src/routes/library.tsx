@@ -12,7 +12,12 @@ import { ErrorState, EmptyState } from "@/components/StateBlocks";
 import { exportJSON, exportMAL, exportCSV, parseListFile, downloadText, type LibEntry, type LibStatus } from "@/lib/listFormats";
 
 export const Route = createFileRoute("/library")({
-  head: () => ({ meta: [{ title: "Your Library — AniEra" }] }),
+  head: () => ({ meta: [
+      { name: "description", content: "Manage your anime collection, favorites, and viewing progress on AniEra." },
+      { property: "og:title", content: "Your Library — AniEra" },
+      { property: "og:description", content: "Manage your anime collection, favorites, and viewing progress on AniEra." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },{ title: "Your Library — AniEra" }] }),
   component: LibraryPage,
 });
 

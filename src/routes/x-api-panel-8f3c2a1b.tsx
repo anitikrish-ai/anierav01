@@ -24,7 +24,11 @@ export const Route = createFileRoute("/x-api-panel-8f3c2a1b")({
   component: PanelPage,
   head: () => ({
     meta: [
-      { title: "API Console" },
+      { title: "Private API Console — AniEra" },
+      { property: "og:title", content: "Private API Console — AniEra" },
+      { property: "og:description", content: "Private AniEra API management console." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex, nofollow" },
       { name: "description", content: "Private API management console." },
     ],

@@ -15,6 +15,7 @@ export const Route = createFileRoute("/anime/$id")({
     const url = `https://aniera.lovable.app/anime/${params.id}`;
     return {
       meta: [
+      { name: "twitter:card", content: "summary" },
         { title: `Anime #${params.id} — Watch on AniEra` },
         { name: "description", content: `Stream this anime on AniEra with sub & dub playback, full episode list, and frosted-glass UI.` },
         { property: "og:title", content: `Watch on AniEra` },

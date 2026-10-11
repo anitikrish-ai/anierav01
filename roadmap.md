@@ -1,5 +1,7 @@
 # Quality pass
 
+- [x] Fix duplicate-looking navigation and verify glass controls, search, and page changes
+
 - [x] Apply Liquid Glass to navigation and controls, keeping content flat
 - [x] Add system/manual themes and accessibility fallbacks
 - [x] Verify updated navigation, theme selection and page sizing

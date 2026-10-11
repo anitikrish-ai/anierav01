@@ -5,6 +5,7 @@ import { checkIsAdmin } from "@/lib/admin.functions";
 import { AdminShell } from "@/components/admin/AdminShell";
 
 export const Route = createFileRoute("/_authenticated/admin")({
+  head: () => ({ meta: [{"title": "Administration \u2014 AniEra"}, {"name": "description", "content": "Manage AniEra site administration."}, {"property": "og:title", "content": "Administration \u2014 AniEra"}, {"property": "og:description", "content": "Manage AniEra site administration."}, {"property": "og:type", "content": "website"}, {"name": "twitter:card", "content": "summary"}, {"name": "robots", "content": "noindex"}] }),
   component: AdminLayout,
 });
 
