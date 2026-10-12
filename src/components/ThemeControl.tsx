@@ -32,8 +32,8 @@ export function ThemeControl() {
   const wrapRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    setTheme(readStored("aniera:theme", ["system", "light", "dark"], "system"));
-    setMotion(readStored("aniera:motion", ["system", "reduced", "playful", "off"], "system"));
+    setTheme(readStored<Theme>("aniera:theme", ["system", "light", "dark"], "system"));
+    setMotion(readStored<Motion>("aniera:motion", ["system", "reduced", "playful", "off"], "system"));
   }, []);
 
   // Apply theme; "system" tracks the device appearance.
