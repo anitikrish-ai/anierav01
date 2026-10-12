@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import type { Anime } from "@/lib/jikan";
 import { bestTitle } from "@/lib/jikan";
@@ -7,6 +7,7 @@ import { Reveal } from "@/components/Reveal";
 function AnimeCardImpl({ anime }: { anime: Anime }) {
   const img = anime.images.webp?.large_image_url || anime.images.jpg.large_image_url;
   const title = bestTitle(anime);
+  const [loaded, setLoaded] = useState(false);
   return (
     <Link
       to="/anime/$id"
@@ -14,13 +15,17 @@ function AnimeCardImpl({ anime }: { anime: Anime }) {
       className="sheen card-lift group relative block overflow-hidden rounded-2xl surface"
       style={{ contentVisibility: "auto", containIntrinsicSize: "300px 450px" } as React.CSSProperties}
     >
-      <div className="aspect-[2/3] overflow-hidden">
+      <div className="relative aspect-[2/3] overflow-hidden">
+        {/* Shimmer placeholder keeps the slot filled until the artwork fades in */}
+        <div className="shimmer absolute inset-0" aria-hidden="true" data-hidden={loaded} />
         <img
           src={img}
           alt={title}
           loading="lazy"
           decoding="async"
-          className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+          onLoad={() => setLoaded(true)}
+          data-loaded={loaded}
+          className="img-fade h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
         />
       </div>
       <div className="on-media pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent p-3 pt-10">

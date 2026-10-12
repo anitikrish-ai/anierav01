@@ -150,7 +150,9 @@ input, select, textarea {
 /* Segmented/tab pill */
 .tab-pill { transition: transform var(--dur-slow) var(--ease-spring), width var(--dur-slow) var(--ease-spring); }
 
-/* ---------- Reduced motion contract ---------- */
+/* ---------- Reduced motion contract ----------
+   Applies when the device asks for reduced motion, or the user picks
+   "Reduced" in the appearance menu (data-motion="reduced" on <html>). */
 @media (prefers-reduced-motion: reduce) {
   .anim-rise, .anim-pop, .page-enter, .bounce-in { animation: fadeIn var(--dur-fast) linear both; }
   .anim-float, .anim-glow, .next-ep-hint { animation: none; }
@@ -161,3 +163,55 @@ input, select, textarea {
   .shimmer::after { animation: none; }
   ::view-transition-old(root), ::view-transition-new(root) { animation: none; }
 }
+html[data-motion="reduced"] .anim-rise,
+html[data-motion="reduced"] .anim-pop,
+html[data-motion="reduced"] .page-enter,
+html[data-motion="reduced"] .bounce-in { animation: fadeIn var(--dur-fast) linear both; }
+html[data-motion="reduced"] .anim-float,
+html[data-motion="reduced"] .anim-glow,
+html[data-motion="reduced"] .next-ep-hint { animation: none; }
+html[data-motion="reduced"] .reveal { transition: opacity var(--dur-fast) linear; }
+html[data-motion="reduced"] .reveal-rise,
+html[data-motion="reduced"] .reveal-scale,
+html[data-motion="reduced"] .reveal-slide-left,
+html[data-motion="reduced"] .reveal-slide-right { transform: none; }
+html[data-motion="reduced"] .card-lift:hover,
+html[data-motion="reduced"] .glass-press:hover,
+html[data-motion="reduced"] .glass-press:active { transform: none; }
+html[data-motion="reduced"] .sheen:hover::after { animation: none; opacity: 0; }
+html[data-motion="reduced"] .shimmer::after { animation: none; }
+html[data-motion="reduced"] ::view-transition-old(root),
+html[data-motion="reduced"] ::view-transition-new(root) { animation: none; }
+
+/* ---------- Motion: off ---------- */
+html[data-motion="off"] { scroll-behavior: auto; }
+html[data-motion="off"] *, html[data-motion="off"] *::before, html[data-motion="off"] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}
+html[data-motion="off"] ::view-transition-old(root),
+html[data-motion="off"] ::view-transition-new(root) { animation: none; }
+
+/* ---------- Motion: playful — bigger springs, longer travel ---------- */
+html[data-motion="playful"] {
+  --dur-fast: 260ms;
+  --dur-base: 420ms;
+  --dur-slow: 700ms;
+  --dist-sm: 12px;
+  --dist-md: 24px;
+  --dist-lg: 36px;
+}
+@media (hover: hover) {
+  html[data-motion="playful"] .card-lift:hover { transform: translate3d(0, -10px, 0) scale(1.02); }
+  html[data-motion="playful"] .glass-press:hover { transform: translate3d(0, -3px, 0) scale(1.08); }
+}
+html[data-motion="playful"] .card-lift:active { transform: translate3d(0, -2px, 0) scale(0.96); }
+
+/* ---------- Smooth image loading ----------
+   Artwork starts invisible over a shimmer placeholder and fades in once
+   loaded, so posters never pop in or leave blank slots. Aspect-ratio
+   boxes on the cards reserve the space, so there is no layout shift. */
+.img-fade { opacity: 0; transition: opacity var(--dur-slow) var(--ease-standard); }
+.img-fade[data-loaded="true"] { opacity: 1; }
+.shimmer[data-hidden="true"] { opacity: 0; transition: opacity var(--dur-fast) var(--ease-standard); }

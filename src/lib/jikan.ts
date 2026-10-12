@@ -93,11 +93,21 @@ function schedule<T>(task: () => Promise<T>): Promise<T> {
   return run.then(task);
 }
 
+/** Fail fast when Jikan/MAL is unreachable so the AniList fallback kicks in. */
+const FETCH_TIMEOUT_MS = 8000;
+
+function fetchWithTimeout(url: string): Promise<Response> {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+  return fetch(url, { headers: { Accept: "application/json" }, signal: controller.signal })
+    .finally(() => clearTimeout(timer));
+}
+
 async function fetchWithRetry(url: string): Promise<Response> {
   let lastErr: unknown;
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     try {
-      const res = await schedule(() => fetch(url, { headers: { Accept: "application/json" } }));
+      const res = await schedule(() => fetchWithTimeout(url));
       if (res.ok) return res;
       // 429 = rate limited, 5xx = upstream hiccup → both worth retrying
       if (res.status === 429 || res.status >= 500) {
