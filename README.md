@@ -255,8 +255,10 @@ If you want, next step I can turn this into:
 - or a UI mock layout (screens design)
 
 This project was built with [Lovable](https://lovable.dev).
-
+{Lovable Chnages}
 **Live app**: https://anierav01.lovable.app
+{Manual changes}
+**Live app**: https://aniera.vercel.app
 
 ## Build with Lovable
 
