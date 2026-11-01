@@ -695,8 +695,8 @@ html[data-theme="light"] {
   display: block;
   position: absolute;
   top: calc(100% + 10px);
-  left: 0;
-  right: 0;
+  left: 8px;
+  right: 8px;
   z-index: var(--z-dropdown);
 }
 

@@ -335,7 +335,7 @@ export function Navbar() {
 
         {/* Mobile dropdown menu (stays inside the single header container) */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-white/10 px-4 py-3 space-y-1 anim-drop">
+          <div className="md:hidden border-t border-white/10 px-3 py-3 space-y-1.5 anim-drop">
             {links.map((link) => {
               const active = activeLink(link.to);
               const Icon = link.icon;
@@ -345,14 +345,14 @@ export function Navbar() {
                   to={link.to}
                   preload="intent"
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+                  className={`flex items-center gap-3 px-3.5 py-3 min-h-[46px] rounded-xl text-sm font-medium transition active:scale-[0.98] ${
                     active
-                      ? "bg-primary/20 text-white font-semibold"
-                      : "text-white/70 hover:text-white hover:bg-white/5"
+                      ? "bg-primary text-white font-semibold shadow-md shadow-primary/20"
+                      : "text-white/80 hover:text-white hover:bg-white/5"
                   }`}
                   aria-current={active ? "page" : undefined}
                 >
-                  <Icon size={18} className={active ? "text-primary" : "text-muted-foreground"} />
+                  <Icon size={18} className={active ? "text-white" : "text-muted-foreground"} />
                   <span>{link.label}</span>
                 </Link>
               );

@@ -1,10 +1,13 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { jikan, bestTitle, type Anime } from "@/lib/jikan";
 import { AnimeGrid, GridSkeleton } from "@/components/AnimeCard";
 import { getHistory, getEpisodeProgress, type HistoryEntry } from "@/lib/history";
 import { Reveal } from "@/components/Reveal";
 import { useEffect, useMemo, useState } from "react";
+import { GlassButton, GlassSegmented } from "@zakisheriff/liquid-glass";
+import { QuickViewSheet } from "@/components/QuickViewSheet";
+import { Play, Info, Sparkles, TrendingUp, Calendar, Star, Compass } from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -29,7 +32,11 @@ export const Route = createFileRoute("/")({
   component: HomePage,
 });
 
+const CATEGORIES = ["All", "Trending", "This Season", "Top Rated", "Upcoming", "Popular"];
+
 function HomePage() {
+  const [activeCategory, setActiveCategory] = useState(0);
+
   const trending = useQuery({
     queryKey: ["top-airing"],
     queryFn: () => jikan.topAiring(1),
@@ -64,130 +71,214 @@ function HomePage() {
   const heroPool = useMemo(() => trending.data?.data?.slice(0, 5) ?? [], [trending.data]);
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-8 sm:space-y-12">
       <HeroCarousel pool={heroPool} loading={trending.isLoading} />
+
+      {/* Liquid Glass Interactive Filter Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1">
+        <div className="flex items-center gap-2">
+          <Sparkles size={16} className="text-primary" />
+          <span className="text-sm font-semibold tracking-tight text-white">Explore Category</span>
+        </div>
+        <div className="w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
+          <GlassSegmented
+            options={CATEGORIES}
+            value={activeCategory}
+            onChange={setActiveCategory}
+            size="sm"
+            intensity={4}
+            aria-label="Anime categories"
+            className="w-full sm:w-auto"
+          />
+        </div>
+      </div>
+
       <ContinueWatching />
-      <Section
-        title="Trending Now"
-        items={trending.data?.data?.slice(5, 17)}
-        loading={trending.isLoading}
-      />
-      <Section
-        title="This Season"
-        items={season.data?.data?.slice(0, 12)}
-        loading={season.isLoading}
-      />
-      <Section title="Top Rated" items={rated.data?.data?.slice(0, 12)} loading={rated.isLoading} />
-      <Section
-        title="Upcoming Next Season"
-        items={upcoming.data?.data?.slice(0, 12)}
-        loading={upcoming.isLoading}
-      />
-      <Section
-        title="All-Time Popular"
-        items={popular.data?.data?.slice(0, 12)}
-        loading={popular.isLoading}
-      />
+
+      {(activeCategory === 0 || activeCategory === 1) && (
+        <Section
+          title="Trending Now"
+          items={trending.data?.data?.slice(5, 17)}
+          loading={trending.isLoading}
+        />
+      )}
+
+      {(activeCategory === 0 || activeCategory === 2) && (
+        <Section
+          title="This Season"
+          items={season.data?.data?.slice(0, 12)}
+          loading={season.isLoading}
+        />
+      )}
+
+      {(activeCategory === 0 || activeCategory === 3) && (
+        <Section
+          title="Top Rated"
+          items={rated.data?.data?.slice(0, 12)}
+          loading={rated.isLoading}
+        />
+      )}
+
+      {(activeCategory === 0 || activeCategory === 4) && (
+        <Section
+          title="Upcoming Next Season"
+          items={upcoming.data?.data?.slice(0, 12)}
+          loading={upcoming.isLoading}
+        />
+      )}
+
+      {(activeCategory === 0 || activeCategory === 5) && (
+        <Section
+          title="All-Time Popular"
+          items={popular.data?.data?.slice(0, 12)}
+          loading={popular.isLoading}
+        />
+      )}
     </div>
   );
 }
 
 function HeroCarousel({ pool, loading }: { pool: Anime[]; loading: boolean }) {
+  const navigate = useNavigate();
   const [idx, setIdx] = useState(0);
+  const [previewAnime, setPreviewAnime] = useState<Anime | null>(null);
+
   useEffect(() => {
     if (pool.length < 2) return;
     const t = setInterval(() => setIdx((i) => (i + 1) % pool.length), 7000);
     return () => clearInterval(t);
   }, [pool.length]);
+
   if (loading || !pool.length) {
-    return <div className="h-[420px] rounded-3xl shimmer" />;
+    return <div className="h-[360px] sm:h-[420px] rounded-3xl shimmer" />;
   }
   const anime = pool[idx % pool.length];
   const img = anime.images.webp?.large_image_url || anime.images.jpg.large_image_url;
+
   return (
-    <section className="relative overflow-hidden rounded-3xl">
-      <div
-        key={anime.mal_id}
-        className="absolute inset-0 scale-110 blur-2xl transition-opacity duration-700"
-        style={{
-          backgroundImage: `url(${img})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          opacity: 0.45,
-        }}
-      />
-      <div className="absolute inset-0 bg-gradient-to-r from-background via-background/60 to-transparent" />
-      <div className="relative grid gap-6 p-6 sm:p-10 md:grid-cols-[1fr_280px] md:gap-10">
-        <div key={anime.mal_id} className="flex flex-col justify-center">
-          <span className="anim-rise mb-3 inline-flex w-fit items-center gap-2 rounded-full glass px-3 py-1 text-xs font-medium text-neon-cyan">
-            <span className="h-1.5 w-1.5 rounded-full bg-neon-cyan glow-cyan anim-glow" /> #
-            {idx + 1} Trending
-          </span>
-          <h1
-            className="anim-rise font-display text-3xl font-bold leading-tight text-white sm:text-5xl"
-            style={{ animationDelay: "60ms" }}
-          >
-            {bestTitle(anime)}
-          </h1>
-          <div
-            className="anim-rise mt-3 flex flex-wrap gap-2 text-xs text-white/70"
-            style={{ animationDelay: "110ms" }}
-          >
-            {anime.score && (
-              <span className="rounded-md bg-white/10 px-2 py-1">★ {anime.score.toFixed(1)}</span>
-            )}
-            {anime.type && <span className="rounded-md bg-white/10 px-2 py-1">{anime.type}</span>}
-            {anime.episodes && (
-              <span className="rounded-md bg-white/10 px-2 py-1">{anime.episodes} eps</span>
-            )}
-            {anime.year && <span className="rounded-md bg-white/10 px-2 py-1">{anime.year}</span>}
-          </div>
-          <p
-            className="anim-rise mt-4 line-clamp-3 max-w-2xl text-sm text-white/70 sm:text-base"
-            style={{ animationDelay: "160ms" }}
-          >
-            {anime.synopsis}
-          </p>
-          <div className="anim-rise mt-6 flex flex-wrap gap-3" style={{ animationDelay: "210ms" }}>
-            <Link
-              to="/watch/$id/$ep"
-              params={{ id: String(anime.mal_id), ep: "1" }}
-              className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-neon-cyan to-neon-magenta px-6 py-2.5 text-sm font-semibold text-background transition hover:scale-105 glow-magenta"
+    <>
+      <section className="relative overflow-hidden rounded-3xl border border-white/10 shadow-2xl">
+        <div
+          key={anime.mal_id}
+          className="absolute inset-0 scale-110 blur-2xl transition-opacity duration-700"
+          style={{
+            backgroundImage: `url(${img})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            opacity: 0.45,
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/75 to-transparent sm:from-background sm:via-background/60" />
+        <div className="relative grid gap-6 p-5 sm:p-10 md:grid-cols-[1fr_280px] md:gap-10">
+          <div key={anime.mal_id} className="flex flex-col justify-center">
+            <span className="anim-rise mb-2 sm:mb-3 inline-flex w-fit items-center gap-2 rounded-full glass px-3 py-1 text-xs font-semibold text-cyan-300">
+              <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 glow-cyan anim-glow" /> #
+              {idx + 1} Trending Airing
+            </span>
+            <h1
+              className="anim-rise font-display text-2xl font-bold leading-tight text-white sm:text-5xl"
+              style={{ animationDelay: "60ms" }}
             >
-              ▶ Watch Now
-            </Link>
-            <Link
-              to="/anime/$id"
-              params={{ id: String(anime.mal_id) }}
-              className="inline-flex items-center gap-2 rounded-full glass px-6 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10"
+              {bestTitle(anime)}
+            </h1>
+            <div
+              className="anim-rise mt-2.5 flex flex-wrap gap-1.5 sm:gap-2 text-xs text-white/70"
+              style={{ animationDelay: "110ms" }}
             >
-              More Info
-            </Link>
-          </div>
-          {pool.length > 1 && (
-            <div className="mt-6 flex gap-1.5">
-              {pool.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setIdx(i)}
-                  aria-label={`Slide ${i + 1}`}
-                  className={`h-1.5 rounded-full transition-all ${i === idx ? "w-8 bg-neon-cyan" : "w-3 bg-white/30 hover:bg-white/60"}`}
-                />
-              ))}
+              {anime.score && (
+                <span className="rounded-md bg-white/10 px-2 py-0.5 font-semibold text-cyan-300">
+                  ★ {anime.score.toFixed(1)}
+                </span>
+              )}
+              {anime.type && (
+                <span className="rounded-md bg-white/10 px-2 py-0.5">{anime.type}</span>
+              )}
+              {anime.episodes && (
+                <span className="rounded-md bg-white/10 px-2 py-0.5">{anime.episodes} eps</span>
+              )}
+              {anime.year && (
+                <span className="rounded-md bg-white/10 px-2 py-0.5">{anime.year}</span>
+              )}
             </div>
-          )}
+            <p
+              className="anim-rise mt-3 line-clamp-3 max-w-2xl text-xs sm:text-sm text-white/75 leading-relaxed"
+              style={{ animationDelay: "160ms" }}
+            >
+              {anime.synopsis}
+            </p>
+            <div
+              className="anim-rise mt-5 flex flex-wrap items-center gap-2.5"
+              style={{ animationDelay: "210ms" }}
+            >
+              <GlassButton
+                variant="tinted-filled"
+                tint="#8b5cf6"
+                size="md"
+                icon={<Play size={15} />}
+                onClick={() =>
+                  navigate({
+                    to: "/watch/$id/$ep",
+                    params: { id: String(anime.mal_id), ep: "1" },
+                  })
+                }
+                className="font-semibold"
+              >
+                Watch Now
+              </GlassButton>
+              <GlassButton
+                variant="glass"
+                size="md"
+                icon={<Info size={15} />}
+                onClick={() => setPreviewAnime(anime)}
+              >
+                Quick Preview
+              </GlassButton>
+              <GlassButton
+                variant="clear"
+                size="md"
+                onClick={() =>
+                  navigate({
+                    to: "/anime/$id",
+                    params: { id: String(anime.mal_id) },
+                  })
+                }
+              >
+                More Info
+              </GlassButton>
+            </div>
+            {pool.length > 1 && (
+              <div className="mt-5 flex gap-1.5">
+                {pool.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setIdx(i)}
+                    aria-label={`Slide ${i + 1}`}
+                    className={`h-1.5 rounded-full transition-all ${
+                      i === idx ? "w-8 bg-cyan-400" : "w-3 bg-white/30 hover:bg-white/60"
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="hidden md:block">
+            <img
+              key={anime.mal_id}
+              src={img}
+              alt={bestTitle(anime)}
+              fetchPriority="high"
+              className="anim-pop aspect-[2/3] w-full rounded-2xl object-cover glass shadow-2xl"
+            />
+          </div>
         </div>
-        <div className="hidden md:block">
-          <img
-            key={anime.mal_id}
-            src={img}
-            alt={bestTitle(anime)}
-            fetchPriority="high"
-            className="anim-pop aspect-[2/3] w-full rounded-2xl object-cover glass"
-          />
-        </div>
-      </div>
-    </section>
+      </section>
+
+      <QuickViewSheet
+        anime={previewAnime}
+        open={!!previewAnime}
+        onClose={() => setPreviewAnime(null)}
+      />
+    </>
   );
 }
 

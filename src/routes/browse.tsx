@@ -6,7 +6,14 @@ import { jikan } from "@/lib/jikan";
 import { AnimeGrid, GridSkeleton } from "@/components/AnimeCard";
 import { ErrorState, EmptyState } from "@/components/StateBlocks";
 import { useEffect, useState } from "react";
-import { GlassButton, GlassCard } from "@zakisheriff/liquid-glass";
+import { GlassButton, GlassCard, GlassSegmented } from "@zakisheriff/liquid-glass";
+
+const FORMATS = [
+  { label: "All Formats", value: "" },
+  { label: "TV Series", value: "tv" },
+  { label: "Movies", value: "movie" },
+  { label: "OVA", value: "ova" },
+];
 
 /** URL values may arrive as numbers (e.g. ?genre=1) — coerce everything safely. */
 const str = z
@@ -184,7 +191,43 @@ function BrowsePage() {
         </p>
       </div>
 
-      <GlassCard variant="regular" intensity={4} padding="16px" radius="24px" className="w-full">
+      <GlassCard
+        variant="regular"
+        intensity={4}
+        padding="16px"
+        radius="24px"
+        className="w-full space-y-3"
+      >
+        {/* Quick Format Segmented Switcher */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2 border-b border-white/10">
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Format
+          </span>
+          <div className="w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
+            <GlassSegmented
+              options={FORMATS.map((f) => f.label)}
+              value={Math.max(
+                0,
+                FORMATS.findIndex((f) => f.value === type),
+              )}
+              onChange={(idx) => {
+                const nextType = FORMATS[idx].value;
+                setType(nextType);
+                navigate({
+                  search: {
+                    ...search,
+                    type: nextType || undefined,
+                    page: undefined,
+                  },
+                });
+              }}
+              size="sm"
+              intensity={4}
+              aria-label="Format filter"
+            />
+          </div>
+        </div>
+
         <form
           onSubmit={(e) => {
             e.preventDefault();
