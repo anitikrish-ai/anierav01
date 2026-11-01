@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { Check, Monitor, Moon, Sun, Sparkles, Turtle, CircleSlash, Settings2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { GlassButton, GlassCard, GlassSegmented } from "@zakisheriff/liquid-glass";
+import { Monitor, Moon, Sun, Sparkles, Turtle, CircleSlash, Settings2 } from "lucide-react";
 
 type Theme = "system" | "light" | "dark";
 type Motion = "system" | "reduced" | "playful" | "off";
@@ -10,11 +10,11 @@ const themeOptions: { value: Theme; label: string; icon: typeof Sun }[] = [
   { value: "light", label: "Light", icon: Sun },
   { value: "dark", label: "Dark", icon: Moon },
 ];
-const motionOptions: { value: Motion; label: string; hint: string; icon: typeof Sun }[] = [
-  { value: "system", label: "System", hint: "Follows your device setting", icon: Monitor },
-  { value: "reduced", label: "Reduced", hint: "Gentle fades, no bouncing", icon: Turtle },
-  { value: "playful", label: "Playful", hint: "Extra bounce and spring", icon: Sparkles },
-  { value: "off", label: "Off", hint: "No animation at all", icon: CircleSlash },
+const motionOptions: { value: Motion; label: string; icon: typeof Sun }[] = [
+  { value: "system", label: "System", icon: Monitor },
+  { value: "reduced", label: "Calm", icon: Turtle },
+  { value: "playful", label: "Playful", icon: Sparkles },
+  { value: "off", label: "Off", icon: CircleSlash },
 ];
 
 function readStored<T extends string>(key: string, allowed: readonly T[], fallback: T): T {
@@ -83,57 +83,48 @@ export function ThemeControl() {
   };
 
   return (
-    <div ref={wrapRef} className="relative">
-      <Button
-        variant="ghost"
-        size="icon"
-        className="glass-press min-h-11 min-w-11 shrink-0 rounded-full"
+    <div ref={wrapRef} className="site-theme-control relative">
+      <GlassButton
+        variant="clear"
+        size="md"
+        icon={<Settings2 size={18} aria-hidden="true" />}
+        className="site-theme-trigger shrink-0"
         aria-label="Appearance and animation settings"
         aria-expanded={open}
-        aria-haspopup="menu"
         title="Appearance"
         onClick={() => setOpen(v => !v)}
-      >
-        <Settings2 aria-hidden="true" />
-      </Button>
+      />
       {open && (
-        <div
-          role="menu"
+        <GlassCard
+          variant="regular"
+          intensity={5}
+          padding="14px"
+          radius="24px"
+          className="site-theme-pop anim-pop absolute right-0 top-full z-[var(--z-dropdown)] mt-2 w-72"
+          role="dialog"
           aria-label="Appearance and animation"
-          className="liquid-glass anim-pop absolute right-0 top-full z-[var(--z-dropdown)] mt-2 w-64 rounded-2xl p-2"
         >
-          <p className="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Appearance</p>
-          {themeOptions.map(opt => (
-            <button
-              key={opt.value}
-              role="menuitemradio"
-              aria-checked={theme === opt.value}
-              onClick={() => pickTheme(opt.value)}
-              className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm text-foreground hover:bg-muted focus-visible:bg-muted"
-            >
-              <opt.icon size={16} aria-hidden="true" className="shrink-0 text-muted-foreground" />
-              <span className="flex-1">{opt.label}</span>
-              {theme === opt.value && <Check size={16} aria-hidden="true" className="text-primary" />}
-            </button>
-          ))}
-          <p className="px-3 pb-1 pt-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Animation</p>
-          {motionOptions.map(opt => (
-            <button
-              key={opt.value}
-              role="menuitemradio"
-              aria-checked={motion === opt.value}
-              onClick={() => pickMotion(opt.value)}
-              className="flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-left text-sm text-foreground hover:bg-muted focus-visible:bg-muted"
-            >
-              <opt.icon size={16} aria-hidden="true" className="shrink-0 text-muted-foreground" />
-              <span className="flex-1">
-                {opt.label}
-                <span className="block text-xs text-muted-foreground">{opt.hint}</span>
-              </span>
-              {motion === opt.value && <Check size={16} aria-hidden="true" className="text-primary" />}
-            </button>
-          ))}
-        </div>
+          <p className="px-1 pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Appearance</p>
+          <GlassSegmented
+            options={themeOptions.map(opt => ({ label: opt.label, icon: <opt.icon size={13} aria-hidden="true" /> }))}
+            value={Math.max(0, themeOptions.findIndex(o => o.value === theme))}
+            onChange={index => pickTheme(themeOptions[index]!.value)}
+            size="sm"
+            intensity={4}
+            className="w-full"
+            aria-label="Appearance"
+          />
+          <p className="px-1 pb-2 pt-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Animation</p>
+          <GlassSegmented
+            options={motionOptions.map(opt => ({ label: opt.label, icon: <opt.icon size={13} aria-hidden="true" /> }))}
+            value={Math.max(0, motionOptions.findIndex(o => o.value === motion))}
+            onChange={index => pickMotion(motionOptions[index]!.value)}
+            size="sm"
+            intensity={4}
+            className="w-full"
+            aria-label="Animation"
+          />
+        </GlassCard>
       )}
     </div>
   );
