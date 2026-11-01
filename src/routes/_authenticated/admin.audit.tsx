@@ -39,7 +39,7 @@ function AuditPage() {
     onError: (e: any) => toast.error(e?.message ?? "Could not clear the log"),
   });
 
-  const rows = ((q.data as any[]) ?? []).filter(r => {
+  const rows = ((q.data as any[]) ?? []).filter((r) => {
     if (!filter.trim()) return true;
     const hay = `${r.action} ${r.area} ${r.actor_email ?? ""} ${r.target_id ?? ""}`.toLowerCase();
     return hay.includes(filter.trim().toLowerCase());
@@ -54,7 +54,7 @@ function AuditPage() {
           <div className="flex gap-2">
             <input
               value={filter}
-              onChange={e => setFilter(e.target.value)}
+              onChange={(e) => setFilter(e.target.value)}
               placeholder="Filter…"
               className="rounded-lg bg-white/5 px-3 py-2 text-sm text-white placeholder:text-white/40 focus:outline-none"
             />
@@ -101,7 +101,7 @@ function AuditPage() {
               </tr>
             </thead>
             <tbody className="text-white/80">
-              {rows.map(r => (
+              {rows.map((r) => (
                 <tr key={r.id} className="border-t border-white/5">
                   <td className="whitespace-nowrap px-4 py-3 text-white/60">
                     {new Date(r.created_at).toLocaleString()}

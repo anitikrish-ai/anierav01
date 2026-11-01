@@ -58,7 +58,8 @@ export const callCustomApi = createServerFn({ method: "POST" })
       .eq("enabled", true)
       .is("deleted_at", null)
       .maybeSingle();
-    if (error || !a) return { ok: false as const, status: 404, body: "API not found or disabled", viaProxy: null };
+    if (error || !a)
+      return { ok: false as const, status: 404, body: "API not found or disabled", viaProxy: null };
 
     const started = Date.now();
     try {
@@ -67,9 +68,11 @@ export const callCustomApi = createServerFn({ method: "POST" })
         url.searchParams.set(k, String(v).replace("{query}", data.query));
       }
       const headers: Record<string, string> = { ...((a.headers ?? {}) as Record<string, string>) };
-      if (a.auth_type === "bearer" && a.auth_value) headers["Authorization"] = `Bearer ${a.auth_value}`;
+      if (a.auth_type === "bearer" && a.auth_value)
+        headers["Authorization"] = `Bearer ${a.auth_value}`;
       if (a.auth_type === "api_key_header" && a.auth_value) headers["X-API-Key"] = a.auth_value;
-      if (a.auth_type === "query_key" && a.auth_value) url.searchParams.set("api_key", a.auth_value);
+      if (a.auth_type === "query_key" && a.auth_value)
+        url.searchParams.set("api_key", a.auth_value);
 
       const method = String(a.method ?? "GET").toUpperCase();
       const body =
@@ -78,11 +81,15 @@ export const callCustomApi = createServerFn({ method: "POST" })
           : undefined;
       const { proxiedFetch, clientIpFrom } = await import("./proxy.server");
       let clientIp: string | null = null;
-      try { clientIp = clientIpFrom(getRequest().headers); } catch { /* no request */ }
+      try {
+        clientIp = clientIpFrom(getRequest().headers);
+      } catch {
+        /* no request */
+      }
       const r = await proxiedFetch({
         target: url.toString(),
         // relays only support simple GET passthrough
-        proxyId: method === "GET" ? data.proxyId ?? null : null,
+        proxyId: method === "GET" ? (data.proxyId ?? null) : null,
         init: { method, headers, body },
         timeoutMs: a.timeout_ms ?? 10000,
         clientIp,

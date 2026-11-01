@@ -16,7 +16,9 @@ export function writeProxyPref(id: string | null) {
   try {
     if (id) window.localStorage.setItem(KEY, id);
     else window.localStorage.removeItem(KEY);
-  } catch { /* storage blocked */ }
+  } catch {
+    /* storage blocked */
+  }
   window.dispatchEvent(new CustomEvent(EVT, { detail: id }));
 }
 

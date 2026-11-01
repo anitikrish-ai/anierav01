@@ -61,7 +61,7 @@ export const bulkUpsert = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ entries: z.array(EntrySchema).max(5000) }).parse(d))
   .handler(async ({ data, context }) => {
     if (!data.entries.length) return { inserted: 0 };
-    const rows = data.entries.map(e => ({ ...e, user_id: context.userId }));
+    const rows = data.entries.map((e) => ({ ...e, user_id: context.userId }));
     // Chunk to keep request size reasonable
     let inserted = 0;
     for (let i = 0; i < rows.length; i += 200) {
@@ -80,7 +80,10 @@ export const getMyProfile = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { data, error } = await context.supabase
-      .from("profiles").select("*").eq("id", context.userId).maybeSingle();
+      .from("profiles")
+      .select("*")
+      .eq("id", context.userId)
+      .maybeSingle();
     if (error) throw new Error(error.message);
     return data;
   });
@@ -89,11 +92,17 @@ export const getMyProfile = createServerFn({ method: "GET" })
 export const updateMyProfile = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
-    z.object({
-      display_name: z.string().trim().max(80).nullish(),
-      avatar_url: z.string().url().max(1000).nullish(),
-      mal_username: z.string().trim().regex(/^[A-Za-z0-9_-]{2,30}$/).nullish(),
-    }).parse(d),
+    z
+      .object({
+        display_name: z.string().trim().max(80).nullish(),
+        avatar_url: z.string().url().max(1000).nullish(),
+        mal_username: z
+          .string()
+          .trim()
+          .regex(/^[A-Za-z0-9_-]{2,30}$/)
+          .nullish(),
+      })
+      .parse(d),
   )
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase
@@ -108,13 +117,22 @@ export const updateMyProfile = createServerFn({ method: "POST" })
 export const importFromMal = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
-    z.object({ username: z.string().trim().regex(/^[A-Za-z0-9_-]{2,30}$/) }).parse(d),
+    z
+      .object({
+        username: z
+          .string()
+          .trim()
+          .regex(/^[A-Za-z0-9_-]{2,30}$/),
+      })
+      .parse(d),
   )
   .handler(async ({ data, context }) => {
     const collected: Array<z.infer<typeof EntrySchema>> = [];
     // Jikan returns up to 25 per page (with pagination.has_next_page).
     for (let page = 1; page <= 20; page++) {
-      const r = await fetch(`https://api.jikan.moe/v4/users/${encodeURIComponent(data.username)}/animelist?page=${page}`);
+      const r = await fetch(
+        `https://api.jikan.moe/v4/users/${encodeURIComponent(data.username)}/animelist?page=${page}`,
+      );
       if (r.status === 404) throw new Error("MAL user not found");
       if (!r.ok) throw new Error(`Jikan error ${r.status}`);
       const json: any = await r.json();
@@ -124,11 +142,15 @@ export const importFromMal = createServerFn({ method: "POST" })
         const malId = Number(anime?.mal_id);
         if (!malId) continue;
         const statusRaw: string = String(row?.watch_status ?? row?.status ?? "").toLowerCase();
-        const status =
-          statusRaw.includes("complet") ? "completed" :
-          statusRaw.includes("plan") ? "plan_to_watch" :
-          statusRaw.includes("hold") ? "on_hold" :
-          statusRaw.includes("drop") ? "dropped" : "watching";
+        const status = statusRaw.includes("complet")
+          ? "completed"
+          : statusRaw.includes("plan")
+            ? "plan_to_watch"
+            : statusRaw.includes("hold")
+              ? "on_hold"
+              : statusRaw.includes("drop")
+                ? "dropped"
+                : "watching";
         collected.push({
           mal_id: malId,
           title: String(anime?.title ?? `Anime ${malId}`),
@@ -144,7 +166,7 @@ export const importFromMal = createServerFn({ method: "POST" })
       if (!json?.pagination?.has_next_page) break;
     }
     if (!collected.length) return { inserted: 0 };
-    const rows = collected.map(e => ({ ...e, user_id: context.userId }));
+    const rows = collected.map((e) => ({ ...e, user_id: context.userId }));
     for (let i = 0; i < rows.length; i += 200) {
       const chunk = rows.slice(i, i + 200);
       const { error } = await context.supabase

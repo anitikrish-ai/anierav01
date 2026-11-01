@@ -41,13 +41,15 @@ const SettingsSchema = z.object({
   background_overlay: z.number().min(0).max(1),
   background_blur: z.number().int().min(0).max(40),
   animations_enabled: z.boolean(),
-  homepage_sections: z.array(
-    z.object({
-      key: z.string().min(1).max(40),
-      label: z.string().min(1).max(60),
-      enabled: z.boolean(),
-    }),
-  ).max(30),
+  homepage_sections: z
+    .array(
+      z.object({
+        key: z.string().min(1).max(40),
+        label: z.string().min(1).max(60),
+        enabled: z.boolean(),
+      }),
+    )
+    .max(30),
   feature_flags: z.record(z.string(), z.boolean()).default({}),
 });
 
@@ -56,12 +58,13 @@ export const saveSiteSettings = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => SettingsSchema.parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const { error } = await context.supabase
-      .from("site_settings")
-      .update(data)
-      .eq("id", 1);
+    const { error } = await context.supabase.from("site_settings").update(data).eq("id", 1);
     if (error) throw new Error(error.message);
-    await writeAudit(context, { action: "update", area: "site_settings", details: { site_title: data.site_title } });
+    await writeAudit(context, {
+      action: "update",
+      area: "site_settings",
+      details: { site_title: data.site_title },
+    });
     return { ok: true };
   });
 
@@ -117,10 +120,7 @@ export const deleteProvider = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const { error } = await context.supabase
-      .from("api_providers")
-      .delete()
-      .eq("id", data.id);
+    const { error } = await context.supabase.from("api_providers").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     await writeAudit(context, { action: "delete", area: "api_provider", target_id: data.id });
     return { ok: true };
@@ -133,7 +133,10 @@ export const checkProviderHealth = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { data: prov, error } = await context.supabase
-      .from("api_providers").select("*").eq("id", data.id).single();
+      .from("api_providers")
+      .select("*")
+      .eq("id", data.id)
+      .single();
     if (error || !prov) throw new Error(error?.message ?? "Provider not found");
     let status = "unknown";
     const started = Date.now();
@@ -191,8 +194,7 @@ export const deleteSeo = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) => z.object({ id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
-    const { error } = await context.supabase
-      .from("seo_overrides").delete().eq("id", data.id);
+    const { error } = await context.supabase.from("seo_overrides").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     await writeAudit(context, { action: "delete", area: "seo_override", target_id: data.id });
     return { ok: true };
@@ -205,31 +207,33 @@ export const listAdmins = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     await assertAdmin(context);
     const { data, error } = await context.supabase
-      .from("user_roles").select("*").eq("role", "admin");
+      .from("user_roles")
+      .select("*")
+      .eq("role", "admin");
     if (error) throw new Error(error.message);
     return data ?? [];
   });
 
 export const grantAdmin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
-    z.object({ user_id: z.string().uuid() }).parse(d),
-  )
+  .inputValidator((d: unknown) => z.object({ user_id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { error } = await context.supabase
       .from("user_roles")
       .insert({ user_id: data.user_id, role: "admin" });
     if (error && !error.message.includes("duplicate")) throw new Error(error.message);
-    await writeAudit(context, { action: "grant_admin", area: "user_roles", target_id: data.user_id });
+    await writeAudit(context, {
+      action: "grant_admin",
+      area: "user_roles",
+      target_id: data.user_id,
+    });
     return { ok: true };
   });
 
 export const revokeAdmin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
-    z.object({ user_id: z.string().uuid() }).parse(d),
-  )
+  .inputValidator((d: unknown) => z.object({ user_id: z.string().uuid() }).parse(d))
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     if (data.user_id === context.userId) {
@@ -241,7 +245,11 @@ export const revokeAdmin = createServerFn({ method: "POST" })
       .eq("user_id", data.user_id)
       .eq("role", "admin");
     if (error) throw new Error(error.message);
-    await writeAudit(context, { action: "revoke_admin", area: "user_roles", target_id: data.user_id });
+    await writeAudit(context, {
+      action: "revoke_admin",
+      area: "user_roles",
+      target_id: data.user_id,
+    });
     return { ok: true };
   });
 
@@ -256,7 +264,10 @@ export const getAdminStats = createServerFn({ method: "GET" })
       context.supabase.from("profiles").select("id", { count: "exact", head: true }),
       context.supabase.from("api_providers").select("id, enabled"),
       context.supabase.from("seo_overrides").select("id", { count: "exact", head: true }),
-      context.supabase.from("user_roles").select("id", { count: "exact", head: true }).eq("role", "admin"),
+      context.supabase
+        .from("user_roles")
+        .select("id", { count: "exact", head: true })
+        .eq("role", "admin"),
     ]);
     const providers = provRes.data ?? [];
     return {
@@ -279,8 +290,10 @@ export const listAllUsers = createServerFn({ method: "GET" })
     const { data, error } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 500 });
     if (error) throw new Error(error.message);
     const { data: roles } = await (supabaseAdmin as any).from("user_roles").select("user_id, role");
-    const { data: profiles } = await (supabaseAdmin as any).from("profiles").select("id, display_name");
-    return data.users.map(u => ({
+    const { data: profiles } = await (supabaseAdmin as any)
+      .from("profiles")
+      .select("id, display_name");
+    return data.users.map((u) => ({
       id: u.id,
       email: u.email ?? "",
       created_at: u.created_at,
@@ -295,28 +308,43 @@ const RoleEnum = z.enum(["admin", "moderator", "user"]);
 export const setUserRole = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) =>
-    z.object({
-      email: z.string().trim().email().max(255),
-      role: RoleEnum,
-      grant: z.boolean(),
-    }).parse(d),
+    z
+      .object({
+        email: z.string().trim().email().max(255),
+        role: RoleEnum,
+        grant: z.boolean(),
+      })
+      .parse(d),
   )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: list, error } = await supabaseAdmin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+    const { data: list, error } = await supabaseAdmin.auth.admin.listUsers({
+      page: 1,
+      perPage: 1000,
+    });
     if (error) throw new Error(error.message);
-    const user = list.users.find(u => (u.email ?? "").toLowerCase() === data.email.toLowerCase());
+    const user = list.users.find((u) => (u.email ?? "").toLowerCase() === data.email.toLowerCase());
     if (!user) throw new Error("No account with that email. They must sign up first.");
     if (!data.grant && data.role === "admin" && user.id === context.userId) {
       throw new Error("You cannot revoke your own admin role");
     }
     const db = supabaseAdmin as any;
     const { error: e2 } = data.grant
-      ? await db.from("user_roles").upsert({ user_id: user.id, role: data.role }, { onConflict: "user_id,role", ignoreDuplicates: true })
+      ? await db
+          .from("user_roles")
+          .upsert(
+            { user_id: user.id, role: data.role },
+            { onConflict: "user_id,role", ignoreDuplicates: true },
+          )
       : await db.from("user_roles").delete().eq("user_id", user.id).eq("role", data.role);
     if (e2) throw new Error(e2.message);
-    await writeAudit(context, { action: data.grant ? "grant_role" : "revoke_role", area: "user_roles", target_id: user.id, details: { role: data.role, email: data.email } });
+    await writeAudit(context, {
+      action: data.grant ? "grant_role" : "revoke_role",
+      area: "user_roles",
+      target_id: user.id,
+      details: { role: data.role, email: data.email },
+    });
     return { ok: true };
   });
 
@@ -329,7 +357,9 @@ export const listCustomApisAdmin = createServerFn({ method: "GET" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data, error } = await (supabaseAdmin as any)
       .from("custom_apis")
-      .select("id, slug, name, category, description, base_url, path, method, enabled, priority, tags, last_status, last_latency_ms, last_checked_at")
+      .select(
+        "id, slug, name, category, description, base_url, path, method, enabled, priority, tags, last_status, last_latency_ms, last_checked_at",
+      )
       .is("deleted_at", null)
       .order("priority", { ascending: true });
     if (error) throw new Error(error.message);
@@ -338,13 +368,22 @@ export const listCustomApisAdmin = createServerFn({ method: "GET" })
 
 export const toggleCustomApiAdmin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ id: z.string().uuid(), enabled: z.boolean() }).parse(d))
+  .inputValidator((d: unknown) =>
+    z.object({ id: z.string().uuid(), enabled: z.boolean() }).parse(d),
+  )
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await (supabaseAdmin as any).from("custom_apis").update({ enabled: data.enabled }).eq("id", data.id);
+    const { error } = await (supabaseAdmin as any)
+      .from("custom_apis")
+      .update({ enabled: data.enabled })
+      .eq("id", data.id);
     if (error) throw new Error(error.message);
-    await writeAudit(context, { action: data.enabled ? "enable" : "disable", area: "custom_api", target_id: data.id });
+    await writeAudit(context, {
+      action: data.enabled ? "enable" : "disable",
+      area: "custom_api",
+      target_id: data.id,
+    });
     return { ok: true };
   });
 
@@ -355,7 +394,9 @@ export const softDeleteCustomApiAdmin = createServerFn({ method: "POST" })
     await assertAdmin(context);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await (supabaseAdmin as any)
-      .from("custom_apis").update({ deleted_at: new Date().toISOString(), enabled: false }).eq("id", data.id);
+      .from("custom_apis")
+      .update({ deleted_at: new Date().toISOString(), enabled: false })
+      .eq("id", data.id);
     if (error) throw new Error(error.message);
     await writeAudit(context, { action: "soft_delete", area: "custom_api", target_id: data.id });
     return { ok: true };

@@ -68,10 +68,7 @@ export const clearAudit = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     await assertAdmin(context);
     const cutoff = new Date(Date.now() - data.olderThanDays * 86400_000).toISOString();
-    const { error } = await context.supabase
-      .from("audit_log")
-      .delete()
-      .lt("created_at", cutoff);
+    const { error } = await context.supabase.from("audit_log").delete().lt("created_at", cutoff);
     if (error) throw new Error(error.message);
     return { ok: true };
   });

@@ -17,7 +17,7 @@ function getObserver() {
   if (typeof window === "undefined" || !("IntersectionObserver" in window)) return null;
   if (!observer) {
     observer = new IntersectionObserver(
-      entries => {
+      (entries) => {
         for (const e of entries) {
           if (!e.isIntersecting) continue;
           callbacks.get(e.target)?.();
@@ -57,7 +57,10 @@ export function Reveal({
       return;
     }
     const io = getObserver();
-    if (!io) { setShown(true); return; }
+    if (!io) {
+      setShown(true);
+      return;
+    }
     // Already in view on mount (above the fold) → reveal on the next frame.
     callbacks.set(el, () => setShown(true));
     io.observe(el);

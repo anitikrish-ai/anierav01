@@ -6,12 +6,13 @@ import { jikan } from "@/lib/jikan";
 import { AnimeGrid, GridSkeleton } from "@/components/AnimeCard";
 import { ErrorState, EmptyState } from "@/components/StateBlocks";
 import { useEffect, useState } from "react";
+import { GlassButton, GlassCard } from "@zakisheriff/liquid-glass";
 
 /** URL values may arrive as numbers (e.g. ?genre=1) — coerce everything safely. */
 const str = z
   .union([z.string(), z.number()])
   .optional()
-  .transform(v => (v === undefined || v === "" ? undefined : String(v)));
+  .transform((v) => (v === undefined || v === "" ? undefined : String(v)));
 
 const searchSchema = z.object({
   q: str,
@@ -24,7 +25,7 @@ const searchSchema = z.object({
   page: z
     .union([z.string(), z.number()])
     .optional()
-    .transform(v => {
+    .transform((v) => {
       const n = typeof v === "string" ? parseInt(v, 10) : v;
       return n && Number.isFinite(n) && n > 0 ? n : undefined;
     }),
@@ -34,9 +35,16 @@ export const Route = createFileRoute("/browse")({
   head: () => ({
     meta: [
       { title: "Browse Anime — Search & Filter | AniEra" },
-      { name: "description", content: "Search and filter anime by title, genre, year, type, score and status. Stream sub or dub on AniEra's frosted-glass player." },
+      {
+        name: "description",
+        content:
+          "Search and filter anime by title, genre, year, type, score and status. Stream sub or dub on AniEra's frosted-glass player.",
+      },
       { property: "og:title", content: "Browse Anime — AniEra" },
-      { property: "og:description", content: "Search & filter every anime — by genre, year, status, type and rating." },
+      {
+        property: "og:description",
+        content: "Search & filter every anime — by genre, year, status, type and rating.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { property: "og:url", content: "https://aniera.lovable.app/browse" },
@@ -75,7 +83,15 @@ function BrowsePage() {
     setType(search.type ?? "");
     setMinScore(search.minScore ?? "");
     setOrder(search.order ?? "");
-  }, [search.q, search.genre, search.year, search.status, search.type, search.minScore, search.order]);
+  }, [
+    search.q,
+    search.genre,
+    search.year,
+    search.status,
+    search.type,
+    search.minScore,
+    search.order,
+  ]);
 
   const genresQ = useQuery({
     queryKey: ["genres"],
@@ -86,11 +102,27 @@ function BrowsePage() {
   const page = search.page ?? 1;
 
   const hasFilter = Boolean(
-    search.q || search.genre || search.year || search.status || search.type || search.minScore || search.order,
+    search.q ||
+    search.genre ||
+    search.year ||
+    search.status ||
+    search.type ||
+    search.minScore ||
+    search.order,
   );
 
   const results = useQuery({
-    queryKey: ["search", search.q, search.genre, search.year, search.status, search.type, search.minScore, search.order, page],
+    queryKey: [
+      "search",
+      search.q,
+      search.genre,
+      search.year,
+      search.status,
+      search.type,
+      search.minScore,
+      search.order,
+      page,
+    ],
     queryFn: () =>
       jikan.search({
         q: search.q,
@@ -122,7 +154,7 @@ function BrowsePage() {
     });
 
   const goPage = (n: number) => {
-    navigate({ search: prev => ({ ...prev, page: n > 1 ? n : undefined }) });
+    navigate({ search: (prev) => ({ ...prev, page: n > 1 ? n : undefined }) });
     if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -152,84 +184,114 @@ function BrowsePage() {
         </p>
       </div>
 
-      <form
-        onSubmit={e => {
-          e.preventDefault();
-          apply();
-        }}
-        className="glass flex flex-wrap items-center gap-3 rounded-2xl p-4"
-      >
-        <input
-          type="search"
-          value={q}
-          onChange={e => setQ(e.target.value)}
-          placeholder="Search anime titles…"
-          aria-label="Search anime"
-          className={`min-w-[200px] flex-1 placeholder:text-white/40 ${field}`}
-        />
-        <select value={genre} onChange={e => setGenre(e.target.value)} aria-label="Genre" className={field}>
-          <option value="">All genres</option>
-          {genresQ.data?.data?.map(g => (
-            <option key={`${g.mal_id}-${g.name}`} value={String(g.mal_id)} className="bg-background">
-              {g.name}
-            </option>
-          ))}
-        </select>
-        <select value={type} onChange={e => setType(e.target.value)} aria-label="Type" className={field}>
-          <option value="">Any type</option>
-          {["tv", "movie", "ova", "special", "ona", "music"].map(t => (
-            <option key={t} value={t} className="bg-background">
-              {t.toUpperCase()}
-            </option>
-          ))}
-        </select>
-        <select value={status} onChange={e => setStatus(e.target.value)} aria-label="Status" className={field}>
-          <option value="">Any status</option>
-          <option value="airing" className="bg-background">Airing</option>
-          <option value="complete" className="bg-background">Completed</option>
-          <option value="upcoming" className="bg-background">Upcoming</option>
-        </select>
-        <select value={minScore} onChange={e => setMinScore(e.target.value)} aria-label="Minimum score" className={field}>
-          <option value="">Any rating</option>
-          {["9", "8", "7", "6", "5"].map(s => (
-            <option key={s} value={s} className="bg-background">
-              {s}+ ★
-            </option>
-          ))}
-        </select>
-        <select value={order} onChange={e => setOrder(e.target.value)} aria-label="Sort by" className={field}>
-          {ORDERS.map(o => (
-            <option key={o.v} value={o.v} className="bg-background">
-              {o.label}
-            </option>
-          ))}
-        </select>
-        <input
-          type="number"
-          placeholder="Year"
-          aria-label="Year"
-          min={1950}
-          max={2030}
-          value={year}
-          onChange={e => setYear(e.target.value)}
-          className={`w-28 placeholder:text-white/40 ${field}`}
-        />
-        {hasFilter && (
-          <button
-            type="button"
-            onClick={reset}
-            className="rounded-lg bg-white/5 px-4 py-2 text-sm text-white/70 hover:bg-white/10 hover:text-white"
-          >
-            Reset
-          </button>
-        )}
-        <button
-          type="submit"
-          className="ml-auto rounded-lg bg-gradient-to-r from-neon-cyan to-neon-magenta px-4 py-2 text-sm font-semibold text-background transition hover:scale-105"
+      <GlassCard variant="regular" intensity={4} padding="16px" radius="24px" className="w-full">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            apply();
+          }}
+          className="flex flex-wrap items-center gap-3"
         >
-          Apply Filters
-        </button>
-      </form>
+          <input
+            type="search"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search anime titles…"
+            aria-label="Search anime"
+            className={`min-w-[200px] flex-1 placeholder:text-white/40 ${field}`}
+          />
+          <select
+            value={genre}
+            onChange={(e) => setGenre(e.target.value)}
+            aria-label="Genre"
+            className={field}
+          >
+            <option value="">All genres</option>
+            {genresQ.data?.data?.map((g) => (
+              <option
+                key={`${g.mal_id}-${g.name}`}
+                value={String(g.mal_id)}
+                className="bg-background"
+              >
+                {g.name}
+              </option>
+            ))}
+          </select>
+          <select
+            value={type}
+            onChange={(e) => setType(e.target.value)}
+            aria-label="Type"
+            className={field}
+          >
+            <option value="">Any type</option>
+            {["tv", "movie", "ova", "special", "ona", "music"].map((t) => (
+              <option key={t} value={t} className="bg-background">
+                {t.toUpperCase()}
+              </option>
+            ))}
+          </select>
+          <select
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+            aria-label="Status"
+            className={field}
+          >
+            <option value="">Any status</option>
+            <option value="airing" className="bg-background">
+              Airing
+            </option>
+            <option value="complete" className="bg-background">
+              Completed
+            </option>
+            <option value="upcoming" className="bg-background">
+              Upcoming
+            </option>
+          </select>
+          <select
+            value={minScore}
+            onChange={(e) => setMinScore(e.target.value)}
+            aria-label="Minimum score"
+            className={field}
+          >
+            <option value="">Any rating</option>
+            {["9", "8", "7", "6", "5"].map((s) => (
+              <option key={s} value={s} className="bg-background">
+                {s}+ ★
+              </option>
+            ))}
+          </select>
+          <select
+            value={order}
+            onChange={(e) => setOrder(e.target.value)}
+            aria-label="Sort by"
+            className={field}
+          >
+            {ORDERS.map((o) => (
+              <option key={o.v} value={o.v} className="bg-background">
+                {o.label}
+              </option>
+            ))}
+          </select>
+          <input
+            type="number"
+            placeholder="Year"
+            aria-label="Year"
+            min={1950}
+            max={2030}
+            value={year}
+            onChange={(e) => setYear(e.target.value)}
+            className={`w-28 placeholder:text-white/40 ${field}`}
+          />
+          {hasFilter && (
+            <GlassButton type="button" variant="clear" size="sm" onClick={reset}>
+              Reset
+            </GlassButton>
+          )}
+          <GlassButton type="submit" variant="filled" tint="#8b5cf6" size="sm" className="ml-auto">
+            Apply Filters
+          </GlassButton>
+        </form>
+      </GlassCard>
 
       {!hasFilter ? (
         <EmptyState
@@ -246,7 +308,9 @@ function BrowsePage() {
         />
       ) : items.length ? (
         <>
-          <div className={results.isFetching ? "opacity-60 transition-opacity" : "transition-opacity"}>
+          <div
+            className={results.isFetching ? "opacity-60 transition-opacity" : "transition-opacity"}
+          >
             <AnimeGrid items={items} />
           </div>
           <div className="flex items-center justify-center gap-3 pt-2">

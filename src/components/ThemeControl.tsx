@@ -21,7 +21,9 @@ function readStored<T extends string>(key: string, allowed: readonly T[], fallba
   try {
     const saved = localStorage.getItem(key);
     if (saved && (allowed as readonly string[]).includes(saved)) return saved as T;
-  } catch { /* Storage may be unavailable; defaults still work. */ }
+  } catch {
+    /* Storage may be unavailable; defaults still work. */
+  }
   return fallback;
 }
 
@@ -33,14 +35,17 @@ export function ThemeControl() {
 
   useEffect(() => {
     setTheme(readStored<Theme>("aniera:theme", ["system", "light", "dark"], "system"));
-    setMotion(readStored<Motion>("aniera:motion", ["system", "reduced", "playful", "off"], "system"));
+    setMotion(
+      readStored<Motion>("aniera:motion", ["system", "reduced", "playful", "off"], "system"),
+    );
   }, []);
 
   // Apply theme; "system" tracks the device appearance.
   useEffect(() => {
     const mq = window.matchMedia("(prefers-color-scheme: light)");
     const apply = () => {
-      document.documentElement.dataset.theme = theme === "system" ? (mq.matches ? "light" : "dark") : theme;
+      document.documentElement.dataset.theme =
+        theme === "system" ? (mq.matches ? "light" : "dark") : theme;
     };
     apply();
     mq.addEventListener("change", apply);
@@ -64,7 +69,9 @@ export function ThemeControl() {
     const close = (event: PointerEvent) => {
       if (!wrapRef.current?.contains(event.target as Node)) setOpen(false);
     };
-    const esc = (event: KeyboardEvent) => { if (event.key === "Escape") setOpen(false); };
+    const esc = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
     document.addEventListener("pointerdown", close);
     document.addEventListener("keydown", esc);
     return () => {
@@ -75,15 +82,23 @@ export function ThemeControl() {
 
   const pickTheme = (next: Theme) => {
     setTheme(next);
-    try { localStorage.setItem("aniera:theme", next); } catch { /* Non-persistent preference is still usable. */ }
+    try {
+      localStorage.setItem("aniera:theme", next);
+    } catch {
+      /* Non-persistent preference is still usable. */
+    }
   };
   const pickMotion = (next: Motion) => {
     setMotion(next);
-    try { localStorage.setItem("aniera:motion", next); } catch { /* Non-persistent preference is still usable. */ }
+    try {
+      localStorage.setItem("aniera:motion", next);
+    } catch {
+      /* Non-persistent preference is still usable. */
+    }
   };
 
   return (
-    <div ref={wrapRef} className="site-theme-control relative">
+    <div ref={wrapRef} className="site-theme-control relative inline-flex items-center shrink-0">
       <GlassButton
         variant="clear"
         size="md"
@@ -92,39 +107,57 @@ export function ThemeControl() {
         aria-label="Appearance and animation settings"
         aria-expanded={open}
         title="Appearance"
-        onClick={() => setOpen(v => !v)}
+        onClick={() => setOpen((v) => !v)}
       />
       {open && (
-        <GlassCard
-          variant="regular"
-          intensity={5}
-          padding="14px"
-          radius="24px"
-          className="site-theme-pop anim-pop absolute right-0 top-full z-[var(--z-dropdown)] mt-2 w-72"
-          role="dialog"
-          aria-label="Appearance and animation"
-        >
-          <p className="px-1 pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Appearance</p>
-          <GlassSegmented
-            options={themeOptions.map(opt => ({ label: opt.label, icon: <opt.icon size={13} aria-hidden="true" /> }))}
-            value={Math.max(0, themeOptions.findIndex(o => o.value === theme))}
-            onChange={index => pickTheme(themeOptions[index]!.value)}
-            size="sm"
-            intensity={4}
-            className="w-full"
-            aria-label="Appearance"
-          />
-          <p className="px-1 pb-2 pt-4 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Animation</p>
-          <GlassSegmented
-            options={motionOptions.map(opt => ({ label: opt.label, icon: <opt.icon size={13} aria-hidden="true" /> }))}
-            value={Math.max(0, motionOptions.findIndex(o => o.value === motion))}
-            onChange={index => pickMotion(motionOptions[index]!.value)}
-            size="sm"
-            intensity={4}
-            className="w-full"
-            aria-label="Animation"
-          />
-        </GlassCard>
+        <div className="site-theme-pop anim-pop absolute right-0 top-[calc(100%+10px)] z-50 w-72 pointer-events-auto">
+          <GlassCard
+            variant="regular"
+            intensity={5}
+            padding="14px"
+            radius="22px"
+            className="w-full shadow-2xl border border-white/10"
+            role="dialog"
+            aria-label="Appearance and animation"
+          >
+            <p className="px-1 pb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/90">
+              Appearance
+            </p>
+            <GlassSegmented
+              options={themeOptions.map((opt) => ({
+                label: opt.label,
+                icon: <opt.icon size={13} aria-hidden="true" />,
+              }))}
+              value={Math.max(
+                0,
+                themeOptions.findIndex((o) => o.value === theme),
+              )}
+              onChange={(index) => pickTheme(themeOptions[index]!.value)}
+              size="sm"
+              intensity={4}
+              className="w-full"
+              aria-label="Appearance"
+            />
+            <p className="px-1 pb-2 pt-3.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/90">
+              Animation
+            </p>
+            <GlassSegmented
+              options={motionOptions.map((opt) => ({
+                label: opt.label,
+                icon: <opt.icon size={13} aria-hidden="true" />,
+              }))}
+              value={Math.max(
+                0,
+                motionOptions.findIndex((o) => o.value === motion),
+              )}
+              onChange={(index) => pickMotion(motionOptions[index]!.value)}
+              size="sm"
+              intensity={4}
+              className="w-full"
+              aria-label="Animation"
+            />
+          </GlassCard>
+        </div>
       )}
     </div>
   );

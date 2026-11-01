@@ -13,9 +13,14 @@ import {
   setPreferredLang,
 } from "@/lib/history";
 import { malToAnilist } from "@/lib/anilist";
-import { searchAnikotoByTitle, getAnikotoSeries, type AnikotoSeries } from "@/lib/anikoto.functions";
+import {
+  searchAnikotoByTitle,
+  getAnikotoSeries,
+  type AnikotoSeries,
+} from "@/lib/anikoto.functions";
 import { getHianimeSources } from "@/lib/hianime.functions";
 import { HlsPlayer } from "@/components/HlsPlayer";
+import { GlassButton, GlassSegmented } from "@zakisheriff/liquid-glass";
 
 type Lang = "sub" | "dub";
 
@@ -23,7 +28,13 @@ interface ServerDef {
   id: string;
   label: string;
   /** Returns an embed URL, or null if this server cannot serve this request. */
-  build: (ctx: { malId: number; anilistId: number | null; anikoto: AnikotoSeries | null; ep: number; lang: Lang }) => string | null;
+  build: (ctx: {
+    malId: number;
+    anilistId: number | null;
+    anikoto: AnikotoSeries | null;
+    ep: number;
+    lang: Lang;
+  }) => string | null;
 }
 
 const SERVERS: ServerDef[] = [
@@ -38,7 +49,7 @@ const SERVERS: ServerDef[] = [
     label: "HiAnime (Episode ID)",
     build: ({ anikoto, ep, lang }) => {
       if (!anikoto) return null;
-      const match = anikoto.episodes.find(e => e.number === ep);
+      const match = anikoto.episodes.find((e) => e.number === ep);
       const epId = match?.episode_id;
       if (!epId) return null;
       return `https://megaplay.buzz/stream/s-2/${epId}/${lang}`;
@@ -94,8 +105,9 @@ const SERVERS: ServerDef[] = [
     label: "Anikoto",
     build: ({ anikoto, ep, lang }) => {
       if (!anikoto) return null;
-      const match = anikoto.episodes.find(e => e.number === ep);
-      const url = match?.embed_url?.[lang] ?? match?.embed_url?.sub ?? match?.embed_url?.dub ?? null;
+      const match = anikoto.episodes.find((e) => e.number === ep);
+      const url =
+        match?.embed_url?.[lang] ?? match?.embed_url?.sub ?? match?.embed_url?.dub ?? null;
       return url || null;
     },
   },
@@ -106,10 +118,16 @@ export const Route = createFileRoute("/watch/$id/$ep")({
     const url = `https://aniera.lovable.app/watch/${params.id}/${params.ep}`;
     return {
       meta: [
-      { property: "og:description", content: `Stream episode ${params.ep} on AniEra with sub and dub playback.` },
-      { name: "twitter:card", content: "summary" },
+        {
+          property: "og:description",
+          content: `Stream episode ${params.ep} on AniEra with sub and dub playback.`,
+        },
+        { name: "twitter:card", content: "summary" },
         { title: `Episode ${params.ep} — Watch on AniEra` },
-        { name: "description", content: `Stream episode ${params.ep} on AniEra with sub & dub, multi-server playback, and a frosted-glass player.` },
+        {
+          name: "description",
+          content: `Stream episode ${params.ep} on AniEra with sub & dub, multi-server playback, and a frosted-glass player.`,
+        },
         { property: "og:title", content: `Episode ${params.ep} — AniEra` },
         { property: "og:type", content: "video.episode" },
         { property: "og:url", content: url },
@@ -142,7 +160,7 @@ function WatchPage() {
   const [serverIdx, setServerIdx] = useState(() => {
     if (typeof window === "undefined") return 0;
     const preferred = getPreferredProvider(malId);
-    const i = preferred ? SERVERS.findIndex(s => s.id === preferred) : -1;
+    const i = preferred ? SERVERS.findIndex((s) => s.id === preferred) : -1;
     return i >= 0 ? i : 0;
   });
   const [lang, setLang] = useState<Lang>(() => getPreferredLang());
@@ -216,26 +234,28 @@ function WatchPage() {
     if (stallTimerRef.current) clearTimeout(stallTimerRef.current);
     if (!embed) return;
     stallTimerRef.current = setTimeout(() => {
-      setLoadState(prev => (prev === "loading" ? "stalled" : prev));
+      setLoadState((prev) => (prev === "loading" ? "stalled" : prev));
     }, 12000);
-    return () => { if (stallTimerRef.current) clearTimeout(stallTimerRef.current); };
+    return () => {
+      if (stallTimerRef.current) clearTimeout(stallTimerRef.current);
+    };
   }, [embed]);
 
   const tryNextServer = () => {
-    setServerIdx(i => {
+    setServerIdx((i) => {
       const next = (i + 1) % SERVERS.length;
       setPreferredProvider(malId, SERVERS[next].id);
       return next;
     });
-    setIframeKey(k => k + 1);
+    setIframeKey((k) => k + 1);
   };
 
   const selectServer = (id: string) => {
-    const idx = SERVERS.findIndex(s => s.id === id);
+    const idx = SERVERS.findIndex((s) => s.id === id);
     if (idx >= 0) {
       setServerIdx(idx);
       setPreferredProvider(malId, id);
-      setIframeKey(k => k + 1);
+      setIframeKey((k) => k + 1);
     }
   };
 
@@ -270,22 +290,29 @@ function WatchPage() {
     if (!showNextHint) return;
     const dismiss = () => setShowNextHint(false);
     const events = ["mousemove", "mousedown", "keydown", "touchstart", "wheel", "scroll"] as const;
-    events.forEach(e => window.addEventListener(e, dismiss, { passive: true, once: true }));
-    return () => events.forEach(e => window.removeEventListener(e, dismiss));
+    events.forEach((e) => window.addEventListener(e, dismiss, { passive: true, once: true }));
+    return () => events.forEach((e) => window.removeEventListener(e, dismiss));
   }, [showNextHint]);
 
   // Reset hint when episode changes.
-  useEffect(() => { setShowNextHint(false); }, [epNum, malId]);
-
+  useEffect(() => {
+    setShowNextHint(false);
+  }, [epNum, malId]);
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center gap-2 text-sm text-white/70">
-        <Link to="/" className="hover:text-white">Home</Link>
+        <Link to="/" className="hover:text-white">
+          Home
+        </Link>
         <span>/</span>
         {a ? (
-          <Link to="/anime/$id" params={{ id }} className="hover:text-white">{bestTitle(a)}</Link>
-        ) : <span>Loading…</span>}
+          <Link to="/anime/$id" params={{ id }} className="hover:text-white">
+            {bestTitle(a)}
+          </Link>
+        ) : (
+          <span>Loading…</span>
+        )}
         <span>/</span>
         <span className="text-white">Episode {epNum}</span>
       </div>
@@ -312,7 +339,10 @@ function WatchPage() {
             ) : (
               <div className="flex h-full w-full flex-col items-center justify-center gap-2 p-4 text-center text-sm text-white/60">
                 <span>HiAnime direct stream not found for this episode.</span>
-                <button onClick={tryNextServer} className="rounded-md bg-gradient-to-r from-neon-cyan to-neon-magenta px-3 py-1 text-xs font-semibold text-background">
+                <button
+                  onClick={tryNextServer}
+                  className="rounded-md bg-gradient-to-r from-neon-cyan to-neon-magenta px-3 py-1 text-xs font-semibold text-background"
+                >
                   Try next server →
                 </button>
               </div>
@@ -336,7 +366,9 @@ function WatchPage() {
           )}
           {loadState === "stalled" && (
             <div className="absolute inset-x-0 bottom-0 flex flex-wrap items-center justify-between gap-2 bg-black/70 px-4 py-2 text-xs text-white/90 backdrop-blur">
-              <span>Stream slow or unavailable on <b>{activeServer.label}</b>.</span>
+              <span>
+                Stream slow or unavailable on <b>{activeServer.label}</b>.
+              </span>
               <button
                 onClick={tryNextServer}
                 className="rounded-md bg-gradient-to-r from-neon-cyan to-neon-magenta px-3 py-1 font-semibold text-background"
@@ -353,18 +385,29 @@ function WatchPage() {
             </h1>
             <p className="mt-0.5 text-[11px] text-white/50">
               MAL #{malId}
-              {anilistQ.data ? <> · AniList #{anilistQ.data}</> : anilistQ.isLoading ? <> · AniList…</> : null}
+              {anilistQ.data ? (
+                <> · AniList #{anilistQ.data}</>
+              ) : anilistQ.isLoading ? (
+                <> · AniList…</>
+              ) : null}
               {anikotoSeriesQ.data ? <> · Anikoto ✓</> : null}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Toggle value={lang} options={[["sub", "SUB"], ["dub", "DUB"]]} onChange={v => selectLang(v as Lang)} />
+            <GlassSegmented
+              options={["SUB", "DUB"]}
+              value={lang === "sub" ? 0 : 1}
+              onChange={(idx) => selectLang(idx === 0 ? "sub" : "dub")}
+              size="sm"
+              intensity={4}
+              aria-label="Audio language"
+            />
             <select
               value={activeServer.id}
-              onChange={e => selectServer(e.target.value)}
-              className="rounded-lg bg-white/5 px-3 py-2 text-xs text-white outline-none ring-1 ring-white/10 focus:ring-neon-cyan"
+              onChange={(e) => selectServer(e.target.value)}
+              className="rounded-xl bg-white/5 px-3 py-2 text-xs text-white outline-none ring-1 ring-white/10 focus:ring-neon-cyan"
             >
-              {SERVERS.map(s => {
+              {SERVERS.map((s) => {
                 const available = !!s.build(ctx);
                 return (
                   <option key={s.id} value={s.id} disabled={!available} className="bg-background">
@@ -373,14 +416,22 @@ function WatchPage() {
                 );
               })}
             </select>
-            <button onClick={tryNextServer}
-              className="rounded-lg glass px-3 py-2 text-xs font-medium text-white hover:bg-white/10">
+            <GlassButton
+              variant="clear"
+              size="sm"
+              onClick={tryNextServer}
+              title="Switch to next server"
+            >
               ↻ Next server
-            </button>
-            <button onClick={() => goEp(epNum - 1)} disabled={epNum <= 1}
-              className="rounded-lg glass px-3 py-2 text-xs font-medium text-white disabled:opacity-40">
+            </GlassButton>
+            <GlassButton
+              variant="clear"
+              size="sm"
+              onClick={() => goEp(epNum - 1)}
+              disabled={epNum <= 1}
+            >
               ← Prev
-            </button>
+            </GlassButton>
             <div className="relative">
               {showNextHint && (
                 <span
@@ -390,10 +441,20 @@ function WatchPage() {
                   Next Episode →
                 </span>
               )}
-              <button onClick={() => goEp(epNum + 1)} disabled={!!total && epNum >= total}
-                className={`rounded-lg bg-gradient-to-r from-neon-cyan to-neon-magenta px-3 py-2 text-xs font-semibold text-background disabled:opacity-40 ${showNextHint ? "ring-2 ring-neon-cyan/70 shadow-[0_0_20px_rgba(34,211,238,0.6)]" : ""}`}>
+              <GlassButton
+                variant="filled"
+                tint="#8b5cf6"
+                size="sm"
+                onClick={() => goEp(epNum + 1)}
+                disabled={!!total && epNum >= total}
+                className={
+                  showNextHint
+                    ? "ring-2 ring-neon-cyan/70 shadow-[0_0_20px_rgba(34,211,238,0.6)]"
+                    : ""
+                }
+              >
                 Next →
-              </button>
+              </GlassButton>
             </div>
           </div>
         </div>
@@ -407,10 +468,16 @@ function WatchPage() {
               const n = i + 1;
               const active = n === epNum;
               return (
-                <Link key={n} to="/watch/$id/$ep" params={{ id, ep: String(n) }}
+                <Link
+                  key={n}
+                  to="/watch/$id/$ep"
+                  params={{ id, ep: String(n) }}
                   className={`rounded-lg px-2 py-2 text-center text-xs font-semibold transition ${
-                    active ? "bg-gradient-to-r from-neon-cyan to-neon-magenta text-background" : "glass text-white/80 hover:text-white"
-                  }`}>
+                    active
+                      ? "bg-gradient-to-r from-neon-cyan to-neon-magenta text-background"
+                      : "glass text-white/80 hover:text-white"
+                  }`}
+                >
                   {n}
                 </Link>
               );
@@ -422,7 +489,15 @@ function WatchPage() {
   );
 }
 
-function Toggle({ value, options, onChange }: { value: string; options: [string, string][]; onChange: (v: string) => void }) {
+function Toggle({
+  value,
+  options,
+  onChange,
+}: {
+  value: string;
+  options: [string, string][];
+  onChange: (v: string) => void;
+}) {
   return (
     <div className="glass flex rounded-lg p-0.5">
       {options.map(([val, label]) => (

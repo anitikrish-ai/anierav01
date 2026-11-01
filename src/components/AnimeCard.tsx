@@ -12,8 +12,11 @@ function AnimeCardImpl({ anime }: { anime: Anime }) {
     <Link
       to="/anime/$id"
       params={{ id: String(anime.mal_id) }}
-      className="sheen card-lift group relative block overflow-hidden rounded-2xl surface"
-      style={{ contentVisibility: "auto", containIntrinsicSize: "300px 450px" } as React.CSSProperties}
+      preload="intent"
+      className="sheen card-lift group relative block overflow-hidden rounded-2xl surface active:scale-[0.98] transition-transform duration-150"
+      style={
+        { contentVisibility: "auto", containIntrinsicSize: "300px 450px" } as React.CSSProperties
+      }
     >
       <div className="relative aspect-[2/3] overflow-hidden">
         {/* Shimmer placeholder keeps the slot filled until the artwork fades in */}
@@ -31,9 +34,13 @@ function AnimeCardImpl({ anime }: { anime: Anime }) {
       <div className="on-media pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent p-3 pt-10">
         <h3 className="truncate text-sm font-semibold text-white">{title}</h3>
         <div className="mt-1 flex items-center justify-between text-[11px] text-white/70">
-          <span>{anime.type ?? "—"} · {anime.episodes ?? "?"} ep</span>
+          <span>
+            {anime.type ?? "—"} · {anime.episodes ?? "?"} ep
+          </span>
           {anime.score ? (
-            <span className="rounded-md bg-white/10 px-1.5 py-0.5 font-medium text-neon-cyan">★ {anime.score.toFixed(1)}</span>
+            <span className="rounded-md bg-white/10 px-1.5 py-0.5 font-medium text-neon-cyan">
+              ★ {anime.score.toFixed(1)}
+            </span>
           ) : null}
         </div>
       </div>
@@ -52,7 +59,7 @@ export function AnimeGrid({ items }: { items: Anime[] }) {
   // Jikan can return the same title across pages/filters — de-dupe so React
   // keys stay unique, and drop malformed rows instead of crashing.
   const seen = new Set<number>();
-  const safe = (Array.isArray(items) ? items : []).filter(a => {
+  const safe = (Array.isArray(items) ? items : []).filter((a) => {
     if (!a || typeof a.mal_id !== "number" || seen.has(a.mal_id)) return false;
     seen.add(a.mal_id);
     return true;
@@ -68,7 +75,6 @@ export function AnimeGrid({ items }: { items: Anime[] }) {
   );
 }
 
-
 export function CardSkeleton() {
   return <div className="aspect-[2/3] rounded-2xl shimmer" />;
 }
@@ -76,7 +82,9 @@ export function CardSkeleton() {
 export function GridSkeleton({ count = 12 }: { count?: number }) {
   return (
     <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-      {Array.from({ length: count }).map((_, i) => <CardSkeleton key={i} />)}
+      {Array.from({ length: count }).map((_, i) => (
+        <CardSkeleton key={i} />
+      ))}
     </div>
   );
 }

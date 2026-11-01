@@ -8,18 +8,24 @@ import { getFavorites, toggleFavorite, getWatchedEpisodes } from "@/lib/history"
 import { AiringCountdown } from "@/components/AiringCountdown";
 import { Reviews } from "@/components/Reviews";
 import { Reveal } from "@/components/Reveal";
-
+import { GlassButton } from "@zakisheriff/liquid-glass";
 
 export const Route = createFileRoute("/anime/$id")({
   head: ({ params }) => {
     const url = `https://aniera.lovable.app/anime/${params.id}`;
     return {
       meta: [
-      { name: "twitter:card", content: "summary" },
+        { name: "twitter:card", content: "summary" },
         { title: `Anime #${params.id} — Watch on AniEra` },
-        { name: "description", content: `Stream this anime on AniEra with sub & dub playback, full episode list, and frosted-glass UI.` },
+        {
+          name: "description",
+          content: `Stream this anime on AniEra with sub & dub playback, full episode list, and frosted-glass UI.`,
+        },
         { property: "og:title", content: `Watch on AniEra` },
-        { property: "og:description", content: `Stream this anime — sub or dub, full episode tracker.` },
+        {
+          property: "og:description",
+          content: `Stream this anime — sub or dub, full episode tracker.`,
+        },
         { property: "og:type", content: "video.tv_show" },
         { property: "og:url", content: url },
       ],
@@ -33,85 +39,151 @@ function AnimePage() {
   const { id } = Route.useParams();
   const malId = Number(id);
   const animeQ = useQuery({ queryKey: ["anime", malId], queryFn: () => jikan.anime(malId) });
-  const epsQ = useQuery({ queryKey: ["episodes", malId], queryFn: () => jikan.episodes(malId), enabled: !!animeQ.data });
-  const recQ = useQuery({ queryKey: ["rec", malId], queryFn: () => jikan.recommendations(malId), enabled: !!animeQ.data });
-  const relQ = useQuery({ queryKey: ["rel", malId], queryFn: () => jikan.relations(malId), enabled: !!animeQ.data });
+  const epsQ = useQuery({
+    queryKey: ["episodes", malId],
+    queryFn: () => jikan.episodes(malId),
+    enabled: !!animeQ.data,
+  });
+  const recQ = useQuery({
+    queryKey: ["rec", malId],
+    queryFn: () => jikan.recommendations(malId),
+    enabled: !!animeQ.data,
+  });
+  const relQ = useQuery({
+    queryKey: ["rel", malId],
+    queryFn: () => jikan.relations(malId),
+    enabled: !!animeQ.data,
+  });
 
   const [fav, setFav] = useState(false);
-  useEffect(() => { setFav(getFavorites().includes(malId)); }, [malId]);
+  useEffect(() => {
+    setFav(getFavorites().includes(malId));
+  }, [malId]);
   const [watched, setWatched] = useState<Set<number>>(new Set());
-  useEffect(() => { setWatched(new Set(getWatchedEpisodes(malId))); }, [malId]);
+  useEffect(() => {
+    setWatched(new Set(getWatchedEpisodes(malId)));
+  }, [malId]);
 
+  if (animeQ.isError) {
+    return (
+      <div className="py-20 text-center space-y-4">
+        <h2 className="text-2xl font-bold text-white">Anime unavailable</h2>
+        <p className="text-sm text-white/60 max-w-md mx-auto">
+          {(animeQ.error as Error)?.message || "Could not load anime details. Please try again."}
+        </p>
+        <GlassButton variant="tinted-filled" tint="#8b5cf6" onClick={() => animeQ.refetch()}>
+          Retry
+        </GlassButton>
+      </div>
+    );
+  }
   if (animeQ.isLoading || !animeQ.data) return <div className="h-96 rounded-3xl shimmer" />;
   const a = animeQ.data.data;
   const img = a.images.webp?.large_image_url || a.images.jpg.large_image_url;
   const eps = epsQ.data?.data ?? [];
   const totalEps = a.episodes ?? eps.length;
-  const episodeList = totalEps && eps.length === 0
-    ? Array.from({ length: Math.min(totalEps, 24) }).map((_, i) => ({ mal_id: i + 1, title: `Episode ${i + 1}` }))
-    : eps;
+  const episodeList =
+    totalEps && eps.length === 0
+      ? Array.from({ length: Math.min(totalEps, 24) }).map((_, i) => ({
+          mal_id: i + 1,
+          title: `Episode ${i + 1}`,
+        }))
+      : eps;
 
   return (
     <div className="space-y-10 page-enter">
       <section className="relative overflow-hidden rounded-3xl">
-        <div className="absolute inset-0 scale-110 blur-2xl" style={{ backgroundImage: `url(${img})`, backgroundSize: "cover", opacity: 0.45 }} />
+        <div
+          className="absolute inset-0 scale-110 blur-2xl"
+          style={{ backgroundImage: `url(${img})`, backgroundSize: "cover", opacity: 0.45 }}
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/30" />
         <div className="relative grid gap-6 p-6 sm:p-10 md:grid-cols-[240px_1fr]">
-          <img src={img} alt={bestTitle(a)} className="aspect-[2/3] w-full max-w-[240px] rounded-2xl object-cover glass" />
+          <img
+            src={img}
+            alt={bestTitle(a)}
+            className="aspect-[2/3] w-full max-w-[240px] rounded-2xl object-cover glass"
+          />
           <div className="min-w-0">
-            <h1 className="font-display text-3xl font-bold text-white sm:text-4xl">{bestTitle(a)}</h1>
+            <h1 className="font-display text-3xl font-bold text-white sm:text-4xl">
+              {bestTitle(a)}
+            </h1>
             {a.title_japanese && <p className="mt-1 text-sm text-white/60">{a.title_japanese}</p>}
             <div className="mt-4 flex flex-wrap gap-2 text-xs text-white/80">
-              {a.score && <span className="rounded-md bg-white/10 px-2 py-1">★ {a.score.toFixed(1)}</span>}
+              {a.score && (
+                <span className="rounded-md bg-white/10 px-2 py-1">★ {a.score.toFixed(1)}</span>
+              )}
               {a.type && <span className="rounded-md bg-white/10 px-2 py-1">{a.type}</span>}
-              {a.episodes && <span className="rounded-md bg-white/10 px-2 py-1">{a.episodes} eps</span>}
+              {a.episodes && (
+                <span className="rounded-md bg-white/10 px-2 py-1">{a.episodes} eps</span>
+              )}
               {a.status && <span className="rounded-md bg-white/10 px-2 py-1">{a.status}</span>}
               {a.year && <span className="rounded-md bg-white/10 px-2 py-1">{a.year}</span>}
               {a.duration && <span className="rounded-md bg-white/10 px-2 py-1">{a.duration}</span>}
               <AiringCountdown malId={malId} />
             </div>
             <div className="mt-3 flex flex-wrap gap-2">
-              {a.genres.map(g => (
-                <Link key={g.mal_id} to="/browse" search={{ genre: String(g.mal_id) } as any}
-                  className="rounded-full glass px-3 py-1 text-xs text-white/80 hover:text-white">
+              {a.genres.map((g) => (
+                <Link
+                  key={g.mal_id}
+                  to="/browse"
+                  search={{ genre: String(g.mal_id) } as any}
+                  className="rounded-full glass px-3 py-1 text-xs text-white/80 hover:text-white"
+                >
                   {g.name}
                 </Link>
               ))}
             </div>
             <p className="mt-4 max-w-3xl text-sm leading-relaxed text-white/80">{a.synopsis}</p>
             <div className="mt-6 flex flex-wrap gap-3">
-              <Link to="/watch/$id/$ep" params={{ id: String(a.mal_id), ep: "1" }}
-                className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-neon-cyan to-neon-magenta px-6 py-2.5 text-sm font-semibold text-background transition hover:scale-105 glow-magenta">
+              <Link
+                to="/watch/$id/$ep"
+                params={{ id: String(a.mal_id), ep: "1" }}
+                className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-neon-cyan to-neon-magenta px-6 py-2.5 text-sm font-semibold text-background transition hover:scale-105 glow-magenta"
+              >
                 ▶ Watch Episode 1
               </Link>
-              <button
+              <GlassButton
+                variant={fav ? "tinted-filled" : "clear"}
+                tint={fav ? "#ec4899" : undefined}
+                size="md"
                 onClick={() => setFav(toggleFavorite(malId))}
-                className={`inline-flex items-center gap-2 rounded-full glass px-6 py-2.5 text-sm font-semibold transition hover:bg-white/10 ${fav ? "text-neon-magenta" : "text-white"}`}
               >
                 {fav ? "♥ In Favorites" : "♡ Add to Favorites"}
-              </button>
+              </GlassButton>
             </div>
           </div>
         </div>
       </section>
 
       <section>
-        <Reveal variant="slide-left" as="span"><h2 className="mb-4 block font-display text-2xl font-bold text-white">Episodes</h2></Reveal>
+        <Reveal variant="slide-left" as="span">
+          <h2 className="mb-4 block font-display text-2xl font-bold text-white">Episodes</h2>
+        </Reveal>
         {episodeList.length === 0 ? (
           <p className="text-white/60">No episode data available.</p>
         ) : (
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
             {episodeList.slice(0, 100).map((ep, i) => (
-              <Link key={ep.mal_id ?? i}
-                to="/watch/$id/$ep" params={{ id: String(a.mal_id), ep: String(i + 1) }}
+              <Link
+                key={ep.mal_id ?? i}
+                to="/watch/$id/$ep"
+                params={{ id: String(a.mal_id), ep: String(i + 1) }}
                 className={`sheen glass rounded-xl p-3 text-sm transition hover:-translate-y-0.5 hover:bg-white/10 hover:text-white ${
                   watched.has(i + 1) ? "ring-1 ring-neon-cyan/40 text-white" : "text-white/85"
-                }`}>
+                }`}
+              >
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-neon-cyan">EP {i + 1}</span>
-                  {watched.has(i + 1) && <span className="text-neon-cyan" title="Watched">✓</span>}
+                  {watched.has(i + 1) && (
+                    <span className="text-neon-cyan" title="Watched">
+                      ✓
+                    </span>
+                  )}
                 </div>
-                <div className="mt-1 line-clamp-2 text-[13px]">{ep.title || `Episode ${i + 1}`}</div>
+                <div className="mt-1 line-clamp-2 text-[13px]">
+                  {ep.title || `Episode ${i + 1}`}
+                </div>
               </Link>
             ))}
           </div>
@@ -120,8 +192,14 @@ function AnimePage() {
 
       {recQ.data?.data?.length ? (
         <section>
-          <Reveal variant="slide-left" as="span"><h2 className="mb-4 block font-display text-2xl font-bold text-white">You Might Also Like</h2></Reveal>
-          {recQ.isLoading ? <GridSkeleton /> : (
+          <Reveal variant="slide-left" as="span">
+            <h2 className="mb-4 block font-display text-2xl font-bold text-white">
+              You Might Also Like
+            </h2>
+          </Reveal>
+          {recQ.isLoading ? (
+            <GridSkeleton />
+          ) : (
             <AnimeGrid items={recQ.data.data.slice(0, 12).map((r: any) => r.entry)} />
           )}
         </section>
@@ -129,20 +207,38 @@ function AnimePage() {
 
       {relQ.data?.data?.length ? (
         <section>
-          <Reveal variant="slide-left" as="span"><h2 className="mb-4 block font-display text-2xl font-bold text-white">Franchise &amp; Related</h2></Reveal>
+          <Reveal variant="slide-left" as="span">
+            <h2 className="mb-4 block font-display text-2xl font-bold text-white">
+              Franchise &amp; Related
+            </h2>
+          </Reveal>
           <div className="space-y-4">
             {relQ.data.data.map((rel, i) => (
-              <Reveal key={`${rel.relation}-${i}`} variant="rise" delay={i * 50} className="glass block rounded-2xl p-4">
-                <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-neon-cyan">{rel.relation}</h3>
+              <Reveal
+                key={`${rel.relation}-${i}`}
+                variant="rise"
+                delay={i * 50}
+                className="glass block rounded-2xl p-4"
+              >
+                <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-neon-cyan">
+                  {rel.relation}
+                </h3>
                 <div className="flex flex-wrap gap-2">
-                  {rel.entry.map(e =>
+                  {rel.entry.map((e) =>
                     e.type === "anime" ? (
-                      <Link key={e.mal_id} to="/anime/$id" params={{ id: String(e.mal_id) }}
-                        className="rounded-full bg-white/10 px-3 py-1 text-xs text-white/85 transition hover:bg-white/20 hover:text-white">
+                      <Link
+                        key={e.mal_id}
+                        to="/anime/$id"
+                        params={{ id: String(e.mal_id) }}
+                        className="rounded-full bg-white/10 px-3 py-1 text-xs text-white/85 transition hover:bg-white/20 hover:text-white"
+                      >
                         {e.name}
                       </Link>
                     ) : (
-                      <span key={`${e.type}-${e.mal_id}`} className="rounded-full bg-white/5 px-3 py-1 text-xs text-white/50">
+                      <span
+                        key={`${e.type}-${e.mal_id}`}
+                        className="rounded-full bg-white/5 px-3 py-1 text-xs text-white/50"
+                      >
                         {e.name}
                       </span>
                     ),

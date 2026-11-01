@@ -1,6 +1,6 @@
 # rmx aniera
 
-From: 
+From:
 
 uid: u455764578476781568
 
@@ -30,13 +30,13 @@ These four APIs together basically form a complete “anime + movie streaming ba
 
 When you combine everything:
 
-* **Jikan → Data + metadata**
+- **Jikan → Data + metadata**
 
-* **Anikoto → Anime catalog + episode IDs**
+- **Anikoto → Anime catalog + episode IDs**
 
-* **VidNest → Movie + TV + anime playback engine**
+- **VidNest → Movie + TV + anime playback engine**
 
-* **Animelok → UI/UX structure + layout inspiration**
+- **Animelok → UI/UX structure + layout inspiration**
 
 Basically… this stack = full Netflix-style anime streaming platform backend + frontend blueprint.
 
@@ -54,31 +54,31 @@ Build a full-stack anime streaming website with a modern **frosted glass / liqui
 
 #### 🎨 UI DESIGN SYSTEM
 
-* Style: Frosted Glass (glassmorphism)
+- Style: Frosted Glass (glassmorphism)
 
-* Background: dark blurred gradient (navy / purple / black tones)
+- Background: dark blurred gradient (navy / purple / black tones)
 
-* Cards: translucent glass panels with blur + soft borders
+- Cards: translucent glass panels with blur + soft borders
 
-* Buttons: glowing neon hover effect (cyan/purple)
+- Buttons: glowing neon hover effect (cyan/purple)
 
-* Animations: smooth fade, slide-up, hover scale
+- Animations: smooth fade, slide-up, hover scale
 
-* Layout: responsive grid (mobile-first)
+- Layout: responsive grid (mobile-first)
 
-* Add skeleton loaders for content
+- Add skeleton loaders for content
 
 ---
 
 #### ⚙️ CORE STACK
 
-* Frontend: Next.js (or React + Vite)
+- Frontend: Next.js (or React + Vite)
 
-* Styling: Tailwind CSS + custom glass utilities
+- Styling: Tailwind CSS + custom glass utilities
 
-* Backend: Node.js / API routes
+- Backend: Node.js / API routes
 
-* Player: iframe-based embedding system
+- Player: iframe-based embedding system
 
 ---
 
@@ -86,17 +86,17 @@ Build a full-stack anime streaming website with a modern **frosted glass / liqui
 
 1. **Anikoto API (Anime Catalog)**
 
-* Fetch recent anime:
+- Fetch recent anime:
 
   `/recent-anime?page=1`
 
-* Fetch series:
+- Fetch series:
 
   `/series/{id}`
 
-* Extract episode_embed_id
+- Extract episode_embed_id
 
-* Use embed:
+- Use embed:
 
   `https://megaplay.buzz/stream/s-2/{episode-id}/{sub|dub}`
 
@@ -104,41 +104,41 @@ Build a full-stack anime streaming website with a modern **frosted glass / liqui
 
 2. **VidNest API (Movies + TV + Anime Player)**
 
-* Movies:
+- Movies:
 
   `https://vidnest.fun/movie/{TMDB_ID}`
 
-* TV:
+- TV:
 
   `https://vidnest.fun/tv/{TMDB_ID}/{season}/{episode}`
 
-* Anime:
+- Anime:
 
   `https://vidnest.fun/anime/{ANILIST_ID}/{episode}/{sub|dub}`
 
 Add query controls:
 
-* startAt / progress
+- startAt / progress
 
-* server switching
+- server switching
 
-* hide UI controls
+- hide UI controls
 
 ---
 
 3. **Jikan API (Metadata Layer)**
 
-* Use for:
+- Use for:
 
-  * Anime details
+  - Anime details
 
-  * genres
+  - genres
 
-  * ratings
+  - ratings
 
-  * seasons
+  - seasons
 
-* Example:
+- Example:
 
   `https://api.jikan.moe/v4/seasons/2026/fall`
 
@@ -148,85 +148,85 @@ Add query controls:
 
    Build pages:
 
-* Home Page
+- Home Page
 
-  * Trending anime slider
+  - Trending anime slider
 
-  * Latest episodes grid
+  - Latest episodes grid
 
-  * Continue watching section
+  - Continue watching section
 
-* Search Page
+- Search Page
 
-  * Full filtering (genre, year, language)
+  - Full filtering (genre, year, language)
 
-* Anime Details Page
+- Anime Details Page
 
-  * Poster + synopsis
+  - Poster + synopsis
 
-  * Episode list
+  - Episode list
 
-  * Watch button
+  - Watch button
 
-* Player Page
+- Player Page
 
-  * Full-screen iframe player
+  - Full-screen iframe player
 
-  * Next/previous episode navigation
+  - Next/previous episode navigation
 
-* Language Switch System
+- Language Switch System
 
-  * Hindi / Tamil / Telugu / English / Japanese
+  - Hindi / Tamil / Telugu / English / Japanese
 
 ---
 
 #### 🎬 PLAYER SYSTEM
 
-* Embed iframe player (VidNest / MegaPlay)
+- Embed iframe player (VidNest / MegaPlay)
 
-* Listen to `postMessage` events:
+- Listen to `postMessage` events:
 
-  * progress tracking
+  - progress tracking
 
-  * episode completion
+  - episode completion
 
-  * watch time logging
+  - watch time logging
 
-* Auto-next episode feature
+- Auto-next episode feature
 
-* Resume last watched position
+- Resume last watched position
 
 ---
 
 #### 💾 FEATURES
 
-* User watch history (localStorage or DB)
+- User watch history (localStorage or DB)
 
-* Continue watching section
+- Continue watching section
 
-* Favorites list
+- Favorites list
 
-* Recently watched anime
+- Recently watched anime
 
-* Auto episode detection
+- Auto episode detection
 
-* Responsive mobile player mode
+- Responsive mobile player mode
 
 ---
 
 #### 🌐 EXTRA POLISH
 
-* Smooth page transitions
+- Smooth page transitions
 
-* Loading shimmer effects
+- Loading shimmer effects
 
-* Glass navbar with blur
+- Glass navbar with blur
 
-* Search autocomplete
+- Search autocomplete
 
-* Dark/light toggle (optional)
+- Dark/light toggle (optional)
 
-* SEO-friendly routes
+- SEO-friendly routes
 
 ---
 
@@ -234,25 +234,25 @@ Add query controls:
 
 A fully working anime streaming platform that feels like a premium OTT app with:
 
-* fast browsing
+- fast browsing
 
-* clean glass UI
+- clean glass UI
 
-* embedded streaming playback
+- embedded streaming playback
 
-* multilingual support
+- multilingual support
 
-* smooth UX like Netflix but anime-focused
+- smooth UX like Netflix but anime-focused
 
 ---
 
 If you want, next step I can turn this into:
 
-* full folder structure (Next.js project)
+- full folder structure (Next.js project)
 
-* ready-to-run code
+- ready-to-run code
 
-* or a UI mock layout (screens design)
+- or a UI mock layout (screens design)
 
 This project was built with [Lovable](https://lovable.dev).
 

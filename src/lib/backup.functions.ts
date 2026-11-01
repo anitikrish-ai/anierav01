@@ -45,9 +45,17 @@ const BackupSchema = z.object({
 });
 
 const SETTINGS_FIELDS = [
-  "site_title", "site_description", "logo_url", "favicon_url", "accent_color",
-  "background_image", "background_overlay", "background_blur",
-  "homepage_sections", "animations_enabled", "feature_flags",
+  "site_title",
+  "site_description",
+  "logo_url",
+  "favicon_url",
+  "accent_color",
+  "background_image",
+  "background_overlay",
+  "background_blur",
+  "homepage_sections",
+  "animations_enabled",
+  "feature_flags",
 ] as const;
 
 const PROVIDER_FIELDS = ["name", "base_url", "enabled", "priority", "notes"] as const;
@@ -70,7 +78,9 @@ export const restoreBackup = createServerFn({ method: "POST" })
       const payload = pick(data.site_settings, SETTINGS_FIELDS);
       if (Object.keys(payload).length) {
         const { error } = await context.supabase
-          .from("site_settings").update(payload as any).eq("id", 1);
+          .from("site_settings")
+          .update(payload as any)
+          .eq("id", 1);
         if (error) throw new Error(error.message);
       }
     }
@@ -78,9 +88,11 @@ export const restoreBackup = createServerFn({ method: "POST" })
     let providers = 0;
     if (data.api_providers.length) {
       const del = await context.supabase
-        .from("api_providers").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+        .from("api_providers")
+        .delete()
+        .neq("id", "00000000-0000-0000-0000-000000000000");
       if (del.error) throw new Error(del.error.message);
-      const rows = data.api_providers.map(p => pick(p, PROVIDER_FIELDS));
+      const rows = data.api_providers.map((p) => pick(p, PROVIDER_FIELDS));
       const { error } = await context.supabase.from("api_providers").insert(rows as any);
       if (error) throw new Error(error.message);
       providers = rows.length;
@@ -88,9 +100,10 @@ export const restoreBackup = createServerFn({ method: "POST" })
 
     let seo = 0;
     if (data.seo_overrides.length) {
-      const rows = data.seo_overrides.map(s => pick(s, SEO_FIELDS)).filter(r => r.route);
+      const rows = data.seo_overrides.map((s) => pick(s, SEO_FIELDS)).filter((r) => r.route);
       const { error } = await context.supabase
-        .from("seo_overrides").upsert(rows as any, { onConflict: "route" });
+        .from("seo_overrides")
+        .upsert(rows as any, { onConflict: "route" });
       if (error) throw new Error(error.message);
       seo = rows.length;
     }

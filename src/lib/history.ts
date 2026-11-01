@@ -16,25 +16,31 @@ export function getHistory(): HistoryEntry[] {
   if (typeof window === "undefined") return [];
   try {
     return JSON.parse(localStorage.getItem(KEY) || "[]");
-  } catch { return []; }
+  } catch {
+    return [];
+  }
 }
 
 export function saveHistory(entry: HistoryEntry) {
   if (typeof window === "undefined") return;
-  const list = getHistory().filter(e => e.malId !== entry.malId);
+  const list = getHistory().filter((e) => e.malId !== entry.malId);
   list.unshift(entry);
   localStorage.setItem(KEY, JSON.stringify(list.slice(0, 30)));
 }
 
 export function getFavorites(): number[] {
   if (typeof window === "undefined") return [];
-  try { return JSON.parse(localStorage.getItem(FAV_KEY) || "[]"); } catch { return []; }
+  try {
+    return JSON.parse(localStorage.getItem(FAV_KEY) || "[]");
+  } catch {
+    return [];
+  }
 }
 
 export function toggleFavorite(id: number): boolean {
   const cur = getFavorites();
   const has = cur.includes(id);
-  const next = has ? cur.filter(x => x !== id) : [id, ...cur];
+  const next = has ? cur.filter((x) => x !== id) : [id, ...cur];
   localStorage.setItem(FAV_KEY, JSON.stringify(next));
   return !has;
 }
@@ -44,7 +50,11 @@ type WatchedMap = Record<string, number[]>;
 
 function readWatched(): WatchedMap {
   if (typeof window === "undefined") return {};
-  try { return JSON.parse(localStorage.getItem(WATCHED_KEY) || "{}"); } catch { return {}; }
+  try {
+    return JSON.parse(localStorage.getItem(WATCHED_KEY) || "{}");
+  } catch {
+    return {};
+  }
 }
 
 export function getWatchedEpisodes(malId: number): number[] {
@@ -67,7 +77,8 @@ export function toggleEpisodeWatched(malId: number, ep: number): boolean {
   const key = String(malId);
   const set = new Set(map[key] ?? []);
   const has = set.has(ep);
-  if (has) set.delete(ep); else set.add(ep);
+  if (has) set.delete(ep);
+  else set.add(ep);
   map[key] = Array.from(set).sort((a, b) => a - b);
   localStorage.setItem(WATCHED_KEY, JSON.stringify(map));
   return !has;
@@ -79,7 +90,11 @@ type ProgressMap = Record<string, { t: number; d: number; u: number }>;
 
 function readProgress(): ProgressMap {
   if (typeof window === "undefined") return {};
-  try { return JSON.parse(localStorage.getItem(PROGRESS_KEY) || "{}"); } catch { return {}; }
+  try {
+    return JSON.parse(localStorage.getItem(PROGRESS_KEY) || "{}");
+  } catch {
+    return {};
+  }
 }
 
 export function getEpisodeProgress(malId: number, ep: number): { t: number; d: number } | null {
@@ -107,7 +122,9 @@ export function getPreferredProvider(malId: number): string | null {
   try {
     const m = JSON.parse(localStorage.getItem(PROVIDER_KEY) || "{}");
     return m[String(malId)] ?? m.__default ?? null;
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 }
 export function setPreferredProvider(malId: number, id: string) {
   if (typeof window === "undefined") return;
@@ -116,7 +133,9 @@ export function setPreferredProvider(malId: number, id: string) {
     m[String(malId)] = id;
     m.__default = id;
     localStorage.setItem(PROVIDER_KEY, JSON.stringify(m));
-  } catch {}
+  } catch {
+    /* ignore storage quota errors */
+  }
 }
 
 /** Persist last-used language (sub/dub) globally. */

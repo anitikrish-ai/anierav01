@@ -38,8 +38,13 @@ export interface Episode {
   recap?: boolean;
 }
 
-interface JikanList<T> { data: T[]; pagination?: { has_next_page: boolean; current_page: number; last_visible_page: number } }
-interface JikanItem<T> { data: T }
+interface JikanList<T> {
+  data: T[];
+  pagination?: { has_next_page: boolean; current_page: number; last_visible_page: number };
+}
+interface JikanItem<T> {
+  data: T;
+}
 
 /* ------------------------------------------------------------------
  * Resilient Jikan client
@@ -61,7 +66,7 @@ const inflight = new Map<string, Promise<unknown>>();
 let chain: Promise<void> = Promise.resolve();
 let lastSent = 0;
 
-const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms));
+const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
 function readSession(key: string): CacheRec | null {
   if (typeof window === "undefined") return null;
@@ -99,8 +104,9 @@ const FETCH_TIMEOUT_MS = 8000;
 function fetchWithTimeout(url: string): Promise<Response> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
-  return fetch(url, { headers: { Accept: "application/json" }, signal: controller.signal })
-    .finally(() => clearTimeout(timer));
+  return fetch(url, { headers: { Accept: "application/json" }, signal: controller.signal }).finally(
+    () => clearTimeout(timer),
+  );
 }
 
 async function fetchWithRetry(url: string): Promise<Response> {
@@ -113,9 +119,10 @@ async function fetchWithRetry(url: string): Promise<Response> {
       if (res.status === 429 || res.status >= 500) {
         lastErr = new Error(`Jikan ${res.status}`);
         const retryAfter = Number(res.headers.get("retry-after"));
-        const backoff = Number.isFinite(retryAfter) && retryAfter > 0
-          ? retryAfter * 1000
-          : Math.min(500 * 2 ** attempt, 4000) + Math.random() * 250;
+        const backoff =
+          Number.isFinite(retryAfter) && retryAfter > 0
+            ? retryAfter * 1000
+            : Math.min(500 * 2 ** attempt, 4000) + Math.random() * 250;
         if (attempt < MAX_RETRIES) {
           await sleep(backoff);
           continue;
@@ -226,16 +233,19 @@ export const jikan = {
     return jget<JikanList<Anime>>(`/anime?${params.toString()}`);
   },
   anime: (id: number) => jget<JikanItem<Anime>>(`/anime/${id}/full`),
-  episodes: (id: number, page = 1) => jget<JikanList<Episode>>(`/anime/${id}/episodes?page=${page}`),
-  recommendations: (id: number) => jget<JikanList<{ entry: Anime }>>(`/anime/${id}/recommendations`),
+  episodes: (id: number, page = 1) =>
+    jget<JikanList<Episode>>(`/anime/${id}/episodes?page=${page}`),
+  recommendations: (id: number) =>
+    jget<JikanList<{ entry: Anime }>>(`/anime/${id}/recommendations`),
   relations: (id: number) =>
-    jget<JikanList<{ relation: string; entry: { mal_id: number; type: string; name: string; url: string }[] }>>(
-      `/anime/${id}/relations`,
-    ),
+    jget<
+      JikanList<{
+        relation: string;
+        entry: { mal_id: number; type: string; name: string; url: string }[];
+      }>
+    >(`/anime/${id}/relations`),
   genres: () => jget<JikanList<{ mal_id: number; name: string; count: number }>>(`/genres/anime`),
-
 };
-
 
 export function bestTitle(a: Anime) {
   return a.title_english || a.title;

@@ -43,9 +43,7 @@ export const getProxyPreference = createServerFn({ method: "GET" })
 
 export const setProxyPreference = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) =>
-    z.object({ proxyId: z.string().uuid().nullable() }).parse(d),
-  )
+  .inputValidator((d: unknown) => z.object({ proxyId: z.string().uuid().nullable() }).parse(d))
   .handler(async ({ data, context }) => {
     if (data.proxyId) {
       // only an admin-allowlisted, enabled relay may be selected
@@ -95,7 +93,11 @@ export const listProxiesAdmin = createServerFn({ method: "GET" })
 const ProxySchema = z.object({
   id: z.string().uuid().optional(),
   label: z.string().trim().min(1).max(80),
-  url: z.string().url().max(500).refine(u => u.startsWith("https://"), "Must be https"),
+  url: z
+    .string()
+    .url()
+    .max(500)
+    .refine((u) => u.startsWith("https://"), "Must be https"),
   display_ip: z.string().max(80).nullable().optional(),
   region: z.string().max(80).nullable().optional(),
   enabled: z.boolean(),
@@ -147,7 +149,11 @@ export const checkProxyEndpoint = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { probeProxy } = await import("./proxy.server");
     const db = supabaseAdmin as any;
-    const { data: row } = await db.from("proxy_endpoints").select("url").eq("id", data.id).maybeSingle();
+    const { data: row } = await db
+      .from("proxy_endpoints")
+      .select("url")
+      .eq("id", data.id)
+      .maybeSingle();
     if (!row) throw new Error("Proxy not found");
     const status = await probeProxy(row.url);
     await db
@@ -175,9 +181,7 @@ export const listProxyLogs = createServerFn({ method: "GET" })
 /* ------------------------------------------------------------------ */
 
 export const verifyProxy = createServerFn({ method: "POST" })
-  .inputValidator((d: unknown) =>
-    z.object({ proxyId: z.string().uuid().nullable() }).parse(d),
-  )
+  .inputValidator((d: unknown) => z.object({ proxyId: z.string().uuid().nullable() }).parse(d))
   .handler(async ({ data }) => {
     const { proxiedFetch, clientIpFrom } = await import("./proxy.server");
     const clientIp = clientIpFrom(getRequest().headers);

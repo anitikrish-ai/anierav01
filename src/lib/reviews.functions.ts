@@ -31,13 +31,18 @@ const ReviewInput = z.object({
 export const listReviews = createServerFn({ method: "GET" })
   .inputValidator((d: unknown) => z.object({ mal_id: z.number().int().positive() }).parse(d))
   .handler(async ({ data }) => {
-    const key = process.env["SUPABASE_PUBLISHABLE_KEY"]!;
-    const supabasePublic = createClient<Database>(process.env["SUPABASE_URL"]!, key, {
+    const key = process.env["SUPABASE_PUBLISHABLE_KEY"];
+    const url = process.env["SUPABASE_URL"];
+    if (!url || !key || !url.startsWith("http")) {
+      return { reviews: [] as ReviewRow[], error: null };
+    }
+    const supabasePublic = createClient<Database>(url, key, {
       auth: { persistSession: false, autoRefreshToken: false },
       global: {
         fetch: (input, init) => {
           const h = new Headers(init?.headers);
-          if (key.startsWith("sb_") && h.get("Authorization") === `Bearer ${key}`) h.delete("Authorization");
+          if (key.startsWith("sb_") && h.get("Authorization") === `Bearer ${key}`)
+            h.delete("Authorization");
           h.set("apikey", key);
           return fetch(input, { ...init, headers: h });
         },
@@ -45,7 +50,9 @@ export const listReviews = createServerFn({ method: "GET" })
     });
     const { data: rows, error } = await supabasePublic
       .from("anime_reviews")
-      .select("id,user_id,mal_id,rating,body,spoiler,author_name,author_avatar,created_at,updated_at")
+      .select(
+        "id,user_id,mal_id,rating,body,spoiler,author_name,author_avatar,created_at,updated_at",
+      )
       .eq("mal_id", data.mal_id)
       .order("created_at", { ascending: false })
       .limit(100);

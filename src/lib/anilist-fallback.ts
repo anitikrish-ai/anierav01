@@ -101,7 +101,7 @@ export function toAnime(m: AlMedia): Anime {
     year: m.seasonYear,
     season: m.season ? m.season.toLowerCase() : null,
     genres: m.genres.map((g, i) => ({ mal_id: i, name: g })),
-    studios: m.studios?.nodes?.map(s => ({ mal_id: s.id, name: s.name })) ?? [],
+    studios: m.studios?.nodes?.map((s) => ({ mal_id: s.id, name: s.name })) ?? [],
     duration: m.duration ? `${m.duration} min per ep` : null,
     rating: m.isAdult ? "R+" : null,
     trailer:
@@ -126,12 +126,19 @@ export function toAnime(m: AlMedia): Anime {
   } as Anime;
 }
 
-type List = { data: Anime[]; pagination: { has_next_page: boolean; current_page: number; last_visible_page: number } };
+type List = {
+  data: Anime[];
+  pagination: { has_next_page: boolean; current_page: number; last_visible_page: number };
+};
 
 function list(media: AlMedia[], page: number, hasNext: boolean): List {
   return {
     data: media.map(toAnime),
-    pagination: { has_next_page: hasNext, current_page: page, last_visible_page: hasNext ? page + 1 : page },
+    pagination: {
+      has_next_page: hasNext,
+      current_page: page,
+      last_visible_page: hasNext ? page + 1 : page,
+    },
   };
 }
 
@@ -148,7 +155,6 @@ const VAR_TYPES: Record<string, string> = {
   genreIn: "[String]",
   scoreGreater: "Int",
 };
-
 
 async function page(
   vars: Record<string, unknown>,
@@ -189,13 +195,38 @@ function nextSeason(): { season: string; year: number } {
  * use it as the source of truth and fall back to a static map.
  */
 const STATIC_GENRES: Record<string, string> = {
-  "1": "Action", "2": "Adventure", "4": "Comedy", "5": "Slice of Life", "7": "Mystery",
-  "8": "Drama", "9": "Ecchi", "10": "Fantasy", "14": "Horror", "17": "Martial Arts",
-  "18": "Mecha", "19": "Music", "22": "Romance", "23": "School", "24": "Sci-Fi",
-  "25": "Shoujo", "26": "Girls Love", "27": "Shounen", "28": "Boys Love", "29": "Space",
-  "30": "Sports", "31": "Super Power", "32": "Vampire", "35": "Harem",
-  "36": "Slice of Life", "37": "Supernatural", "38": "Military", "39": "Police",
-  "40": "Psychological", "41": "Thriller", "42": "Seinen", "43": "Josei",
+  "1": "Action",
+  "2": "Adventure",
+  "4": "Comedy",
+  "5": "Slice of Life",
+  "7": "Mystery",
+  "8": "Drama",
+  "9": "Ecchi",
+  "10": "Fantasy",
+  "14": "Horror",
+  "17": "Martial Arts",
+  "18": "Mecha",
+  "19": "Music",
+  "22": "Romance",
+  "23": "School",
+  "24": "Sci-Fi",
+  "25": "Shoujo",
+  "26": "Girls Love",
+  "27": "Shounen",
+  "28": "Boys Love",
+  "29": "Space",
+  "30": "Sports",
+  "31": "Super Power",
+  "32": "Vampire",
+  "35": "Harem",
+  "36": "Slice of Life",
+  "37": "Supernatural",
+  "38": "Military",
+  "39": "Police",
+  "40": "Psychological",
+  "41": "Thriller",
+  "42": "Seinen",
+  "43": "Josei",
 };
 
 let genreMapPromise: Promise<Record<string, string>> | null = null;
@@ -239,9 +270,11 @@ export async function anilistFallback(path: string): Promise<unknown | null> {
   if (p === "/top/anime") {
     const f = sp.get("filter");
     const sort =
-      f === "airing" ? "status: RELEASING, sort: TRENDING_DESC" :
-      f === "bypopularity" ? "sort: POPULARITY_DESC" :
-      "sort: SCORE_DESC";
+      f === "airing"
+        ? "status: RELEASING, sort: TRENDING_DESC"
+        : f === "bypopularity"
+          ? "sort: POPULARITY_DESC"
+          : "sort: SCORE_DESC";
     const r = await page({ page: pageNum }, sort, 25);
     return list(r.Page.media, pageNum, r.Page.pageInfo.hasNextPage);
   }
@@ -262,15 +295,13 @@ export async function anilistFallback(path: string): Promise<unknown | null> {
     const day = sp.get("filter");
     // Pull a deeper slice so each weekday has a full line-up, not 3 shows.
     const pages = await Promise.all(
-      [1, 2, 3].map(n =>
+      [1, 2, 3].map((n) =>
         page({ page: n }, "status: RELEASING, sort: POPULARITY_DESC", 50).catch(() => null),
       ),
     );
-    let media = pages
-      .flatMap(r => r?.Page.media ?? [])
-      .filter(m => m.nextAiringEpisode);
+    let media = pages.flatMap((r) => r?.Page.media ?? []).filter((m) => m.nextAiringEpisode);
     if (day) {
-      media = media.filter(m => {
+      media = media.filter((m) => {
         const d = new Date(m.nextAiringEpisode!.airingAt * 1000);
         return WEEKDAYS[d.getDay()] === day.toLowerCase();
       });
@@ -289,7 +320,11 @@ export async function anilistFallback(path: string): Promise<unknown | null> {
     if (q) parts.push("search: $search");
     if (startDate) parts.push("seasonYear: $seasonYear");
     if (status) {
-      const map: Record<string, string> = { airing: "RELEASING", complete: "FINISHED", upcoming: "NOT_YET_RELEASED" };
+      const map: Record<string, string> = {
+        airing: "RELEASING",
+        complete: "FINISHED",
+        upcoming: "NOT_YET_RELEASED",
+      };
       if (map[status]) parts.push(`status: ${map[status]}`);
     }
     if (type) parts.push(`format: ${type.toUpperCase().replace(/\s+/g, "_")}`);
@@ -297,7 +332,8 @@ export async function anilistFallback(path: string): Promise<unknown | null> {
     const genreNames = (await Promise.all(genreIds.map(malGenreName))).filter(Boolean) as string[];
     if (genreNames.length) parts.push("genre_in: $genreIn");
     const minScore = Number(sp.get("min_score"));
-    if (Number.isFinite(minScore) && minScore > 0) parts.push("averageScore_greater: $scoreGreater");
+    if (Number.isFinite(minScore) && minScore > 0)
+      parts.push("averageScore_greater: $scoreGreater");
     const ORDER: Record<string, string> = {
       score: "SCORE_DESC",
       popularity: "POPULARITY_DESC",
@@ -319,15 +355,14 @@ export async function anilistFallback(path: string): Promise<unknown | null> {
         search: q || undefined,
         seasonYear: startDate ? Number(startDate.slice(0, 4)) : undefined,
         genreIn: genreNames.length ? genreNames : undefined,
-        scoreGreater: Number.isFinite(minScore) && minScore > 0 ? Math.round(minScore * 10) : undefined,
+        scoreGreater:
+          Number.isFinite(minScore) && minScore > 0 ? Math.round(minScore * 10) : undefined,
       },
       parts.join(", "),
       Number(sp.get("limit") || 24),
     );
     return list(r.Page.media, pageNum, r.Page.pageInfo.hasNextPage);
-
   }
-
 
   // /anime/{id}/full
   const full = p.match(/^\/anime\/(\d+)\/full$/);
@@ -354,13 +389,18 @@ export async function anilistFallback(path: string): Promise<unknown | null> {
       mal_id: i + 1,
       title: `Episode ${i + 1}`,
     }));
-    return { data: out, pagination: { has_next_page: false, current_page: 1, last_visible_page: 1 } };
+    return {
+      data: out,
+      pagination: { has_next_page: false, current_page: 1, last_visible_page: 1 },
+    };
   }
 
   // /anime/{id}/recommendations
   const recs = p.match(/^\/anime\/(\d+)\/recommendations$/);
   if (recs) {
-    const data = await gql<{ Media: { recommendations: { nodes: { mediaRecommendation: AlMedia | null }[] } } | null }>(
+    const data = await gql<{
+      Media: { recommendations: { nodes: { mediaRecommendation: AlMedia | null }[] } } | null;
+    }>(
       `query ($idMal: Int) {
         Media(idMal: $idMal, type: ANIME) {
           recommendations(sort: RATING_DESC, perPage: 12) {
@@ -373,8 +413,8 @@ export async function anilistFallback(path: string): Promise<unknown | null> {
     const nodes = data.Media?.recommendations?.nodes ?? [];
     return {
       data: nodes
-        .filter(n => n.mediaRecommendation)
-        .map(n => ({ entry: toAnime(n.mediaRecommendation!) })),
+        .filter((n) => n.mediaRecommendation)
+        .map((n) => ({ entry: toAnime(n.mediaRecommendation!) })),
     };
   }
 
@@ -386,7 +426,14 @@ export async function anilistFallback(path: string): Promise<unknown | null> {
         relations: {
           edges: {
             relationType: string | null;
-            node: { id: number; idMal: number | null; type: string | null; format: string | null; siteUrl: string | null; title: { romaji: string | null; english: string | null } };
+            node: {
+              id: number;
+              idMal: number | null;
+              type: string | null;
+              format: string | null;
+              siteUrl: string | null;
+              title: { romaji: string | null; english: string | null };
+            };
           }[];
         } | null;
       } | null;
@@ -404,13 +451,16 @@ export async function anilistFallback(path: string): Promise<unknown | null> {
       { idMal: Number(rels[1]) },
     );
     const edges = data.Media?.relations?.edges ?? [];
-    const grouped = new Map<string, { mal_id: number; type: string; name: string; url: string }[]>();
+    const grouped = new Map<
+      string,
+      { mal_id: number; type: string; name: string; url: string }[]
+    >();
     for (const e of edges) {
       if (!e.node.idMal || e.node.type !== "ANIME") continue;
       const rel = (e.relationType ?? "OTHER")
         .toLowerCase()
         .replace(/_/g, " ")
-        .replace(/\b\w/g, c => c.toUpperCase());
+        .replace(/\b\w/g, (c) => c.toUpperCase());
       const entry = {
         mal_id: e.node.idMal,
         type: "anime",

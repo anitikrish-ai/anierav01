@@ -32,9 +32,13 @@ export const searchAnikotoByTitle = createServerFn({ method: "GET" })
     for (let page = 1; page <= 3; page++) {
       let r: Response;
       try {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 4000);
         r = await fetch(`${BASE}/recent-anime?page=${page}&per_page=50`, {
           headers: { Accept: "application/json" },
+          signal: controller.signal,
         });
+        clearTimeout(timer);
       } catch {
         return null;
       }
@@ -48,7 +52,11 @@ export const searchAnikotoByTitle = createServerFn({ method: "GET" })
         const n = normalize(t);
         return n === target || n.includes(target) || target.includes(n);
       });
-      if (hit) return { id: String(hit.id ?? hit.slug ?? hit.dataId ?? ""), title: String(hit.title ?? hit.name ?? "") };
+      if (hit)
+        return {
+          id: String(hit.id ?? hit.slug ?? hit.dataId ?? ""),
+          title: String(hit.title ?? hit.name ?? ""),
+        };
     }
     return null;
   });
@@ -62,9 +70,13 @@ export const getAnikotoSeries = createServerFn({ method: "GET" })
     if (!data.id) return null;
     let r: Response;
     try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 4000);
       r = await fetch(`${BASE}/series/${encodeURIComponent(data.id)}`, {
         headers: { Accept: "application/json" },
+        signal: controller.signal,
       });
+      clearTimeout(timer);
     } catch {
       return null;
     }

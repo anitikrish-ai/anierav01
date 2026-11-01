@@ -64,9 +64,7 @@ export const getHianimeSources = createServerFn({ method: "GET" })
       if (!episodes.length) return null;
 
       // 2) Pick episode by number, fallback to index.
-      const epRow =
-        episodes.find((e) => Number(e.number) === data.ep) ??
-        episodes[data.ep - 1];
+      const epRow = episodes.find((e) => Number(e.number) === data.ep) ?? episodes[data.ep - 1];
       const episodeId: string | null = epRow?.id ?? null;
       if (!episodeId) return null;
 
@@ -99,7 +97,7 @@ export const getHianimeSources = createServerFn({ method: "GET" })
             tracks,
             episodeId,
             serverName: srv.name ?? null,
-            lang: (primary.includes(srv) ? data.lang : data.lang === "dub" ? "sub" : "dub"),
+            lang: primary.includes(srv) ? data.lang : data.lang === "dub" ? "sub" : "dub",
             intro: out?.intro ?? null,
             outro: out?.outro ?? null,
           };

@@ -23,7 +23,11 @@ export function ProxyChooser() {
   const [checking, setChecking] = useState(false);
   const synced = useRef(false);
 
-  const proxies = useQuery({ queryKey: ["proxy-list"], queryFn: () => listFn(), staleTime: 300_000 });
+  const proxies = useQuery({
+    queryKey: ["proxy-list"],
+    queryFn: () => listFn(),
+    staleTime: 300_000,
+  });
 
   useEffect(() => {
     supabase.auth.getSession().then(async ({ data }) => {
@@ -33,19 +37,25 @@ export function ProxyChooser() {
       try {
         const r = await getFn();
         if (r.proxyId) setProxyId(r.proxyId);
-      } catch { /* keep local */ }
+      } catch {
+        /* keep local */
+      }
     });
   }, [getFn, setProxyId]);
 
   // Drop a stale choice if the admin disabled that relay.
   useEffect(() => {
-    if (proxyId && proxies.data && !proxies.data.some(p => p.id === proxyId)) setProxyId(null);
+    if (proxyId && proxies.data && !proxies.data.some((p) => p.id === proxyId)) setProxyId(null);
   }, [proxyId, proxies.data, setProxyId]);
 
   const change = async (id: string | null) => {
     setProxyId(id);
     if (signedIn) {
-      try { await setFn({ data: { proxyId: id } }); } catch (e: any) { toast.error(e?.message ?? "Could not save"); }
+      try {
+        await setFn({ data: { proxyId: id } });
+      } catch (e: any) {
+        toast.error(e?.message ?? "Could not save");
+      }
     }
     toast.success(id ? "Proxy relay selected" : "Direct connection selected");
   };
@@ -54,7 +64,10 @@ export function ProxyChooser() {
     setChecking(true);
     try {
       const r = await verifyFn({ data: { proxyId } });
-      if (r.seenIp) toast.success(`Providers see: ${r.seenIp}${r.viaProxy ? ` (via ${r.viaProxy})` : " (server)"}`);
+      if (r.seenIp)
+        toast.success(
+          `Providers see: ${r.seenIp}${r.viaProxy ? ` (via ${r.viaProxy})` : " (server)"}`,
+        );
       else toast.error("Relay did not respond");
     } catch (e: any) {
       toast.error(e?.message ?? "Check failed");
@@ -72,17 +85,23 @@ export function ProxyChooser() {
       <select
         id="proxy-select"
         value={proxyId ?? ""}
-        onChange={e => change(e.target.value || null)}
+        onChange={(e) => change(e.target.value || null)}
         className="rounded-md border border-white/10 bg-background px-2 py-1 text-white"
       >
         <option value="">Direct (server)</option>
-        {proxies.data.map(p => (
+        {proxies.data.map((p) => (
           <option key={p.id} value={p.id}>
-            {p.label}{p.region ? ` · ${p.region}` : ""}{p.display_ip ? ` · ${p.display_ip}` : ""}
+            {p.label}
+            {p.region ? ` · ${p.region}` : ""}
+            {p.display_ip ? ` · ${p.display_ip}` : ""}
           </option>
         ))}
       </select>
-      <button onClick={verify} disabled={checking} className="rounded-md bg-white/10 px-2 py-1 text-white hover:bg-white/20 disabled:opacity-50">
+      <button
+        onClick={verify}
+        disabled={checking}
+        className="rounded-md bg-white/10 px-2 py-1 text-white hover:bg-white/20 disabled:opacity-50"
+      >
         {checking ? "Checking…" : "Check IP"}
       </button>
     </div>

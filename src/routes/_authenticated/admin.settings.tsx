@@ -8,31 +8,46 @@ import { useSiteSettings, type SiteSettings } from "@/lib/site-settings";
 import { AdminHeader, AdminCard } from "@/components/admin/AdminShell";
 
 export const Route = createFileRoute("/_authenticated/admin/settings")({
-  head: () => ({ meta: [{"title": "Site Settings \u2014 AniEra Admin"}, {"name": "description", "content": "Manage AniEra site settings."}, {"property": "og:title", "content": "Site Settings \u2014 AniEra Admin"}, {"property": "og:description", "content": "Manage AniEra site settings."}, {"property": "og:type", "content": "website"}, {"name": "twitter:card", "content": "summary"}, {"name": "robots", "content": "noindex"}] }),
+  head: () => ({
+    meta: [
+      { title: "Site Settings \u2014 AniEra Admin" },
+      { name: "description", content: "Manage AniEra site settings." },
+      { property: "og:title", content: "Site Settings \u2014 AniEra Admin" },
+      { property: "og:description", content: "Manage AniEra site settings." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { name: "robots", content: "noindex" },
+    ],
+  }),
   component: SettingsPage,
 });
 
 function SettingsPage() {
   const settings = useSiteSettings();
   const [form, setForm] = useState<SiteSettings>(settings);
-  useEffect(() => { setForm(settings); }, [settings]);
+  useEffect(() => {
+    setForm(settings);
+  }, [settings]);
 
   const save = useServerFn(saveSiteSettings);
   const qc = useQueryClient();
   const mut = useMutation({
-    mutationFn: (payload: SiteSettings) => save({ data: {
-      site_title: payload.site_title,
-      site_description: payload.site_description,
-      logo_url: payload.logo_url,
-      favicon_url: payload.favicon_url,
-      accent_color: payload.accent_color,
-      background_image: payload.background_image,
-      background_overlay: payload.background_overlay,
-      background_blur: payload.background_blur,
-      animations_enabled: payload.animations_enabled,
-      homepage_sections: payload.homepage_sections,
-      feature_flags: payload.feature_flags,
-    } }),
+    mutationFn: (payload: SiteSettings) =>
+      save({
+        data: {
+          site_title: payload.site_title,
+          site_description: payload.site_description,
+          logo_url: payload.logo_url,
+          favicon_url: payload.favicon_url,
+          accent_color: payload.accent_color,
+          background_image: payload.background_image,
+          background_overlay: payload.background_overlay,
+          background_blur: payload.background_blur,
+          animations_enabled: payload.animations_enabled,
+          homepage_sections: payload.homepage_sections,
+          feature_flags: payload.feature_flags,
+        },
+      }),
     onSuccess: () => {
       toast.success("Settings saved — live everywhere");
       qc.invalidateQueries({ queryKey: ["site_settings"] });
@@ -41,19 +56,19 @@ function SettingsPage() {
   });
 
   const set = <K extends keyof SiteSettings>(k: K, v: SiteSettings[K]) =>
-    setForm(f => ({ ...f, [k]: v }));
+    setForm((f) => ({ ...f, [k]: v }));
 
   const toggleSection = (key: string) => {
-    setForm(f => ({
+    setForm((f) => ({
       ...f,
-      homepage_sections: f.homepage_sections.map(s =>
+      homepage_sections: f.homepage_sections.map((s) =>
         s.key === key ? { ...s, enabled: !s.enabled } : s,
       ),
     }));
   };
 
   const moveSection = (idx: number, dir: -1 | 1) => {
-    setForm(f => {
+    setForm((f) => {
       const arr = [...f.homepage_sections];
       const target = idx + dir;
       if (target < 0 || target >= arr.length) return f;
@@ -85,7 +100,7 @@ function SettingsPage() {
               <input
                 className="input"
                 value={form.site_title}
-                onChange={e => set("site_title", e.target.value)}
+                onChange={(e) => set("site_title", e.target.value)}
                 maxLength={120}
               />
             </Field>
@@ -93,7 +108,7 @@ function SettingsPage() {
               <textarea
                 className="input h-20"
                 value={form.site_description}
-                onChange={e => set("site_description", e.target.value)}
+                onChange={(e) => set("site_description", e.target.value)}
                 maxLength={400}
               />
             </Field>
@@ -101,7 +116,7 @@ function SettingsPage() {
               <input
                 className="input"
                 value={form.logo_url ?? ""}
-                onChange={e => set("logo_url", e.target.value || null)}
+                onChange={(e) => set("logo_url", e.target.value || null)}
                 placeholder="https://…"
               />
             </Field>
@@ -109,7 +124,7 @@ function SettingsPage() {
               <input
                 className="input"
                 value={form.favicon_url ?? ""}
-                onChange={e => set("favicon_url", e.target.value || null)}
+                onChange={(e) => set("favicon_url", e.target.value || null)}
                 placeholder="https://…"
               />
             </Field>
@@ -117,14 +132,12 @@ function SettingsPage() {
         </AdminCard>
 
         <AdminCard>
-          <h2 className="font-display text-lg font-bold text-white">
-            Feature toggles
-          </h2>
+          <h2 className="font-display text-lg font-bold text-white">Feature toggles</h2>
           <div className="mt-4 space-y-3">
             <Toggle
               label="Animations"
               checked={form.animations_enabled}
-              onChange={v => set("animations_enabled", v)}
+              onChange={(v) => set("animations_enabled", v)}
             />
           </div>
           <p className="mt-4 text-xs text-white/40">
@@ -133,21 +146,14 @@ function SettingsPage() {
         </AdminCard>
 
         <AdminCard className="md:col-span-2">
-          <h2 className="font-display text-lg font-bold text-white">
-            Homepage sections
-          </h2>
+          <h2 className="font-display text-lg font-bold text-white">Homepage sections</h2>
           <p className="mt-1 text-xs text-white/50">
             Reorder or hide sections. The home page respects this order.
           </p>
           <ul className="mt-4 space-y-2">
             {form.homepage_sections.map((s, i) => (
-              <li
-                key={s.key}
-                className="flex items-center gap-3 rounded-lg bg-white/5 px-3 py-2"
-              >
-                <span className="w-10 text-center text-xs text-white/40">
-                  {i + 1}
-                </span>
+              <li key={s.key} className="flex items-center gap-3 rounded-lg bg-white/5 px-3 py-2">
+                <span className="w-10 text-center text-xs text-white/40">{i + 1}</span>
                 <span className="flex-1 font-medium text-white">{s.label}</span>
                 <button
                   onClick={() => moveSection(i, -1)}
@@ -180,9 +186,7 @@ function SettingsPage() {
 function Field({ label, children }: { label: string; children: any }) {
   return (
     <label className="block">
-      <span className="mb-1 block text-xs uppercase tracking-wider text-white/50">
-        {label}
-      </span>
+      <span className="mb-1 block text-xs uppercase tracking-wider text-white/50">{label}</span>
       {children}
     </label>
   );
@@ -198,11 +202,7 @@ function Toggle({
   onChange: (v: boolean) => void;
 }) {
   return (
-    <button
-      type="button"
-      onClick={() => onChange(!checked)}
-      className="flex items-center gap-3"
-    >
+    <button type="button" onClick={() => onChange(!checked)} className="flex items-center gap-3">
       <span
         className={`relative inline-flex h-5 w-9 rounded-full transition ${
           checked ? "bg-neon-cyan" : "bg-white/20"

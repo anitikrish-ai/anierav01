@@ -7,12 +7,12 @@ Source of truth: `src/motion.css`. Tokens mirrored in `docs/motion-tokens.json`.
 
 ## Scale
 
-| Token | Value | Use |
-|---|---|---|
-| `--dur-instant` | 100ms | press feedback |
-| `--dur-fast` | 200ms | hover, micro-interactions, **all exits** |
-| `--dur-base` | 300ms | entrances, page transition in |
-| `--dur-slow` | 500ms | scroll reveals, spring settle |
+| Token           | Value | Use                                      |
+| --------------- | ----- | ---------------------------------------- |
+| `--dur-instant` | 100ms | press feedback                           |
+| `--dur-fast`    | 200ms | hover, micro-interactions, **all exits** |
+| `--dur-base`    | 300ms | entrances, page transition in            |
+| `--dur-slow`    | 500ms | scroll reveals, spring settle            |
 
 Easings: `--ease-standard` (state), `--ease-out` (enter), `--ease-in` (exit),
 `--ease-spring` (the one signature; glass press and tab pill only).
@@ -30,13 +30,13 @@ Distances: 8 / 16 / 24px. Never more.
 
 ## Signature moves
 
-| Name | Class | Trigger | Not for |
-|---|---|---|---|
-| card-lift | `.card-lift` | hover/focus on poster cards | text-only list rows |
-| glass-press | `.glass-press` | hover/press on glass icon buttons | content cards |
-| scroll-reveal | `<Reveal>` | enters viewport once | above-the-fold hero (use `.anim-rise`) |
-| sheen | `.sheen` | hover on posters | more than one element per card |
-| specular light | `.liquid-glass` + `lib/glass-pointer.ts` | pointer over nav/glass | touch devices (auto-disabled) |
+| Name           | Class                                    | Trigger                           | Not for                                |
+| -------------- | ---------------------------------------- | --------------------------------- | -------------------------------------- |
+| card-lift      | `.card-lift`                             | hover/focus on poster cards       | text-only list rows                    |
+| glass-press    | `.glass-press`                           | hover/press on glass icon buttons | content cards                          |
+| scroll-reveal  | `<Reveal>`                               | enters viewport once              | above-the-fold hero (use `.anim-rise`) |
+| sheen          | `.sheen`                                 | hover on posters                  | more than one element per card         |
+| specular light | `.liquid-glass` + `lib/glass-pointer.ts` | pointer over nav/glass            | touch devices (auto-disabled)          |
 
 ## Adding motion
 

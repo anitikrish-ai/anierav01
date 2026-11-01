@@ -24,8 +24,7 @@ const DEFAULTS: SiteSettings = {
   logo_url: null,
   favicon_url: null,
   accent_color: "#8b5cf6",
-  background_image:
-    "https://i.pinimg.com/736x/70/a9/09/70a909322b27f1001d5ace42d1821ff0.jpg",
+  background_image: "https://i.pinimg.com/736x/70/a9/09/70a909322b27f1001d5ace42d1821ff0.jpg",
   background_overlay: 0.7,
   background_blur: 0,
   homepage_sections: [
@@ -71,10 +70,8 @@ export function useSiteSettings() {
   useEffect(() => {
     const ch = supabase
       .channel("site_settings_live")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "site_settings" },
-        () => q.refetch(),
+      .on("postgres_changes", { event: "*", schema: "public", table: "site_settings" }, () =>
+        q.refetch(),
       )
       .subscribe();
     return () => {
@@ -93,10 +90,7 @@ export function useApplySiteSettings() {
     if (typeof document === "undefined") return;
     const root = document.documentElement;
     root.style.setProperty("--admin-accent", s.accent_color);
-    root.style.setProperty(
-      "--admin-bg-image",
-      `url("${s.background_image}")`,
-    );
+    root.style.setProperty("--admin-bg-image", `url("${s.background_image}")`);
     root.style.setProperty("--admin-bg-overlay", String(s.background_overlay));
     root.style.setProperty("--admin-bg-blur", `${s.background_blur}px`);
     root.dataset.animations = s.animations_enabled ? "on" : "off";

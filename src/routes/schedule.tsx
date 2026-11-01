@@ -7,7 +7,7 @@ import { z } from "zod";
 import { jikan, bestTitle } from "@/lib/jikan";
 import { GridSkeleton } from "@/components/AnimeCard";
 import { ErrorState, EmptyState } from "@/components/StateBlocks";
-
+import { GlassSegmented } from "@zakisheriff/liquid-glass";
 
 const DAYS = [
   { id: "monday", label: "Mon" },
@@ -23,7 +23,6 @@ function localTodayId(): string {
   return DAYS[(new Date().getDay() + 6) % 7]!.id;
 }
 
-
 const searchSchema = z.object({ day: z.string().optional() });
 
 export const Route = createFileRoute("/schedule")({
@@ -32,7 +31,11 @@ export const Route = createFileRoute("/schedule")({
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { title: "Anime Airing Schedule 2026 — Weekly Calendar | AniEra" },
-      { name: "description", content: "Weekly airing calendar for currently broadcasting anime. Track new episodes for the 2026 season, day by day, with countdowns and scores." },
+      {
+        name: "description",
+        content:
+          "Weekly airing calendar for currently broadcasting anime. Track new episodes for the 2026 season, day by day, with countdowns and scores.",
+      },
       { property: "og:title", content: "Anime Airing Schedule — AniEra" },
       { property: "og:description", content: "See what's airing today and across the week." },
       { property: "og:url", content: "https://aniera.lovable.app/schedule" },
@@ -61,29 +64,23 @@ function SchedulePage() {
 
   return (
     <div className="page-enter space-y-6">
-
       <div>
         <h1 className="font-display text-3xl font-bold text-white">Airing Schedule</h1>
         <p className="mt-1 text-sm text-white/60">Catch what's broadcasting this week.</p>
       </div>
 
-      <div className="flex flex-wrap gap-2">
-        {DAYS.map(d => {
-          const active = d.id === day;
-          return (
-            <button
-              key={d.id}
-              onClick={() => navigate({ search: { day: d.id } })}
-              className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-                active
-                  ? "bg-gradient-to-r from-neon-cyan to-neon-magenta text-background"
-                  : "glass text-white/80 hover:text-white"
-              }`}
-            >
-              {d.label}
-            </button>
-          );
-        })}
+      <div className="w-full max-w-xl">
+        <GlassSegmented
+          options={DAYS.map((d) => d.label)}
+          value={Math.max(
+            0,
+            DAYS.findIndex((d) => d.id === day),
+          )}
+          onChange={(idx) => navigate({ search: { day: DAYS[idx]?.id } })}
+          size="md"
+          intensity={4}
+          aria-label="Airing schedule day"
+        />
       </div>
 
       {q.isLoading ? (
@@ -96,8 +93,7 @@ function SchedulePage() {
         />
       ) : items.length ? (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {items.map(a => {
-
+          {items.map((a) => {
             const img = a.images.webp?.image_url || a.images.jpg.image_url;
             const time = (a as any).broadcast?.time as string | undefined;
             return (
@@ -122,9 +118,7 @@ function SchedulePage() {
                   <h3 className="mt-1 line-clamp-2 text-sm font-semibold text-white group-hover:text-neon-cyan">
                     {bestTitle(a)}
                   </h3>
-                  <p className="mt-1 line-clamp-2 text-[11px] text-white/55">
-                    {a.synopsis ?? "—"}
-                  </p>
+                  <p className="mt-1 line-clamp-2 text-[11px] text-white/55">{a.synopsis ?? "—"}</p>
                 </div>
               </Link>
             );

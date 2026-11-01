@@ -87,17 +87,35 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         { charSet: "utf-8" },
         { name: "viewport", content: "width=device-width, initial-scale=1" },
         { title: "AniEra — Anime Streaming, Seasonal Anime 2026, Sub & Dub" },
-        { name: "description", content: "AniEra is a premium anime streaming hub: trending and seasonal anime 2026, episode tracker, sub and dub playback, all wrapped in a frosted-glass UI built for fans." },
+        {
+          name: "description",
+          content:
+            "AniEra is a premium anime streaming hub: trending and seasonal anime 2026, episode tracker, sub and dub playback, all wrapped in a frosted-glass UI built for fans.",
+        },
         { name: "author", content: "AniEra" },
         { name: "theme-color", content: "#0A0A14" },
-        { property: "og:title", content: "AniEra — Anime Streaming, Seasonal Anime 2026, Sub & Dub" },
-        { property: "og:description", content: "AniEra is a premium anime streaming hub: trending and seasonal anime 2026, episode tracker, sub and dub playback, all wrapped in a frosted-glass UI built for fans." },
+        {
+          property: "og:title",
+          content: "AniEra — Anime Streaming, Seasonal Anime 2026, Sub & Dub",
+        },
+        {
+          property: "og:description",
+          content:
+            "AniEra is a premium anime streaming hub: trending and seasonal anime 2026, episode tracker, sub and dub playback, all wrapped in a frosted-glass UI built for fans.",
+        },
         { property: "og:type", content: "website" },
         { property: "og:site_name", content: "AniEra" },
         { name: "twitter:card", content: "summary_large_image" },
         { name: "twitter:site", content: "@AniEra" },
-        { name: "twitter:title", content: "AniEra — Anime Streaming, Seasonal Anime 2026, Sub & Dub" },
-        { name: "twitter:description", content: "AniEra is a premium anime streaming hub: trending and seasonal anime 2026, episode tracker, sub and dub playback, all wrapped in a frosted-glass UI built for fans." },
+        {
+          name: "twitter:title",
+          content: "AniEra — Anime Streaming, Seasonal Anime 2026, Sub & Dub",
+        },
+        {
+          name: "twitter:description",
+          content:
+            "AniEra is a premium anime streaming hub: trending and seasonal anime 2026, episode tracker, sub and dub playback, all wrapped in a frosted-glass UI built for fans.",
+        },
       ],
       links: [
         { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -106,8 +124,20 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           rel: "stylesheet",
           href: "https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap",
         },
-        { rel: "preload", href: "/fonts/animeace-bld.woff2", as: "font", type: "font/woff2", crossOrigin: "anonymous" },
-        { rel: "preload", href: "/fonts/animeace-reg.woff2", as: "font", type: "font/woff2", crossOrigin: "anonymous" },
+        {
+          rel: "preload",
+          href: "/fonts/animeace-bld.woff2",
+          as: "font",
+          type: "font/woff2",
+          crossOrigin: "anonymous",
+        },
+        {
+          rel: "preload",
+          href: "/fonts/animeace-reg.woff2",
+          as: "font",
+          type: "font/woff2",
+          crossOrigin: "anonymous",
+        },
         { rel: "stylesheet", href: appCss },
       ],
       scripts: [
@@ -179,7 +209,7 @@ function RootComponent() {
 function SiteChrome() {
   useApplySiteSettings();
   useEffect(() => initGlassPointer(), []);
-  const pathname = useRouterState({ select: s => s.location.pathname });
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
   const standalone = pathname.startsWith("/x-api-panel-");
 
   if (standalone) {
@@ -195,14 +225,19 @@ function SiteChrome() {
     <div className="min-h-screen">
       <div className="site-bg-layer" />
       <div className="site-bg-overlay" />
-      <a href="#main" className="skip-link">Skip to content</a>
+      <a href="#main" className="skip-link">
+        Skip to content
+      </a>
       <Navbar />
-      <main id="main" tabIndex={-1} className="has-tabbar mx-auto max-w-7xl px-4 pb-20 pt-4 sm:px-6">
+      <main id="main" tabIndex={-1} className="mx-auto max-w-7xl px-4 pb-16 pt-4 sm:px-6">
         <Outlet />
       </main>
-      <footer className="has-tabbar space-y-3 border-t border-white/5 py-8 text-center text-xs text-white/40">
+      <footer className="space-y-3 border-t border-white/5 py-8 text-center text-xs text-white/40">
         <ProxyChooser />
-        <div>AniEra · Powered by Jikan, VidNest & MegaPlay · Streams are embedded from third-party sources.</div>
+        <div>
+          AniEra · Powered by Jikan, VidNest & MegaPlay · Streams are embedded from third-party
+          sources.
+        </div>
       </footer>
       <Toaster theme="dark" position="top-right" richColors />
     </div>

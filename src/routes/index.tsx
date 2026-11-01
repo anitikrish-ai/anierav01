@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { jikan, bestTitle, type Anime } from "@/lib/jikan";
 import { AnimeGrid, GridSkeleton } from "@/components/AnimeCard";
 import { getHistory, getEpisodeProgress, type HistoryEntry } from "@/lib/history";
@@ -12,9 +12,16 @@ export const Route = createFileRoute("/")({
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { title: "AniEra — Anime Streaming, Seasonal Anime 2026, Sub & Dub" },
-      { name: "description", content: "Stream trending and seasonal anime 2026 on AniEra: top airing series, upcoming episodes, sub & dub playback, watchlist and continue-watching — all in a frosted-glass UI." },
+      {
+        name: "description",
+        content:
+          "Stream trending and seasonal anime 2026 on AniEra: top airing series, upcoming episodes, sub & dub playback, watchlist and continue-watching — all in a frosted-glass UI.",
+      },
       { property: "og:title", content: "AniEra — Anime Streaming, Seasonal Anime 2026" },
-      { property: "og:description", content: "Trending, seasonal & upcoming anime — sub or dub, in a frosted-glass player." },
+      {
+        property: "og:description",
+        content: "Trending, seasonal & upcoming anime — sub or dub, in a frosted-glass player.",
+      },
       { property: "og:url", content: "https://aniera.lovable.app/" },
     ],
     links: [{ rel: "canonical", href: "https://aniera.lovable.app/" }],
@@ -23,11 +30,36 @@ export const Route = createFileRoute("/")({
 });
 
 function HomePage() {
-  const trending = useQuery({ queryKey: ["top-airing"], queryFn: () => jikan.topAiring(1) });
-  const season = useQuery({ queryKey: ["season-now"], queryFn: () => jikan.seasonNow(1) });
-  const popular = useQuery({ queryKey: ["top-popular"], queryFn: () => jikan.topPopular(1) });
-  const rated = useQuery({ queryKey: ["top-rated"], queryFn: () => jikan.topRated(1) });
-  const upcoming = useQuery({ queryKey: ["season-upcoming"], queryFn: () => jikan.seasonUpcoming(1) });
+  const trending = useQuery({
+    queryKey: ["top-airing"],
+    queryFn: () => jikan.topAiring(1),
+    staleTime: 1000 * 60 * 15,
+    placeholderData: keepPreviousData,
+  });
+  const season = useQuery({
+    queryKey: ["season-now"],
+    queryFn: () => jikan.seasonNow(1),
+    staleTime: 1000 * 60 * 15,
+    placeholderData: keepPreviousData,
+  });
+  const popular = useQuery({
+    queryKey: ["top-popular"],
+    queryFn: () => jikan.topPopular(1),
+    staleTime: 1000 * 60 * 15,
+    placeholderData: keepPreviousData,
+  });
+  const rated = useQuery({
+    queryKey: ["top-rated"],
+    queryFn: () => jikan.topRated(1),
+    staleTime: 1000 * 60 * 15,
+    placeholderData: keepPreviousData,
+  });
+  const upcoming = useQuery({
+    queryKey: ["season-upcoming"],
+    queryFn: () => jikan.seasonUpcoming(1),
+    staleTime: 1000 * 60 * 15,
+    placeholderData: keepPreviousData,
+  });
 
   const heroPool = useMemo(() => trending.data?.data?.slice(0, 5) ?? [], [trending.data]);
 
@@ -35,11 +67,27 @@ function HomePage() {
     <div className="space-y-12">
       <HeroCarousel pool={heroPool} loading={trending.isLoading} />
       <ContinueWatching />
-      <Section title="Trending Now" items={trending.data?.data?.slice(5, 17)} loading={trending.isLoading} />
-      <Section title="This Season" items={season.data?.data?.slice(0, 12)} loading={season.isLoading} />
+      <Section
+        title="Trending Now"
+        items={trending.data?.data?.slice(5, 17)}
+        loading={trending.isLoading}
+      />
+      <Section
+        title="This Season"
+        items={season.data?.data?.slice(0, 12)}
+        loading={season.isLoading}
+      />
       <Section title="Top Rated" items={rated.data?.data?.slice(0, 12)} loading={rated.isLoading} />
-      <Section title="Upcoming Next Season" items={upcoming.data?.data?.slice(0, 12)} loading={upcoming.isLoading} />
-      <Section title="All-Time Popular" items={popular.data?.data?.slice(0, 12)} loading={popular.isLoading} />
+      <Section
+        title="Upcoming Next Season"
+        items={upcoming.data?.data?.slice(0, 12)}
+        loading={upcoming.isLoading}
+      />
+      <Section
+        title="All-Time Popular"
+        items={popular.data?.data?.slice(0, 12)}
+        loading={popular.isLoading}
+      />
     </div>
   );
 }
@@ -48,7 +96,7 @@ function HeroCarousel({ pool, loading }: { pool: Anime[]; loading: boolean }) {
   const [idx, setIdx] = useState(0);
   useEffect(() => {
     if (pool.length < 2) return;
-    const t = setInterval(() => setIdx(i => (i + 1) % pool.length), 7000);
+    const t = setInterval(() => setIdx((i) => (i + 1) % pool.length), 7000);
     return () => clearInterval(t);
   }, [pool.length]);
   if (loading || !pool.length) {
@@ -61,24 +109,43 @@ function HeroCarousel({ pool, loading }: { pool: Anime[]; loading: boolean }) {
       <div
         key={anime.mal_id}
         className="absolute inset-0 scale-110 blur-2xl transition-opacity duration-700"
-        style={{ backgroundImage: `url(${img})`, backgroundSize: "cover", backgroundPosition: "center", opacity: 0.45 }}
+        style={{
+          backgroundImage: `url(${img})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          opacity: 0.45,
+        }}
       />
       <div className="absolute inset-0 bg-gradient-to-r from-background via-background/60 to-transparent" />
       <div className="relative grid gap-6 p-6 sm:p-10 md:grid-cols-[1fr_280px] md:gap-10">
         <div key={anime.mal_id} className="flex flex-col justify-center">
           <span className="anim-rise mb-3 inline-flex w-fit items-center gap-2 rounded-full glass px-3 py-1 text-xs font-medium text-neon-cyan">
-            <span className="h-1.5 w-1.5 rounded-full bg-neon-cyan glow-cyan anim-glow" /> #{idx + 1} Trending
+            <span className="h-1.5 w-1.5 rounded-full bg-neon-cyan glow-cyan anim-glow" /> #
+            {idx + 1} Trending
           </span>
-          <h1 className="anim-rise font-display text-3xl font-bold leading-tight text-white sm:text-5xl" style={{ animationDelay: "60ms" }}>
+          <h1
+            className="anim-rise font-display text-3xl font-bold leading-tight text-white sm:text-5xl"
+            style={{ animationDelay: "60ms" }}
+          >
             {bestTitle(anime)}
           </h1>
-          <div className="anim-rise mt-3 flex flex-wrap gap-2 text-xs text-white/70" style={{ animationDelay: "110ms" }}>
-            {anime.score && <span className="rounded-md bg-white/10 px-2 py-1">★ {anime.score.toFixed(1)}</span>}
+          <div
+            className="anim-rise mt-3 flex flex-wrap gap-2 text-xs text-white/70"
+            style={{ animationDelay: "110ms" }}
+          >
+            {anime.score && (
+              <span className="rounded-md bg-white/10 px-2 py-1">★ {anime.score.toFixed(1)}</span>
+            )}
             {anime.type && <span className="rounded-md bg-white/10 px-2 py-1">{anime.type}</span>}
-            {anime.episodes && <span className="rounded-md bg-white/10 px-2 py-1">{anime.episodes} eps</span>}
+            {anime.episodes && (
+              <span className="rounded-md bg-white/10 px-2 py-1">{anime.episodes} eps</span>
+            )}
             {anime.year && <span className="rounded-md bg-white/10 px-2 py-1">{anime.year}</span>}
           </div>
-          <p className="anim-rise mt-4 line-clamp-3 max-w-2xl text-sm text-white/70 sm:text-base" style={{ animationDelay: "160ms" }}>
+          <p
+            className="anim-rise mt-4 line-clamp-3 max-w-2xl text-sm text-white/70 sm:text-base"
+            style={{ animationDelay: "160ms" }}
+          >
             {anime.synopsis}
           </p>
           <div className="anim-rise mt-6 flex flex-wrap gap-3" style={{ animationDelay: "210ms" }}>
@@ -168,32 +235,39 @@ function ContinueWatching() {
           const pct = p ? Math.min(100, Math.round((p.t / p.d) * 100)) : 0;
           return (
             <Reveal key={e.malId} variant="scale" delay={i * 45}>
-            <Link
-              to="/watch/$id/$ep"
-              params={{ id: String(e.malId), ep: String(e.episode) }}
-              className="sheen group relative block overflow-hidden rounded-2xl glass transition hover:-translate-y-1.5 hover:glow-cyan"
-            >
-              <div className="aspect-[2/3] overflow-hidden">
-                <img src={e.image} alt={e.title} className="h-full w-full object-cover transition group-hover:scale-110" />
-              </div>
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 to-transparent p-3 pt-8">
-                <h3 className="truncate text-sm font-semibold text-white">{e.title}</h3>
-                <p className="text-[11px] text-white/70">Ep {e.episode}{e.totalEpisodes ? ` / ${e.totalEpisodes}` : ""} · {e.lang.toUpperCase()}</p>
-                {p && (
-                  <>
-                    <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-white/20">
-                      <div
-                        className="h-full origin-left rounded-full bg-gradient-to-r from-neon-cyan to-neon-magenta transition-transform duration-700 ease-out"
-                        style={{ width: "100%", transform: `scaleX(${pct / 100})` }}
-                      />
-                    </div>
-                    <p className="mt-1 text-[10px] text-white/60">
-                      {pct >= 95 ? "Finished" : `Resume at ${fmtTime(p.t)}`}
-                    </p>
-                  </>
-                )}
-              </div>
-            </Link>
+              <Link
+                to="/watch/$id/$ep"
+                params={{ id: String(e.malId), ep: String(e.episode) }}
+                className="sheen group relative block overflow-hidden rounded-2xl glass transition hover:-translate-y-1.5 hover:glow-cyan"
+              >
+                <div className="aspect-[2/3] overflow-hidden">
+                  <img
+                    src={e.image}
+                    alt={e.title}
+                    className="h-full w-full object-cover transition group-hover:scale-110"
+                  />
+                </div>
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 to-transparent p-3 pt-8">
+                  <h3 className="truncate text-sm font-semibold text-white">{e.title}</h3>
+                  <p className="text-[11px] text-white/70">
+                    Ep {e.episode}
+                    {e.totalEpisodes ? ` / ${e.totalEpisodes}` : ""} · {e.lang.toUpperCase()}
+                  </p>
+                  {p && (
+                    <>
+                      <div className="mt-2 h-1 w-full overflow-hidden rounded-full bg-white/20">
+                        <div
+                          className="h-full origin-left rounded-full bg-gradient-to-r from-neon-cyan to-neon-magenta transition-transform duration-700 ease-out"
+                          style={{ width: "100%", transform: `scaleX(${pct / 100})` }}
+                        />
+                      </div>
+                      <p className="mt-1 text-[10px] text-white/60">
+                        {pct >= 95 ? "Finished" : `Resume at ${fmtTime(p.t)}`}
+                      </p>
+                    </>
+                  )}
+                </div>
+              </Link>
             </Reveal>
           );
         })}

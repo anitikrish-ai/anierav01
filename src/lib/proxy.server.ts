@@ -9,7 +9,8 @@
  * admin-side security review, while the external provider only sees the relay.
  */
 
-const PRIVATE_HOST = /^(localhost|127\.|0\.|10\.|169\.254\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|\[?::1\]?|metadata\.google\.internal)/i;
+const PRIVATE_HOST =
+  /^(localhost|127\.|0\.|10\.|169\.254\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|\[?::1\]?|metadata\.google\.internal)/i;
 
 export type ProxyRow = {
   id: string;
@@ -59,11 +60,7 @@ export function buildProxiedUrl(proxyUrl: string, target: string): string {
 export function clientIpFrom(headers: Headers): string | null {
   const fwd = headers.get("x-forwarded-for");
   if (fwd) return fwd.split(",")[0]!.trim().slice(0, 60);
-  return (
-    headers.get("cf-connecting-ip") ??
-    headers.get("x-real-ip") ??
-    null
-  );
+  return headers.get("cf-connecting-ip") ?? headers.get("x-real-ip") ?? null;
 }
 
 /**

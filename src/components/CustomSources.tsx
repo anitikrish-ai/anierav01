@@ -10,19 +10,59 @@ type Item = { title: string; image?: string; sub?: string };
 /** Best-effort extraction of title/image rows from arbitrary JSON responses. */
 function extract(body: string): Item[] {
   let j: any;
-  try { j = JSON.parse(body); } catch { return []; }
-  const arr: any[] = Array.isArray(j) ? j : Array.isArray(j?.data) ? j.data : Array.isArray(j?.results) ? j.results : Array.isArray(j?.media) ? j.media : [];
-  return arr.slice(0, 12).map(x => {
-    const a = x?.attributes ?? x ?? {};
-    const title = a.canonicalTitle ?? a.title_english ?? a.title?.english ?? a.title?.romaji ?? (typeof a.title === "string" ? a.title : null) ?? a.name;
-    const image = a.posterImage?.small ?? a.images?.jpg?.image_url ?? a.coverImage?.medium ?? a.image ?? a.poster;
-    const sub = a.subtype ?? a.type ?? a.status ?? a.startDate ?? "";
-    return title ? { title: String(title), image: typeof image === "string" ? image : undefined, sub: String(sub ?? "") } : null;
-  }).filter(Boolean) as Item[];
+  try {
+    j = JSON.parse(body);
+  } catch {
+    return [];
+  }
+  const arr: any[] = Array.isArray(j)
+    ? j
+    : Array.isArray(j?.data)
+      ? j.data
+      : Array.isArray(j?.results)
+        ? j.results
+        : Array.isArray(j?.media)
+          ? j.media
+          : [];
+  return arr
+    .slice(0, 12)
+    .map((x) => {
+      const a = x?.attributes ?? x ?? {};
+      const title =
+        a.canonicalTitle ??
+        a.title_english ??
+        a.title?.english ??
+        a.title?.romaji ??
+        (typeof a.title === "string" ? a.title : null) ??
+        a.name;
+      const image =
+        a.posterImage?.small ??
+        a.images?.jpg?.image_url ??
+        a.coverImage?.medium ??
+        a.image ??
+        a.poster;
+      const sub = a.subtype ?? a.type ?? a.status ?? a.startDate ?? "";
+      return title
+        ? {
+            title: String(title),
+            image: typeof image === "string" ? image : undefined,
+            sub: String(sub ?? ""),
+          }
+        : null;
+    })
+    .filter(Boolean) as Item[];
 }
 
 /** Shows results from admin-added custom APIs. Hidden when none are enabled. */
-export function CustomSources({ query = "", heading = "Extra sources", searchable = false }: { query?: string; heading?: string; searchable?: boolean }) {
+export function CustomSources({
+  query = "",
+  heading = "Extra sources",
+  searchable = false,
+}: {
+  query?: string;
+  heading?: string;
+  searchable?: boolean;
+}) {
   const [own, setOwn] = useState("");
   const listFn = useServerFn(listEnabledCustomApis);
   const callFn = useServerFn(callCustomApi);
@@ -49,7 +89,7 @@ export function CustomSources({ query = "", heading = "Extra sources", searchabl
         <Plug className="h-4 w-4 text-primary" />
         <h2 className="font-display text-lg font-bold text-white">{heading}</h2>
         <div className="ml-auto flex flex-wrap gap-1">
-          {apis.data.map(a => (
+          {apis.data.map((a) => (
             <button
               key={a.id}
               onClick={() => setSlug(a.slug)}
@@ -63,7 +103,7 @@ export function CustomSources({ query = "", heading = "Extra sources", searchabl
       {searchable && (
         <input
           value={own}
-          onChange={e => setOwn(e.target.value)}
+          onChange={(e) => setOwn(e.target.value)}
           placeholder="Search this source…"
           className="mb-3 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white"
         />
@@ -81,7 +121,12 @@ export function CustomSources({ query = "", heading = "Extra sources", searchabl
           {items.map((it, i) => (
             <div key={i} className="min-w-0">
               {it.image ? (
-                <img src={it.image} alt={it.title} loading="lazy" className="aspect-[2/3] w-full rounded-lg object-cover" />
+                <img
+                  src={it.image}
+                  alt={it.title}
+                  loading="lazy"
+                  className="aspect-[2/3] w-full rounded-lg object-cover"
+                />
               ) : (
                 <div className="aspect-[2/3] w-full rounded-lg bg-white/5" />
               )}
@@ -91,7 +136,9 @@ export function CustomSources({ query = "", heading = "Extra sources", searchabl
           ))}
         </div>
       )}
-      {res.data?.viaProxy && <p className="mt-2 text-[10px] text-white/40">Fetched via {res.data.viaProxy}</p>}
+      {res.data?.viaProxy && (
+        <p className="mt-2 text-[10px] text-white/40">Fetched via {res.data.viaProxy}</p>
+      )}
     </section>
   );
 }

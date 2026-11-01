@@ -20,7 +20,11 @@ interface Props {
   onProgress?: (t: number, d: number) => void;
 }
 
-interface QualityLevel { index: number; height: number; bitrate: number; }
+interface QualityLevel {
+  index: number;
+  height: number;
+  bitrate: number;
+}
 
 const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.5, 3];
 
@@ -28,7 +32,15 @@ const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5, 1.75, 2, 2.5, 3];
  * HLS.js-backed player with keyboard shortcuts, PiP, speed & quality selectors,
  * and resume-position support. Falls back to native HLS on Safari.
  */
-export function HlsPlayer({ src, tracks, poster, autoPlay = true, onEnded, startTime, onProgress }: Props) {
+export function HlsPlayer({
+  src,
+  tracks,
+  poster,
+  autoPlay = true,
+  onEnded,
+  startTime,
+  onProgress,
+}: Props) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const hlsRef = useRef<Hls | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -69,8 +81,14 @@ export function HlsPlayer({ src, tracks, poster, autoPlay = true, onEnded, start
     } else {
       setErr("HLS not supported in this browser.");
     }
-    setPipSupported(typeof (document as any).pictureInPictureEnabled === "boolean" && (document as any).pictureInPictureEnabled);
-    return () => { hls?.destroy(); hlsRef.current = null; };
+    setPipSupported(
+      typeof (document as any).pictureInPictureEnabled === "boolean" &&
+        (document as any).pictureInPictureEnabled,
+    );
+    return () => {
+      hls?.destroy();
+      hlsRef.current = null;
+    };
   }, [src]);
 
   // Apply startTime once
@@ -79,7 +97,12 @@ export function HlsPlayer({ src, tracks, poster, autoPlay = true, onEnded, start
     if (!video || !startTime || startTime < 2) return;
     const seek = () => {
       if (seekedRef.current) return;
-      try { video.currentTime = startTime; seekedRef.current = true; } catch {}
+      try {
+        video.currentTime = startTime;
+        seekedRef.current = true;
+      } catch {
+        /* ignore seeking errors */
+      }
     };
     video.addEventListener("loadedmetadata", seek, { once: true });
     if (video.readyState >= 1) seek();
@@ -109,7 +132,11 @@ export function HlsPlayer({ src, tracks, poster, autoPlay = true, onEnded, start
         case " ":
         case "k":
           e.preventDefault();
-          video.paused ? video.play() : video.pause();
+          if (video.paused) {
+            void video.play();
+          } else {
+            video.pause();
+          }
           break;
         case "ArrowLeft":
           video.currentTime = Math.max(0, video.currentTime - 5);
@@ -146,7 +173,9 @@ export function HlsPlayer({ src, tracks, poster, autoPlay = true, onEnded, start
       const doc = document as any;
       if (doc.pictureInPictureElement) await doc.exitPictureInPicture();
       else await (video as any).requestPictureInPicture?.();
-    } catch {}
+    } catch {
+      /* ignore PiP errors */
+    }
   };
 
   const setPlaybackRate = (r: number) => {
@@ -187,23 +216,29 @@ export function HlsPlayer({ src, tracks, poster, autoPlay = true, onEnded, start
         <select
           aria-label="Playback speed"
           value={speed}
-          onChange={e => setPlaybackRate(Number(e.target.value))}
+          onChange={(e) => setPlaybackRate(Number(e.target.value))}
           className="pointer-events-auto rounded-md bg-black/60 px-2 py-1 text-xs text-white outline-none ring-1 ring-white/20 backdrop-blur hover:bg-black/80"
         >
-          {SPEEDS.map(s => <option key={s} value={s} className="bg-background">{s}x</option>)}
+          {SPEEDS.map((s) => (
+            <option key={s} value={s} className="bg-background">
+              {s}x
+            </option>
+          ))}
         </select>
         {qualities.length > 0 && (
           <select
             aria-label="Quality"
             value={qualityIdx}
-            onChange={e => setQuality(Number(e.target.value))}
+            onChange={(e) => setQuality(Number(e.target.value))}
             className="pointer-events-auto rounded-md bg-black/60 px-2 py-1 text-xs text-white outline-none ring-1 ring-white/20 backdrop-blur hover:bg-black/80"
           >
-            <option value={-1} className="bg-background">Auto</option>
+            <option value={-1} className="bg-background">
+              Auto
+            </option>
             {qualities
               .slice()
               .sort((a, b) => b.height - a.height)
-              .map(q => (
+              .map((q) => (
                 <option key={q.index} value={q.index} className="bg-background">
                   {q.height ? `${q.height}p` : `${Math.round(q.bitrate / 1000)}k`}
                 </option>

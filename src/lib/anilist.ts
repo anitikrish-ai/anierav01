@@ -2,12 +2,20 @@ const CACHE_KEY = "aniera:mal2al";
 
 function readCache(): Record<string, number | null> {
   if (typeof window === "undefined") return {};
-  try { return JSON.parse(localStorage.getItem(CACHE_KEY) || "{}"); } catch { return {}; }
+  try {
+    return JSON.parse(localStorage.getItem(CACHE_KEY) || "{}");
+  } catch {
+    return {};
+  }
 }
 
 function writeCache(map: Record<string, number | null>) {
   if (typeof window === "undefined") return;
-  try { localStorage.setItem(CACHE_KEY, JSON.stringify(map)); } catch {}
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify(map));
+  } catch {
+    /* ignore storage quota errors */
+  }
 }
 
 /**
@@ -21,11 +29,15 @@ export async function malToAnilist(malId: number): Promise<number | null> {
 
   const query = `query ($id: Int) { Media(idMal: $id, type: ANIME) { id } }`;
   try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 4000);
     const r = await fetch("https://graphql.anilist.co", {
       method: "POST",
       headers: { "Content-Type": "application/json", Accept: "application/json" },
       body: JSON.stringify({ query, variables: { id: malId } }),
+      signal: controller.signal,
     });
+    clearTimeout(timer);
     if (!r.ok) {
       cache[key] = null;
       writeCache(cache);

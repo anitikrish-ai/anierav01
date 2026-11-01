@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 import { createServerFn } from "@tanstack/react-start";
 import { useSession } from "@tanstack/react-start/server";
 import { z } from "zod";
@@ -252,7 +253,10 @@ export const setApiEnabled = createServerFn({ method: "POST" })
     await requireConfirmed(data.confirmPassword);
     const db = await admin();
     await snapshot(data.id, "before toggle");
-    const { error } = await db.from("custom_apis").update({ enabled: data.enabled }).eq("id", data.id);
+    const { error } = await db
+      .from("custom_apis")
+      .update({ enabled: data.enabled })
+      .eq("id", data.id);
     if (error) throw new Error(error.message);
     await log({ api_id: data.id, action: data.enabled ? "enable" : "disable", ok: true });
     return { ok: true as const };
@@ -340,9 +344,11 @@ export const testApi = createServerFn({ method: "POST" })
         url.searchParams.set(k, String(v).replace("{query}", data.sampleQuery ?? ""));
       }
       const headers: Record<string, string> = { ...(a.headers ?? {}) };
-      if (a.auth_type === "bearer" && a.auth_value) headers["Authorization"] = `Bearer ${a.auth_value}`;
+      if (a.auth_type === "bearer" && a.auth_value)
+        headers["Authorization"] = `Bearer ${a.auth_value}`;
       if (a.auth_type === "api_key_header" && a.auth_value) headers["X-API-Key"] = a.auth_value;
-      if (a.auth_type === "query_key" && a.auth_value) url.searchParams.set("api_key", a.auth_value);
+      if (a.auth_type === "query_key" && a.auth_value)
+        url.searchParams.set("api_key", a.auth_value);
 
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), a.timeout_ms ?? 10000);
@@ -413,7 +419,10 @@ export const importApis = createServerFn({ method: "POST" })
     z
       .object({
         confirmPassword: z.string().min(1),
-        apis: z.array(ApiSchema.omit({ id: true })).min(1).max(200),
+        apis: z
+          .array(ApiSchema.omit({ id: true }))
+          .min(1)
+          .max(200),
       })
       .parse(d),
   )

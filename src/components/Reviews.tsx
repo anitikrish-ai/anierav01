@@ -18,7 +18,7 @@ export function Reviews({ malId, animeTitle }: { malId: number; animeTitle: stri
     queryFn: () => load({ data: { mal_id: malId } }),
   });
 
-  const mine = q.data?.reviews.find(r => r.user_id === user?.id) ?? null;
+  const mine = q.data?.reviews.find((r) => r.user_id === user?.id) ?? null;
 
   const [body, setBody] = useState("");
   const [rating, setRating] = useState<number | null>(null);
@@ -62,23 +62,24 @@ export function Reviews({ malId, animeTitle }: { malId: number; animeTitle: stri
 
   const reviews = q.data?.reviews ?? [];
   const avg =
-    reviews.filter(r => r.rating).reduce((s, r) => s + (r.rating ?? 0), 0) /
-    (reviews.filter(r => r.rating).length || 1);
+    reviews.filter((r) => r.rating).reduce((s, r) => s + (r.rating ?? 0), 0) /
+    (reviews.filter((r) => r.rating).length || 1);
 
   return (
     <section>
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <h2 className="font-display text-2xl font-bold text-white">Reviews & Comments</h2>
-        {reviews.some(r => r.rating) && (
+        {reviews.some((r) => r.rating) && (
           <span className="rounded-full glass px-3 py-1 text-xs text-white/80">
-            Community score ★ {avg.toFixed(1)} · {reviews.length} review{reviews.length === 1 ? "" : "s"}
+            Community score ★ {avg.toFixed(1)} · {reviews.length} review
+            {reviews.length === 1 ? "" : "s"}
           </span>
         )}
       </div>
 
       {signedIn ? (
         <form
-          onSubmit={e => {
+          onSubmit={(e) => {
             e.preventDefault();
             if (body.trim().length < 2) return;
             saveM.mutate();
@@ -87,7 +88,7 @@ export function Reviews({ malId, animeTitle }: { malId: number; animeTitle: stri
         >
           <textarea
             value={body}
-            onChange={e => setBody(e.target.value)}
+            onChange={(e) => setBody(e.target.value)}
             rows={3}
             maxLength={4000}
             placeholder={mine ? "Update your review…" : "Share your thoughts on this anime…"}
@@ -99,17 +100,25 @@ export function Reviews({ malId, animeTitle }: { malId: number; animeTitle: stri
               Rating
               <select
                 value={rating ?? ""}
-                onChange={e => setRating(e.target.value ? Number(e.target.value) : null)}
+                onChange={(e) => setRating(e.target.value ? Number(e.target.value) : null)}
                 className="rounded-lg bg-white/5 px-2 py-1.5 text-sm text-white outline-none ring-1 ring-white/10 focus:ring-neon-cyan"
               >
-                <option value="" className="bg-background">—</option>
-                {Array.from({ length: 10 }, (_, i) => 10 - i).map(n => (
-                  <option key={n} value={n} className="bg-background">{n}</option>
+                <option value="" className="bg-background">
+                  —
+                </option>
+                {Array.from({ length: 10 }, (_, i) => 10 - i).map((n) => (
+                  <option key={n} value={n} className="bg-background">
+                    {n}
+                  </option>
                 ))}
               </select>
             </label>
             <label className="flex items-center gap-2 text-xs text-white/70">
-              <input type="checkbox" checked={spoiler} onChange={e => setSpoiler(e.target.checked)} />
+              <input
+                type="checkbox"
+                checked={spoiler}
+                onChange={(e) => setSpoiler(e.target.checked)}
+              />
               Contains spoilers
             </label>
             <button
@@ -133,8 +142,10 @@ export function Reviews({ malId, animeTitle }: { malId: number; animeTitle: stri
         </form>
       ) : (
         <div className="glass rounded-2xl p-4 text-sm text-white/70">
-          <Link to="/auth" className="font-semibold text-neon-cyan hover:underline">Sign in</Link> to post a review
-          or rate this anime.
+          <Link to="/auth" className="font-semibold text-neon-cyan hover:underline">
+            Sign in
+          </Link>{" "}
+          to post a review or rate this anime.
         </div>
       )}
 
@@ -142,11 +153,15 @@ export function Reviews({ malId, animeTitle }: { malId: number; animeTitle: stri
         {q.isLoading ? (
           <div className="h-24 rounded-2xl shimmer" />
         ) : q.isError ? (
-          <ErrorState message={(q.error as Error)?.message} onRetry={() => q.refetch()} retrying={q.isFetching} />
+          <ErrorState
+            message={(q.error as Error)?.message}
+            onRetry={() => q.refetch()}
+            retrying={q.isFetching}
+          />
         ) : reviews.length === 0 ? (
           <p className="text-sm text-white/60">No reviews yet — be the first to write one.</p>
         ) : (
-          reviews.map(r => <ReviewCard key={r.id} r={r} own={r.user_id === user?.id} />)
+          reviews.map((r) => <ReviewCard key={r.id} r={r} own={r.user_id === user?.id} />)
         )}
       </div>
     </section>
@@ -159,7 +174,12 @@ function ReviewCard({ r, own }: { r: ReviewRow; own: boolean }) {
     <article className="glass rounded-2xl p-4">
       <div className="flex items-center gap-3">
         {r.author_avatar ? (
-          <img src={r.author_avatar} alt="" loading="lazy" className="h-8 w-8 rounded-full object-cover" />
+          <img
+            src={r.author_avatar}
+            alt=""
+            loading="lazy"
+            className="h-8 w-8 rounded-full object-cover"
+          />
         ) : (
           <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-xs text-white">
             {r.author_name.charAt(0).toUpperCase()}
@@ -167,12 +187,15 @@ function ReviewCard({ r, own }: { r: ReviewRow; own: boolean }) {
         )}
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold text-white">
-            {r.author_name}{own && <span className="ml-2 text-[11px] text-neon-cyan">you</span>}
+            {r.author_name}
+            {own && <span className="ml-2 text-[11px] text-neon-cyan">you</span>}
           </p>
           <p className="text-[11px] text-white/50">{new Date(r.created_at).toLocaleDateString()}</p>
         </div>
         {r.rating && (
-          <span className="ml-auto rounded-md bg-white/10 px-2 py-1 text-xs text-white">★ {r.rating}</span>
+          <span className="ml-auto rounded-md bg-white/10 px-2 py-1 text-xs text-white">
+            ★ {r.rating}
+          </span>
         )}
       </div>
       {r.spoiler && !revealed ? (

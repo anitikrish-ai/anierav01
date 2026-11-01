@@ -4,17 +4,20 @@ import { useServerFn } from "@tanstack/react-start";
 import { getAdminStats } from "@/lib/admin.functions";
 import { AdminHeader, AdminCard } from "@/components/admin/AdminShell";
 import { useSiteSettings } from "@/lib/site-settings";
-import {
-  Library,
-  Users as UsersIcon,
-  Plug,
-  Search,
-  ShieldCheck,
-  Palette,
-} from "lucide-react";
+import { Library, Users as UsersIcon, Plug, Search, ShieldCheck, Palette } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
-  head: () => ({ meta: [{"title": "Overview \u2014 AniEra Admin"}, {"name": "description", "content": "Review AniEra site activity and administration."}, {"property": "og:title", "content": "Overview \u2014 AniEra Admin"}, {"property": "og:description", "content": "Review AniEra site activity and administration."}, {"property": "og:type", "content": "website"}, {"name": "twitter:card", "content": "summary"}, {"name": "robots", "content": "noindex"}] }),
+  head: () => ({
+    meta: [
+      { title: "Overview \u2014 AniEra Admin" },
+      { name: "description", content: "Review AniEra site activity and administration." },
+      { property: "og:title", content: "Overview \u2014 AniEra Admin" },
+      { property: "og:description", content: "Review AniEra site activity and administration." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
+      { name: "robots", content: "noindex" },
+    ],
+  }),
   component: DashboardPage,
 });
 
@@ -29,10 +32,7 @@ function DashboardPage() {
     { label: "Profiles", value: d?.profiles ?? "—", icon: UsersIcon },
     {
       label: "API providers",
-      value:
-        d != null
-          ? `${d.providersEnabled}/${d.providersTotal}`
-          : "—",
+      value: d != null ? `${d.providersEnabled}/${d.providersTotal}` : "—",
       icon: Plug,
     },
     { label: "SEO overrides", value: d?.seoOverrides ?? "—", icon: Search },
@@ -47,18 +47,14 @@ function DashboardPage() {
         description="Live snapshot of your site. Every setting below is stored in the database and applied to the live site instantly."
       />
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-        {cards.map(c => {
+        {cards.map((c) => {
           const Icon = c.icon;
           return (
             <AdminCard key={c.label}>
               <div className="flex items-center justify-between">
                 <div>
-                  <div className="text-xs uppercase tracking-wider text-white/50">
-                    {c.label}
-                  </div>
-                  <div className="mt-1 font-display text-2xl font-bold text-white">
-                    {c.value}
-                  </div>
+                  <div className="text-xs uppercase tracking-wider text-white/50">{c.label}</div>
+                  <div className="mt-1 font-display text-2xl font-bold text-white">{c.value}</div>
                 </div>
                 <Icon className="h-8 w-8 text-neon-cyan/70" />
               </div>
@@ -69,9 +65,7 @@ function DashboardPage() {
 
       <div className="mt-6 grid gap-4 md:grid-cols-2">
         <AdminCard>
-          <h2 className="font-display text-lg font-bold text-white">
-            Site identity
-          </h2>
+          <h2 className="font-display text-lg font-bold text-white">Site identity</h2>
           <dl className="mt-3 space-y-2 text-sm">
             <Row label="Title" value={settings.site_title} />
             <Row label="Tagline" value={settings.site_description} />
@@ -79,18 +73,14 @@ function DashboardPage() {
           </dl>
         </AdminCard>
         <AdminCard>
-          <h2 className="font-display text-lg font-bold text-white">
-            Homepage sections
-          </h2>
+          <h2 className="font-display text-lg font-bold text-white">Homepage sections</h2>
           <ul className="mt-3 space-y-1 text-sm">
-            {settings.homepage_sections.map(s => (
+            {settings.homepage_sections.map((s) => (
               <li key={s.key} className="flex items-center justify-between">
                 <span className="text-white/80">{s.label}</span>
                 <span
                   className={`rounded-full px-2 py-0.5 text-[11px] ${
-                    s.enabled
-                      ? "bg-emerald-500/20 text-emerald-300"
-                      : "bg-white/10 text-white/40"
+                    s.enabled ? "bg-emerald-500/20 text-emerald-300" : "bg-white/10 text-white/40"
                   }`}
                 >
                   {s.enabled ? "Enabled" : "Hidden"}

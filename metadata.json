@@ -1,0 +1,6 @@
+{
+  "name": "AniEra - Anime Streaming & Seasonal Hub",
+  "description": "AniEra is a modern anime streaming platform featuring trending and seasonal anime, episode tracker, sub/dub playback, and custom sources.",
+  "capabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"],
+  "permissions": []
+}

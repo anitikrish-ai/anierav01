@@ -27,7 +27,8 @@ export const Route = createFileRoute("/sitemap.xml")({
           if (r.ok) {
             const j: any = await r.json();
             for (const a of j?.data ?? []) {
-              if (a?.mal_id) dynamic.push({ path: `/anime/${a.mal_id}`, changefreq: "weekly", priority: "0.7" });
+              if (a?.mal_id)
+                dynamic.push({ path: `/anime/${a.mal_id}`, changefreq: "weekly", priority: "0.7" });
             }
           }
         } catch {
@@ -41,7 +42,9 @@ export const Route = createFileRoute("/sitemap.xml")({
             e.changefreq ? `    <changefreq>${e.changefreq}</changefreq>` : null,
             e.priority ? `    <priority>${e.priority}</priority>` : null,
             `  </url>`,
-          ].filter(Boolean).join("\n"),
+          ]
+            .filter(Boolean)
+            .join("\n"),
         );
 
         const xml = [

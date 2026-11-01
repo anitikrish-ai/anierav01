@@ -20,20 +20,36 @@ const STATUS_TO_MAL: Record<LibStatus, number> = {
   plan_to_watch: 6,
 };
 const MAL_TO_STATUS: Record<string, LibStatus> = {
-  "1": "watching", "2": "completed", "3": "on_hold", "4": "dropped", "6": "plan_to_watch",
-  watching: "watching", completed: "completed", on_hold: "on_hold", dropped: "dropped",
-  plan_to_watch: "plan_to_watch", plantowatch: "plan_to_watch", planned: "plan_to_watch",
-  onhold: "on_hold", paused: "on_hold",
+  "1": "watching",
+  "2": "completed",
+  "3": "on_hold",
+  "4": "dropped",
+  "6": "plan_to_watch",
+  watching: "watching",
+  completed: "completed",
+  on_hold: "on_hold",
+  dropped: "dropped",
+  plan_to_watch: "plan_to_watch",
+  plantowatch: "plan_to_watch",
+  planned: "plan_to_watch",
+  onhold: "on_hold",
+  paused: "on_hold",
 };
 
 function esc(s: unknown): string {
-  return String(s ?? "").replace(/[&<>"']/g, c =>
-    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&apos;" })[c]!);
+  return String(s ?? "").replace(
+    /[&<>"']/g,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&apos;" })[c]!,
+  );
 }
 
 /** Native JSON export (most lossless). */
 export function exportJSON(entries: LibEntry[]): string {
-  return JSON.stringify({ app: "AniEra", version: 1, exported_at: new Date().toISOString(), entries }, null, 2);
+  return JSON.stringify(
+    { app: "AniEra", version: 1, exported_at: new Date().toISOString(), entries },
+    null,
+    2,
+  );
 }
 
 /** MyAnimeList XML export — compatible with MAL importer. */
@@ -67,15 +83,35 @@ export function exportMAL(entries: LibEntry[]): string {
 
 /** CSV export (Excel-friendly). */
 export function exportCSV(entries: LibEntry[]): string {
-  const head = ["mal_id", "title", "status", "score", "episodes_watched", "total_episodes", "is_favorite", "notes"];
-  const rows = entries.map(e => [
-    e.mal_id, e.title, e.status, e.score ?? "", e.episodes_watched, e.total_episodes ?? "", e.is_favorite ? "1" : "0", (e.notes ?? "").replace(/\n/g, " "),
+  const head = [
+    "mal_id",
+    "title",
+    "status",
+    "score",
+    "episodes_watched",
+    "total_episodes",
+    "is_favorite",
+    "notes",
+  ];
+  const rows = entries.map((e) => [
+    e.mal_id,
+    e.title,
+    e.status,
+    e.score ?? "",
+    e.episodes_watched,
+    e.total_episodes ?? "",
+    e.is_favorite ? "1" : "0",
+    (e.notes ?? "").replace(/\n/g, " "),
   ]);
   const csv = [head, ...rows]
-    .map(r => r.map(v => {
-      const s = String(v);
-      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
-    }).join(","))
+    .map((r) =>
+      r
+        .map((v) => {
+          const s = String(v);
+          return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+        })
+        .join(","),
+    )
     .join("\n");
   return csv;
 }
@@ -88,20 +124,24 @@ function detectFormat(text: string): "json" | "xml" | "csv" {
 }
 
 function normStatus(v: unknown): LibStatus {
-  const key = String(v ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  const key = String(v ?? "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
   return MAL_TO_STATUS[key] ?? "plan_to_watch";
 }
 
 function parseJSON(text: string): LibEntry[] {
   const j = JSON.parse(text);
-  const arr: any[] = Array.isArray(j) ? j : j.entries ?? j.lists ?? j.data ?? [];
+  const arr: any[] = Array.isArray(j) ? j : (j.entries ?? j.lists ?? j.data ?? []);
   return arr
-    .map(r => {
+    .map((r) => {
       const malId = Number(r.mal_id ?? r.malId ?? r.id ?? r.idMal ?? r.media?.idMal);
       if (!malId) return null;
       return {
         mal_id: malId,
-        title: String(r.title ?? r.media?.title?.romaji ?? r.media?.title?.english ?? `Anime ${malId}`),
+        title: String(
+          r.title ?? r.media?.title?.romaji ?? r.media?.title?.english ?? `Anime ${malId}`,
+        ),
         image: r.image ?? r.media?.coverImage?.large ?? null,
         status: normStatus(r.status),
         score: r.score != null ? Number(r.score) || null : null,
@@ -116,37 +156,57 @@ function parseJSON(text: string): LibEntry[] {
 
 function parseCSV(text: string): LibEntry[] {
   const rows: string[][] = [];
-  let cur: string[] = [], cell = "", q = false;
+  let cur: string[] = [],
+    cell = "",
+    q = false;
   for (let i = 0; i < text.length; i++) {
     const c = text[i];
     if (q) {
-      if (c === '"' && text[i + 1] === '"') { cell += '"'; i++; }
-      else if (c === '"') q = false;
+      if (c === '"' && text[i + 1] === '"') {
+        cell += '"';
+        i++;
+      } else if (c === '"') q = false;
       else cell += c;
     } else if (c === '"') q = true;
-    else if (c === ",") { cur.push(cell); cell = ""; }
-    else if (c === "\n" || c === "\r") { if (cell || cur.length) { cur.push(cell); rows.push(cur); cur = []; cell = ""; } if (c === "\r" && text[i + 1] === "\n") i++; }
-    else cell += c;
+    else if (c === ",") {
+      cur.push(cell);
+      cell = "";
+    } else if (c === "\n" || c === "\r") {
+      if (cell || cur.length) {
+        cur.push(cell);
+        rows.push(cur);
+        cur = [];
+        cell = "";
+      }
+      if (c === "\r" && text[i + 1] === "\n") i++;
+    } else cell += c;
   }
-  if (cell || cur.length) { cur.push(cell); rows.push(cur); }
+  if (cell || cur.length) {
+    cur.push(cell);
+    rows.push(cur);
+  }
   if (rows.length < 2) return [];
-  const head = rows[0].map(h => h.trim().toLowerCase());
+  const head = rows[0].map((h) => h.trim().toLowerCase());
   const idx = (k: string) => head.indexOf(k);
-  return rows.slice(1).map(r => {
-    const malId = Number(r[idx("mal_id")] ?? r[idx("id")]);
-    if (!malId) return null;
-    return {
-      mal_id: malId,
-      title: r[idx("title")] ?? `Anime ${malId}`,
-      image: null,
-      status: normStatus(r[idx("status")]),
-      score: Number(r[idx("score")]) || null,
-      episodes_watched: Number(r[idx("episodes_watched")] ?? r[idx("progress")]) || 0,
-      total_episodes: Number(r[idx("total_episodes")]) || null,
-      is_favorite: r[idx("is_favorite")] === "1" || r[idx("is_favorite")]?.toLowerCase() === "true",
-      notes: r[idx("notes")] || null,
-    } satisfies LibEntry;
-  }).filter(Boolean) as LibEntry[];
+  return rows
+    .slice(1)
+    .map((r) => {
+      const malId = Number(r[idx("mal_id")] ?? r[idx("id")]);
+      if (!malId) return null;
+      return {
+        mal_id: malId,
+        title: r[idx("title")] ?? `Anime ${malId}`,
+        image: null,
+        status: normStatus(r[idx("status")]),
+        score: Number(r[idx("score")]) || null,
+        episodes_watched: Number(r[idx("episodes_watched")] ?? r[idx("progress")]) || 0,
+        total_episodes: Number(r[idx("total_episodes")]) || null,
+        is_favorite:
+          r[idx("is_favorite")] === "1" || r[idx("is_favorite")]?.toLowerCase() === "true",
+        notes: r[idx("notes")] || null,
+      } satisfies LibEntry;
+    })
+    .filter(Boolean) as LibEntry[];
 }
 
 function parseXML(text: string): LibEntry[] {

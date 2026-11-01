@@ -31,7 +31,11 @@ function BackupPage() {
     mutationFn: () => doExport(),
     onSuccess: (data: any) => {
       const stamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, "-");
-      downloadText(`aniera-backup-${stamp}.json`, JSON.stringify(data, null, 2), "application/json");
+      downloadText(
+        `aniera-backup-${stamp}.json`,
+        JSON.stringify(data, null, 2),
+        "application/json",
+      );
       setPreview(JSON.stringify(data, null, 2).slice(0, 4000));
       toast.success("Backup downloaded");
     },
@@ -72,7 +76,8 @@ function BackupPage() {
         <AdminCard>
           <h2 className="font-display text-lg font-bold text-white">Restore</h2>
           <p className="mt-1 text-sm text-white/60">
-            Replaces API providers and merges SEO overrides and site settings. This cannot be undone.
+            Replaces API providers and merges SEO overrides and site settings. This cannot be
+            undone.
           </p>
           <label className="mt-4 inline-block cursor-pointer rounded-lg bg-white/10 px-4 py-2 text-sm font-semibold text-white hover:bg-white/20">
             {restoreMut.isPending ? "Restoring…" : "Choose backup file"}
@@ -80,7 +85,7 @@ function BackupPage() {
               type="file"
               accept="application/json,.json"
               className="hidden"
-              onChange={e => {
+              onChange={(e) => {
                 const f = e.target.files?.[0];
                 if (f && confirm("Restore this backup? Existing providers will be replaced.")) {
                   restoreMut.mutate(f);
