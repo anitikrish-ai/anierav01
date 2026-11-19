@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Hls from "hls.js";
 
 interface Track {
@@ -14,6 +14,9 @@ interface Props {
   poster?: string;
   autoPlay?: boolean;
   onEnded?: () => void;
+  onReady?: () => void;
+  onFatalError?: () => void;
+  onTryNextServer?: () => void;
   /** Resume position in seconds. Applied once when metadata is ready. */
   startTime?: number;
   /** Fired ~every 5s with (currentTime, duration). Used to persist progress. */
@@ -38,12 +41,21 @@ export function HlsPlayer({
   poster,
   autoPlay = true,
   onEnded,
+  onReady,
+  onFatalError,
+  onTryNextServer,
   startTime,
   onProgress,
 }: Props) {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const hlsRef = useRef<Hls | null>(null);
+  const onReadyRef = useRef(onReady);
+  const onFatalRef = useRef(onFatalError);
+  onReadyRef.current = onReady;
+  onFatalRef.current = onFatalError;
+
   const [err, setErr] = useState<string | null>(null);
+  const [reloadSeq, setReloadSeq] = useState(0);
   const [speed, setSpeed] = useState(1);
   const [qualities, setQualities] = useState<QualityLevel[]>([]);
   const [qualityIdx, setQualityIdx] = useState<number>(-1); // -1 = auto
@@ -60,6 +72,9 @@ export function HlsPlayer({
     seekedRef.current = false;
 
     let hls: Hls | null = null;
+    let recoveredNetwork = false;
+    let recoveredMedia = false;
+
     if (Hls.isSupported()) {
       hls = new Hls({ enableWorker: true, lowLatencyMode: false });
       hlsRef.current = hls;
@@ -72,14 +87,35 @@ export function HlsPlayer({
           bitrate: l.bitrate ?? 0,
         }));
         setQualities(levels);
+        onReadyRef.current?.();
       });
       hls.on(Hls.Events.ERROR, (_evt, data) => {
-        if (data.fatal) setErr(`Playback error (${data.type}/${data.details})`);
+        if (!data.fatal) return;
+        if (data.type === Hls.ErrorTypes.NETWORK_ERROR && !recoveredNetwork) {
+          recoveredNetwork = true;
+          hls?.startLoad();
+          return;
+        }
+        if (data.type === Hls.ErrorTypes.MEDIA_ERROR && !recoveredMedia) {
+          recoveredMedia = true;
+          hls?.recoverMediaError();
+          return;
+        }
+        setErr(`Stream unavailable (${data.details || data.type})`);
+        onFatalRef.current?.();
       });
     } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
       video.src = src;
+      const onLoaded = () => onReadyRef.current?.();
+      const onNativeErr = () => {
+        setErr("Stream unavailable in native player.");
+        onFatalRef.current?.();
+      };
+      video.addEventListener("loadedmetadata", onLoaded, { once: true });
+      video.addEventListener("error", onNativeErr, { once: true });
     } else {
-      setErr("HLS not supported in this browser.");
+      setErr("HLS playback is not supported in this browser.");
+      onFatalRef.current?.();
     }
     setPipSupported(
       typeof (document as any).pictureInPictureEnabled === "boolean" &&
@@ -89,7 +125,7 @@ export function HlsPlayer({
       hls?.destroy();
       hlsRef.current = null;
     };
-  }, [src]);
+  }, [src, reloadSeq]);
 
   // Apply startTime once
   useEffect(() => {
@@ -121,19 +157,41 @@ export function HlsPlayer({
     return () => clearInterval(int);
   }, [onProgress, src]);
 
+  const togglePip = useCallback(async () => {
+    const video = videoRef.current;
+    if (!video) return;
+    try {
+      const doc = document as any;
+      if (doc.pictureInPictureElement) await doc.exitPictureInPicture();
+      else await (video as any).requestPictureInPicture?.();
+    } catch {
+      /* ignore PiP errors */
+    }
+  }, []);
+
   // Keyboard shortcuts
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const video = videoRef.current;
       if (!video) return;
-      const tag = (e.target as HTMLElement | null)?.tagName;
-      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      const target = e.target as HTMLElement | null;
+      const tag = target?.tagName;
+      if (
+        tag === "INPUT" ||
+        tag === "TEXTAREA" ||
+        tag === "SELECT" ||
+        tag === "BUTTON" ||
+        tag === "A" ||
+        target?.isContentEditable
+      ) {
+        return;
+      }
       switch (e.key) {
         case " ":
         case "k":
           e.preventDefault();
           if (video.paused) {
-            void video.play();
+            void video.play().catch(() => {});
           } else {
             video.pause();
           }
@@ -145,38 +203,28 @@ export function HlsPlayer({
           video.currentTime = Math.min(video.duration || 0, video.currentTime + 5);
           break;
         case "ArrowUp":
+          e.preventDefault();
           video.volume = Math.min(1, video.volume + 0.1);
           break;
         case "ArrowDown":
+          e.preventDefault();
           video.volume = Math.max(0, video.volume - 0.1);
           break;
         case "m":
           video.muted = !video.muted;
           break;
         case "f":
-          if (document.fullscreenElement) document.exitFullscreen();
-          else video.requestFullscreen?.();
+          if (document.fullscreenElement) void document.exitFullscreen();
+          else void video.requestFullscreen?.();
           break;
         case "p":
-          togglePip();
+          void togglePip();
           break;
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
-
-  const togglePip = async () => {
-    const video = videoRef.current;
-    if (!video) return;
-    try {
-      const doc = document as any;
-      if (doc.pictureInPictureElement) await doc.exitPictureInPicture();
-      else await (video as any).requestPictureInPicture?.();
-    } catch {
-      /* ignore PiP errors */
-    }
-  };
+  }, [togglePip]);
 
   const setPlaybackRate = (r: number) => {
     setSpeed(r);
@@ -193,6 +241,7 @@ export function HlsPlayer({
       <video
         ref={videoRef}
         controls
+        playsInline
         autoPlay={autoPlay}
         poster={poster}
         crossOrigin="anonymous"
@@ -212,12 +261,12 @@ export function HlsPlayer({
       </video>
 
       {/* Overlay controls: speed / quality / PiP */}
-      <div className="pointer-events-none absolute right-2 top-2 flex gap-1.5">
+      <div className="pointer-events-none absolute right-2 top-2 flex max-w-[calc(100%-16px)] flex-wrap justify-end gap-1.5">
         <select
           aria-label="Playback speed"
           value={speed}
           onChange={(e) => setPlaybackRate(Number(e.target.value))}
-          className="pointer-events-auto rounded-md bg-black/60 px-2 py-1 text-xs text-white outline-none ring-1 ring-white/20 backdrop-blur hover:bg-black/80"
+          className="pointer-events-auto min-h-[28px] rounded-md bg-black/65 px-2 py-1 text-xs text-white outline-none ring-1 ring-white/20 backdrop-blur hover:bg-black/80"
         >
           {SPEEDS.map((s) => (
             <option key={s} value={s} className="bg-background">
@@ -230,7 +279,7 @@ export function HlsPlayer({
             aria-label="Quality"
             value={qualityIdx}
             onChange={(e) => setQuality(Number(e.target.value))}
-            className="pointer-events-auto rounded-md bg-black/60 px-2 py-1 text-xs text-white outline-none ring-1 ring-white/20 backdrop-blur hover:bg-black/80"
+            className="pointer-events-auto min-h-[28px] rounded-md bg-black/65 px-2 py-1 text-xs text-white outline-none ring-1 ring-white/20 backdrop-blur hover:bg-black/80"
           >
             <option value={-1} className="bg-background">
               Auto
@@ -250,7 +299,7 @@ export function HlsPlayer({
             type="button"
             onClick={togglePip}
             aria-label="Picture in picture"
-            className="pointer-events-auto rounded-md bg-black/60 px-2 py-1 text-xs font-medium text-white ring-1 ring-white/20 backdrop-blur hover:bg-black/80"
+            className="pointer-events-auto min-h-[28px] rounded-md bg-black/65 px-2.5 py-1 text-xs font-medium text-white ring-1 ring-white/20 backdrop-blur hover:bg-black/80"
           >
             PiP
           </button>
@@ -258,8 +307,26 @@ export function HlsPlayer({
       </div>
 
       {err && (
-        <div className="absolute inset-0 grid place-items-center bg-black/80 p-4 text-center text-sm text-white/80">
-          {err}
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/85 p-4 text-center text-sm text-white/85">
+          <p>{err}</p>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <button
+              type="button"
+              onClick={() => setReloadSeq((n) => n + 1)}
+              className="rounded-lg bg-white/15 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-white/25"
+            >
+              Retry Stream
+            </button>
+            {onTryNextServer && (
+              <button
+                type="button"
+                onClick={onTryNextServer}
+                className="rounded-lg bg-primary px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-primary/90"
+              >
+                Try next server →
+              </button>
+            )}
+          </div>
         </div>
       )}
     </div>

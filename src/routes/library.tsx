@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQueries, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
+import { Film, Heart, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { getFavorites, getHistory, type HistoryEntry } from "@/lib/history";
 import { jikan } from "@/lib/jikan";
@@ -49,6 +50,27 @@ const STATUSES: { key: LibStatus | "all" | "favorites"; label: string }[] = [
   { key: "dropped", label: "Dropped" },
 ];
 
+function LibraryPoster({ src, alt }: { src?: string | null; alt: string }) {
+  const [failed, setFailed] = useState(false);
+  if (!src || failed) {
+    return (
+      <div className="flex h-full w-full items-center justify-center bg-white/5 text-white/30">
+        <Film className="h-8 w-8" />
+      </div>
+    );
+  }
+  return (
+    <img
+      src={src}
+      alt={alt}
+      loading="lazy"
+      decoding="async"
+      onError={() => setFailed(true)}
+      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+    />
+  );
+}
+
 function LibraryPage() {
   const { signedIn, loading: authLoading } = useAuth();
   return authLoading ? (
@@ -69,10 +91,11 @@ function CloudLibrary() {
 
   const libQ = useQuery({ queryKey: ["library"], queryFn: () => fetchLibrary() });
   const [tab, setTab] = useState<LibStatus | "all" | "favorites">("all");
+  const [confirmId, setConfirmId] = useState<number | null>(null);
 
   const all: LibEntry[] = (libQ.data ?? []).map((r: any) => ({
     mal_id: r.mal_id,
-    title: r.title,
+    title: r.title || "Untitled",
     image: r.image,
     status: r.status,
     score: r.score,
@@ -87,11 +110,17 @@ function CloudLibrary() {
 
   const delMut = useMutation({
     mutationFn: (mal_id: number) => del({ data: { mal_id } }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["library"] }),
+    onSuccess: () => {
+      setConfirmId(null);
+      qc.invalidateQueries({ queryKey: ["library"] });
+      toast.success("Removed from library");
+    },
+    onError: (e: any) => toast.error(e?.message ?? "Could not remove entry"),
   });
   const upsertMut = useMutation({
     mutationFn: (e: LibEntry) => upsert({ data: e as any }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["library"] }),
+    onError: (e: any) => toast.error(e?.message ?? "Could not update entry"),
   });
   const importMut = useMutation({
     mutationFn: async (file: File) => {
@@ -118,12 +147,12 @@ function CloudLibrary() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="page-enter space-y-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-display text-3xl font-bold text-white">Your Library</h1>
-        <div className="flex flex-wrap gap-2">
-          <label className="cursor-pointer rounded-lg glass px-3 py-1.5 text-xs font-medium text-white hover:bg-white/10">
-            Import
+        <h1 className="font-display text-2xl font-bold text-white sm:text-3xl">Your Library</h1>
+        <div className="flex flex-wrap items-center gap-2">
+          <label className="inline-flex min-h-[36px] cursor-pointer items-center rounded-xl glass px-3 py-1.5 text-xs font-medium text-white hover:bg-white/10">
+            {importMut.isPending ? "Importing…" : "Import"}
             <input
               type="file"
               accept=".json,.xml,.csv,.txt"
@@ -136,33 +165,36 @@ function CloudLibrary() {
             />
           </label>
           <button
+            type="button"
             onClick={() => download("json")}
-            className="rounded-lg glass px-3 py-1.5 text-xs text-white hover:bg-white/10"
+            className="min-h-[36px] rounded-xl glass px-3 py-1.5 text-xs font-medium text-white hover:bg-white/10"
           >
             JSON
           </button>
           <button
+            type="button"
             onClick={() => download("xml")}
-            className="rounded-lg glass px-3 py-1.5 text-xs text-white hover:bg-white/10"
+            className="min-h-[36px] rounded-xl glass px-3 py-1.5 text-xs font-medium text-white hover:bg-white/10"
           >
             MAL XML
           </button>
           <button
+            type="button"
             onClick={() => download("csv")}
-            className="rounded-lg glass px-3 py-1.5 text-xs text-white hover:bg-white/10"
+            className="min-h-[36px] rounded-xl glass px-3 py-1.5 text-xs font-medium text-white hover:bg-white/10"
           >
             CSV
           </button>
           <Link
             to="/profile"
-            className="rounded-lg bg-gradient-to-r from-neon-cyan to-neon-magenta px-3 py-1.5 text-xs font-semibold text-background"
+            className="inline-flex min-h-[36px] items-center rounded-xl bg-primary px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-primary/90"
           >
             Profile
           </Link>
         </div>
       </header>
 
-      <nav className="flex flex-wrap gap-2 overflow-x-auto">
+      <nav className="flex flex-wrap gap-2" aria-label="Library status filter">
         {STATUSES.map((s) => {
           const active = tab === s.key;
           const count =
@@ -174,17 +206,21 @@ function CloudLibrary() {
           return (
             <button
               key={s.key}
+              type="button"
               onClick={() => setTab(s.key)}
-              className={`rounded-full px-3 py-1.5 text-xs font-medium transition ${active ? "bg-gradient-to-r from-neon-cyan to-neon-magenta text-background" : "glass text-white/70 hover:text-white"}`}
+              aria-pressed={active}
+              className={`min-h-[36px] rounded-full px-3.5 py-1.5 text-xs font-medium transition ${
+                active ? "bg-primary text-white" : "glass text-white/70 hover:text-white"
+              }`}
             >
-              {s.label} <span className="opacity-60">({count})</span>
+              {s.label} <span className={active ? "text-white/80" : "opacity-60"}>({count})</span>
             </button>
           );
         })}
       </nav>
 
       {libQ.isLoading ? (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+        <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-6">
           {Array.from({ length: 12 }).map((_, i) => (
             <div key={i} className="aspect-[2/3] rounded-2xl shimmer" />
           ))}
@@ -201,56 +237,85 @@ function CloudLibrary() {
           hint={
             tab === "all"
               ? "Add anime from a series page, or import an existing MyAnimeList export."
-              : "Move a title into this status from its card, or pick another tab."
+              : "Move a title into this status from its series page, or pick another tab."
           }
         />
       ) : (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-          {filtered.map((e) => (
-            <div key={e.mal_id} className="group relative overflow-hidden rounded-2xl glass">
-              <Link
-                to="/watch/$id/$ep"
-                params={{ id: String(e.mal_id), ep: String(Math.max(1, e.episodes_watched || 1)) }}
+        <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-6">
+          {filtered.map((e) => {
+            const isConfirming = confirmId === e.mal_id;
+            return (
+              <div
+                key={e.mal_id}
+                className="card-lift group relative overflow-hidden rounded-2xl surface"
               >
-                <div className="aspect-[2/3] overflow-hidden">
-                  {e.image ? (
-                    <img
-                      src={e.image}
-                      alt={e.title}
-                      className="h-full w-full object-cover transition group-hover:scale-110"
-                    />
+                <Link
+                  to="/watch/$id/$ep"
+                  params={{
+                    id: String(e.mal_id),
+                    ep: String(Math.max(1, e.episodes_watched || 1)),
+                  }}
+                  className="block"
+                >
+                  <div className="aspect-[2/3] overflow-hidden bg-white/5">
+                    <LibraryPoster src={e.image} alt={e.title} />
+                  </div>
+                  <div className="on-media pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/95 via-black/65 to-transparent p-3 pt-10">
+                    <h3 className="truncate text-sm font-semibold text-white">{e.title}</h3>
+                    <p className="mt-0.5 text-[11px] text-white/75">
+                      {e.episodes_watched}/{e.total_episodes ?? "?"} eps ·{" "}
+                      {e.status.replace(/_/g, " ")}
+                      {e.score ? <span className="text-amber-300"> · ★{e.score}</span> : null}
+                    </p>
+                  </div>
+                </Link>
+                <div className="on-media absolute right-2 top-2 z-10 flex flex-col items-end gap-1.5 opacity-100 transition sm:opacity-0 sm:group-hover:opacity-100">
+                  <button
+                    type="button"
+                    onClick={() => upsertMut.mutate({ ...e, is_favorite: !e.is_favorite })}
+                    title={e.is_favorite ? "Unfavorite" : "Favorite"}
+                    aria-label={e.is_favorite ? `Unfavorite ${e.title}` : `Favorite ${e.title}`}
+                    className={`flex h-8 w-8 items-center justify-center rounded-full backdrop-blur-md transition ${
+                      e.is_favorite
+                        ? "bg-rose-500 text-white shadow-sm"
+                        : "bg-black/60 text-white hover:bg-black/80"
+                    }`}
+                  >
+                    <Heart className={`h-3.5 w-3.5 ${e.is_favorite ? "fill-current" : ""}`} />
+                  </button>
+                  {isConfirming ? (
+                    <div className="flex items-center gap-1 rounded-full bg-black/85 p-1 backdrop-blur-md">
+                      <button
+                        type="button"
+                        disabled={delMut.isPending}
+                        onClick={() => delMut.mutate(e.mal_id)}
+                        className="rounded-full bg-rose-500 px-2 py-0.5 text-[10px] font-semibold text-white hover:bg-rose-600"
+                      >
+                        Remove
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setConfirmId(null)}
+                        className="rounded-full px-1.5 py-0.5 text-[10px] text-white/75 hover:text-white"
+                      >
+                        Cancel
+                      </button>
+                    </div>
                   ) : (
-                    <div className="h-full w-full bg-white/5" />
+                    <button
+                      type="button"
+                      onClick={() => setConfirmId(e.mal_id)}
+                      title={`Remove ${e.title}`}
+                      aria-label={`Remove ${e.title}`}
+                      className="flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-md transition hover:bg-rose-500/80"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
                   )}
                 </div>
-                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 to-transparent p-3 pt-8">
-                  <h3 className="truncate text-sm font-semibold text-white">{e.title}</h3>
-                  <p className="text-[11px] text-white/70">
-                    {e.episodes_watched}/{e.total_episodes ?? "?"} eps ·{" "}
-                    {e.status.replace(/_/g, " ")}
-                    {e.score ? ` · ★${e.score}` : ""}
-                  </p>
-                </div>
-              </Link>
-              <div className="absolute right-2 top-2 flex flex-col gap-1 opacity-0 transition group-hover:opacity-100">
-                <button
-                  onClick={() => upsertMut.mutate({ ...e, is_favorite: !e.is_favorite })}
-                  title={e.is_favorite ? "Unfavorite" : "Favorite"}
-                  className={`rounded-md px-2 py-1 text-xs ${e.is_favorite ? "bg-neon-magenta text-background" : "bg-black/60 text-white"}`}
-                >
-                  {e.is_favorite ? "♥" : "♡"}
-                </button>
-                <button
-                  onClick={() => {
-                    if (confirm(`Remove ${e.title}?`)) delMut.mutate(e.mal_id);
-                  }}
-                  className="rounded-md bg-black/60 px-2 py-1 text-xs text-white hover:bg-red-500/70"
-                >
-                  ✕
-                </button>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
@@ -277,12 +342,12 @@ function LocalLibrary() {
   const favLoading = favQueries.some((q) => q.isFetching);
 
   return (
-    <div className="space-y-10">
+    <div className="page-enter space-y-10">
       <header className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-display text-3xl font-bold text-white">Your Library</h1>
+        <h1 className="font-display text-2xl font-bold text-white sm:text-3xl">Your Library</h1>
         <Link
           to="/auth"
-          className="rounded-lg bg-gradient-to-r from-neon-cyan to-neon-magenta px-4 py-2 text-xs font-semibold text-background"
+          className="inline-flex min-h-[38px] items-center rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-white hover:bg-primary/90"
         >
           Sign in to sync & import
         </Link>
@@ -300,24 +365,20 @@ function LocalLibrary() {
             hint="Pick a series and hit play — your progress shows up here."
           />
         ) : (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+          <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-6">
             {history.map((e) => (
               <Link
                 key={e.malId}
                 to="/watch/$id/$ep"
                 params={{ id: String(e.malId), ep: String(e.episode) }}
-                className="group relative block overflow-hidden rounded-2xl glass transition hover:-translate-y-1 hover:glow-cyan"
+                className="card-lift group relative block overflow-hidden rounded-2xl surface"
               >
-                <div className="aspect-[2/3] overflow-hidden">
-                  <img
-                    src={e.image}
-                    alt={e.title}
-                    className="h-full w-full object-cover transition group-hover:scale-110"
-                  />
+                <div className="aspect-[2/3] overflow-hidden bg-white/5">
+                  <LibraryPoster src={e.image} alt={e.title} />
                 </div>
-                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 to-transparent p-3 pt-8">
+                <div className="on-media pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/95 via-black/65 to-transparent p-3 pt-10">
                   <h3 className="truncate text-sm font-semibold text-white">{e.title}</h3>
-                  <p className="text-[11px] text-white/70">
+                  <p className="mt-0.5 text-[11px] text-white/75">
                     Ep {e.episode} · {e.lang.toUpperCase()}
                   </p>
                 </div>
@@ -331,14 +392,14 @@ function LocalLibrary() {
         <h2 className="mb-4 font-display text-xl font-bold text-white">Favorites</h2>
         {favIds.length === 0 ? (
           <EmptyState title="No favorites yet" hint="Tap the heart on any anime to keep it here." />
-        ) : favError ? (
+        ) : favError && favs.length === 0 ? (
           <ErrorState
             message={(favError as any)?.message}
             onRetry={() => favQueries.forEach((q) => q.refetch())}
             retrying={favLoading}
           />
         ) : favs.length === 0 ? (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+          <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-6">
             {favIds.slice(0, 6).map((id) => (
               <div key={id} className="aspect-[2/3] rounded-2xl shimmer" />
             ))}

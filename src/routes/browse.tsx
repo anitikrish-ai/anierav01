@@ -6,7 +6,9 @@ import { jikan } from "@/lib/jikan";
 import { AnimeGrid, GridSkeleton } from "@/components/AnimeCard";
 import { ErrorState, EmptyState } from "@/components/StateBlocks";
 import { useEffect, useState } from "react";
-import { GlassButton, GlassCard, GlassSegmented } from "@zakisheriff/liquid-glass";
+import { GlassButton } from "@zakisheriff/liquid-glass";
+import { LiquidTabs } from "@/components/LiquidTabs";
+import { triggerHaptic } from "@/lib/haptics";
 
 const FORMATS = [
   { label: "All Formats", value: "" },
@@ -146,7 +148,8 @@ function BrowsePage() {
     placeholderData: keepPreviousData,
   });
 
-  const apply = () =>
+  const apply = () => {
+    triggerHaptic("submit");
     navigate({
       search: {
         q: q.trim() || undefined,
@@ -159,6 +162,7 @@ function BrowsePage() {
         page: undefined,
       },
     });
+  };
 
   const goPage = (n: number) => {
     navigate({ search: (prev) => ({ ...prev, page: n > 1 ? n : undefined }) });
@@ -172,7 +176,8 @@ function BrowsePage() {
   const showSkeleton = results.isLoading || (results.isFetching && items.length === 0);
 
   const field =
-    "rounded-lg bg-white/5 px-3 py-2 text-sm text-white outline-none ring-1 ring-white/10 focus:ring-neon-cyan";
+    "min-h-[44px] w-full rounded-xl border border-white/10 bg-white/[0.06] px-3 py-2 text-sm text-white outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/25";
+  const fieldLabel = "mb-1 block text-[11px] font-semibold uppercase tracking-wider text-white/55";
 
   return (
     <div className="page-enter space-y-6">
@@ -191,41 +196,35 @@ function BrowsePage() {
         </p>
       </div>
 
-      <GlassCard
-        variant="regular"
-        intensity={4}
-        padding="16px"
-        radius="24px"
-        className="w-full space-y-3"
-      >
+      <div className="apple-group rounded-3xl p-4 sm:p-5 space-y-4">
         {/* Quick Format Segmented Switcher */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2 border-b border-white/10">
-          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3 border-b border-white/10">
+          <span className="text-xs font-semibold uppercase tracking-wider text-white/55">
             Format
           </span>
-          <div className="w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
-            <GlassSegmented
-              options={FORMATS.map((f) => f.label)}
-              value={Math.max(
-                0,
-                FORMATS.findIndex((f) => f.value === type),
-              )}
-              onChange={(idx) => {
-                const nextType = FORMATS[idx].value;
-                setType(nextType);
-                navigate({
-                  search: {
-                    ...search,
-                    type: nextType || undefined,
-                    page: undefined,
-                  },
-                });
-              }}
-              size="sm"
-              intensity={4}
-              aria-label="Format filter"
-            />
-          </div>
+          <LiquidTabs
+            ariaLabel="Format filter"
+            options={FORMATS.map((f) => f.label)}
+            value={Math.max(
+              0,
+              FORMATS.findIndex((f) => f.value === type),
+            )}
+            onChange={(idx) => {
+              const nextType = FORMATS[idx].value;
+              setType(nextType);
+              navigate({
+                search: {
+                  ...search,
+                  q: q.trim() || undefined,
+                  type: nextType || undefined,
+                  page: undefined,
+                },
+              });
+            }}
+            size="sm"
+            wrap
+            className="w-fit"
+          />
         </div>
 
         <form
@@ -233,108 +232,159 @@ function BrowsePage() {
             e.preventDefault();
             apply();
           }}
-          className="flex flex-wrap items-center gap-3"
+          className="space-y-4"
         >
-          <input
-            type="search"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Search anime titles…"
-            aria-label="Search anime"
-            className={`min-w-[200px] flex-1 placeholder:text-white/40 ${field}`}
-          />
-          <select
-            value={genre}
-            onChange={(e) => setGenre(e.target.value)}
-            aria-label="Genre"
-            className={field}
-          >
-            <option value="">All genres</option>
-            {genresQ.data?.data?.map((g) => (
-              <option
-                key={`${g.mal_id}-${g.name}`}
-                value={String(g.mal_id)}
-                className="bg-background"
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+            <div className="col-span-2 sm:col-span-3 lg:col-span-2">
+              <label htmlFor="browse-q" className={fieldLabel}>
+                Title Search
+              </label>
+              <input
+                id="browse-q"
+                type="search"
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="Search anime titles…"
+                className={`placeholder:text-white/40 ${field}`}
+              />
+            </div>
+
+            <div>
+              <label htmlFor="browse-genre" className={fieldLabel}>
+                Genre
+              </label>
+              <select
+                id="browse-genre"
+                value={genre}
+                onChange={(e) => setGenre(e.target.value)}
+                className={field}
               >
-                {g.name}
-              </option>
-            ))}
-          </select>
-          <select
-            value={type}
-            onChange={(e) => setType(e.target.value)}
-            aria-label="Type"
-            className={field}
-          >
-            <option value="">Any type</option>
-            {["tv", "movie", "ova", "special", "ona", "music"].map((t) => (
-              <option key={t} value={t} className="bg-background">
-                {t.toUpperCase()}
-              </option>
-            ))}
-          </select>
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            aria-label="Status"
-            className={field}
-          >
-            <option value="">Any status</option>
-            <option value="airing" className="bg-background">
-              Airing
-            </option>
-            <option value="complete" className="bg-background">
-              Completed
-            </option>
-            <option value="upcoming" className="bg-background">
-              Upcoming
-            </option>
-          </select>
-          <select
-            value={minScore}
-            onChange={(e) => setMinScore(e.target.value)}
-            aria-label="Minimum score"
-            className={field}
-          >
-            <option value="">Any rating</option>
-            {["9", "8", "7", "6", "5"].map((s) => (
-              <option key={s} value={s} className="bg-background">
-                {s}+ ★
-              </option>
-            ))}
-          </select>
-          <select
-            value={order}
-            onChange={(e) => setOrder(e.target.value)}
-            aria-label="Sort by"
-            className={field}
-          >
-            {ORDERS.map((o) => (
-              <option key={o.v} value={o.v} className="bg-background">
-                {o.label}
-              </option>
-            ))}
-          </select>
-          <input
-            type="number"
-            placeholder="Year"
-            aria-label="Year"
-            min={1950}
-            max={2030}
-            value={year}
-            onChange={(e) => setYear(e.target.value)}
-            className={`w-28 placeholder:text-white/40 ${field}`}
-          />
-          {hasFilter && (
-            <GlassButton type="button" variant="clear" size="sm" onClick={reset}>
-              Reset
-            </GlassButton>
-          )}
-          <GlassButton type="submit" variant="filled" tint="#8b5cf6" size="sm" className="ml-auto">
-            Apply Filters
-          </GlassButton>
+                <option value="">All genres</option>
+                {genresQ.data?.data?.map((g) => (
+                  <option
+                    key={`${g.mal_id}-${g.name}`}
+                    value={String(g.mal_id)}
+                    className="bg-background"
+                  >
+                    {g.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="browse-type" className={fieldLabel}>
+                Type
+              </label>
+              <select
+                id="browse-type"
+                value={type}
+                onChange={(e) => setType(e.target.value)}
+                className={field}
+              >
+                <option value="">Any type</option>
+                {["tv", "movie", "ova", "special", "ona", "music"].map((t) => (
+                  <option key={t} value={t} className="bg-background">
+                    {t.toUpperCase()}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="browse-status" className={fieldLabel}>
+                Status
+              </label>
+              <select
+                id="browse-status"
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+                className={field}
+              >
+                <option value="">Any status</option>
+                <option value="airing" className="bg-background">
+                  Airing
+                </option>
+                <option value="complete" className="bg-background">
+                  Completed
+                </option>
+                <option value="upcoming" className="bg-background">
+                  Upcoming
+                </option>
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="browse-score" className={fieldLabel}>
+                Min Rating
+              </label>
+              <select
+                id="browse-score"
+                value={minScore}
+                onChange={(e) => setMinScore(e.target.value)}
+                className={field}
+              >
+                <option value="">Any rating</option>
+                {["9", "8", "7", "6", "5"].map((s) => (
+                  <option key={s} value={s} className="bg-background">
+                    {s}+ ★
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="browse-order" className={fieldLabel}>
+                Sort By
+              </label>
+              <select
+                id="browse-order"
+                value={order}
+                onChange={(e) => setOrder(e.target.value)}
+                className={field}
+              >
+                {ORDERS.map((o) => (
+                  <option key={o.v} value={o.v} className="bg-background">
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="browse-year" className={fieldLabel}>
+                Release Year
+              </label>
+              <input
+                id="browse-year"
+                type="number"
+                placeholder="1950–2030"
+                min={1950}
+                max={2030}
+                value={year}
+                onChange={(e) => setYear(e.target.value)}
+                className={`placeholder:text-white/40 ${field}`}
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-3">
+            <span className="text-xs text-white/50">
+              Year range: 1950–2030 · Leave fields blank to include all
+            </span>
+            <div className="ml-auto flex items-center gap-2">
+              {hasFilter && (
+                <GlassButton type="button" variant="clear" size="sm" onClick={reset}>
+                  Reset
+                </GlassButton>
+              )}
+              <GlassButton type="submit" variant="filled" tint="#0a84ff" size="sm">
+                Apply Filters
+              </GlassButton>
+            </div>
+          </div>
         </form>
-      </GlassCard>
+      </div>
 
       {!hasFilter ? (
         <EmptyState

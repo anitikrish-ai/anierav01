@@ -23,7 +23,7 @@ const DEFAULTS: SiteSettings = {
   site_description: "Premium anime streaming hub",
   logo_url: null,
   favicon_url: null,
-  accent_color: "#8b5cf6",
+  accent_color: "#0a84ff",
   background_image: "https://i.pinimg.com/736x/70/a9/09/70a909322b27f1001d5ace42d1821ff0.jpg",
   background_overlay: 0.7,
   background_blur: 0,

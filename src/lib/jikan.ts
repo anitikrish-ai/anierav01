@@ -57,11 +57,21 @@ interface JikanItem<T> {
 const MIN_GAP_MS = 400; // ~2.5 req/s, under Jikan's 3/s limit
 const MAX_RETRIES = 3;
 const CACHE_TTL_MS = 1000 * 60 * 10;
+const MAX_CACHE_ENTRIES = 200;
 
 type CacheRec = { t: number; v: unknown };
 
 const memCache = new Map<string, CacheRec>();
 const inflight = new Map<string, Promise<unknown>>();
+
+function setMemCache(key: string, rec: CacheRec) {
+  if (memCache.has(key)) memCache.delete(key);
+  memCache.set(key, rec);
+  if (memCache.size > MAX_CACHE_ENTRIES) {
+    const oldestKey = memCache.keys().next().value;
+    if (oldestKey !== undefined) memCache.delete(oldestKey);
+  }
+}
 
 let chain: Promise<void> = Promise.resolve();
 let lastSent = 0;
@@ -157,7 +167,7 @@ async function jget<T>(path: string): Promise<T> {
 
   const cached = memCache.get(path) ?? readSession(path);
   if (cached && now - cached.t < CACHE_TTL_MS) {
-    memCache.set(path, cached);
+    setMemCache(path, cached);
     return cached.v as T;
   }
 
@@ -180,7 +190,7 @@ async function jget<T>(path: string): Promise<T> {
       json = alt as T;
     }
     const rec: CacheRec = { t: Date.now(), v: json };
-    memCache.set(path, rec);
+    setMemCache(path, rec);
     writeSession(path, rec);
     return json;
   })().finally(() => {
@@ -247,6 +257,6 @@ export const jikan = {
   genres: () => jget<JikanList<{ mal_id: number; name: string; count: number }>>(`/genres/anime`),
 };
 
-export function bestTitle(a: Anime) {
-  return a.title_english || a.title;
+export function bestTitle(a?: Partial<Anime> | null) {
+  return a?.title_english || a?.title || "Untitled";
 }

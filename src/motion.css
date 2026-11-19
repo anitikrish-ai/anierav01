@@ -2,58 +2,58 @@
  * AniEra motion system. Single source of truth for every duration, easing,
  * distance and keyframe. Spec: docs/MOTION.md. Tokens: docs/motion-tokens.json.
  *
- * Rules: animate transform + opacity only. Durations come from the scale only.
- * One signature easing (--ease-spring). Every animation has a reduced-motion
- * behaviour at the bottom of this file.
+ * Rules: animate transform + opacity only. Durations come from the scale.
+ * One signature spring (--ease-spring). Every animation has a reduced-motion
+ * fallback at the bottom of this file.
  */
 :root {
   /* Duration scale */
   --dur-instant: 100ms; /* press / state feedback */
-  --dur-fast: 200ms; /* hover, micro-interactions, exits */
-  --dur-base: 300ms; /* reveals, page entrance */
-  --dur-slow: 500ms; /* large scene changes, spring settle */
+  --dur-fast: 220ms; /* hover, micro-interactions, exits */
+  --dur-base: 380ms; /* reveals, page entrance */
+  --dur-slow: 620ms; /* large scene changes, spring settle */
 
   /* Easing vocabulary */
   --ease-standard: cubic-bezier(0.4, 0, 0.2, 1); /* state changes */
-  --ease-out: cubic-bezier(0.22, 1, 0.36, 1); /* entrances (decelerate) */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1); /* expressive decelerate */
   --ease-in: cubic-bezier(0.4, 0, 1, 1); /* exits (accelerate) */
-  /* Signature: the single spring. Used for press, tab pill, glass lift. */
+  /* Signature: expressive Apple-grade spring with crisp settle */
   --ease-spring: linear(
     0,
-    0.009,
-    0.035 2.1%,
-    0.141 4.4%,
-    0.723 12.9%,
-    0.938 16.7%,
-    1.017 19.5%,
-    1.077 22.6%,
-    1.101 25.6%,
-    1.097 28.9%,
-    1.054 35.6%,
-    1.007 44.6%,
-    0.991 51.5%,
-    1.003 68.8%,
+    0.012,
+    0.048 2.2%,
+    0.18 4.6%,
+    0.76 12.8%,
+    0.96 16.8%,
+    1.038 20.1%,
+    1.084 23.6%,
+    1.095 26.8%,
+    1.078 30.8%,
+    1.032 38%,
+    1.002 48%,
+    0.994 58%,
+    1.002 74%,
     1
   );
 
   /* Travel distances */
-  --dist-sm: 8px;
-  --dist-md: 16px;
-  --dist-lg: 24px;
+  --dist-sm: 12px;
+  --dist-md: 22px;
+  --dist-lg: 32px;
 
-  /* Stagger: 40ms per child, capped at 12 children (see AnimeGrid) */
-  --stagger: 40ms;
+  /* Stagger: 45ms per child, capped at 12 children */
+  --stagger: 45ms;
 }
 
-/* ---------- Keyframes (transform + opacity only) ---------- */
+/* ---------- Keyframes (GPU transform + opacity only) ---------- */
 @keyframes riseIn {
   from {
     opacity: 0;
-    transform: translate3d(0, var(--dist-sm), 0);
+    transform: translate3d(0, var(--dist-md), 0) scale3d(0.97, 0.97, 1);
   }
   to {
     opacity: 1;
-    transform: translate3d(0, 0, 0);
+    transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
   }
 }
 @keyframes fadeIn {
@@ -67,11 +67,11 @@
 @keyframes popIn {
   from {
     opacity: 0;
-    transform: scale3d(0.94, 0.94, 1);
+    transform: translate3d(0, 8px, 0) scale3d(0.9, 0.9, 1);
   }
   to {
     opacity: 1;
-    transform: scale3d(1, 1, 1);
+    transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
   }
 }
 @keyframes floatY {
@@ -80,24 +80,26 @@
     transform: translate3d(0, 0, 0);
   }
   50% {
-    transform: translate3d(0, -4px, 0);
+    transform: translate3d(0, -5px, 0);
   }
 }
 @keyframes glowPulse {
   0%,
   100% {
     opacity: 0.55;
+    transform: scale(0.92);
   }
   50% {
     opacity: 1;
+    transform: scale(1.15);
   }
 }
 @keyframes sheenSweep {
   from {
-    transform: translate3d(-120%, 0, 0) skewX(-18deg);
+    transform: translate3d(-130%, 0, 0) skewX(-20deg);
   }
   to {
-    transform: translate3d(220%, 0, 0) skewX(-18deg);
+    transform: translate3d(240%, 0, 0) skewX(-20deg);
   }
 }
 @keyframes shimmerSlide {
@@ -108,28 +110,100 @@
     transform: translate3d(100%, 0, 0);
   }
 }
+@keyframes dropIn {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -12px, 0) scale3d(0.96, 0.96, 1);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+  }
+}
+@keyframes popInTop {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -10px, 0) scale3d(0.92, 0.92, 1);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+  }
+}
+@keyframes sheetIn {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 32px, 0) scale3d(0.95, 0.95, 1);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+  }
+}
+@keyframes heroKenBurns {
+  0% {
+    transform: scale(1.06) translate3d(0, 0, 0);
+  }
+  50% {
+    transform: scale(1.12) translate3d(-1%, -0.8%, 0);
+  }
+  100% {
+    transform: scale(1.06) translate3d(0, 0, 0);
+  }
+}
+@keyframes navBarIn {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -16px, 0) scale3d(0.98, 0.98, 1);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+  }
+}
 @keyframes vtOut {
   to {
     opacity: 0;
-    transform: scale(0.985);
+    transform: scale(0.98);
   }
 }
 @keyframes vtIn {
   from {
     opacity: 0;
-    transform: translateY(var(--dist-sm)) scale(1.01);
+    transform: translate3d(0, var(--dist-sm), 0) scale(1.012);
   }
 }
 
 /* ---------- Entrances ---------- */
 .anim-rise {
-  animation: riseIn var(--dur-base) var(--ease-out) both;
+  animation: riseIn var(--dur-slow) var(--ease-spring) both;
 }
 .anim-fade {
   animation: fadeIn var(--dur-base) var(--ease-out) both;
 }
 .anim-pop {
-  animation: popIn var(--dur-base) var(--ease-out) both;
+  animation: popIn var(--dur-slow) var(--ease-spring) both;
+}
+.anim-pop-tr {
+  transform-origin: top right;
+  animation: popInTop var(--dur-slow) var(--ease-spring) both;
+  will-change: transform, opacity;
+}
+.anim-drop {
+  transform-origin: top center;
+  animation: dropIn var(--dur-base) var(--ease-spring) both;
+  will-change: transform, opacity;
+}
+.anim-sheet {
+  animation: sheetIn var(--dur-slow) var(--ease-spring) both;
+  will-change: transform, opacity;
+}
+.anim-hero-bg {
+  animation: heroKenBurns 18s ease-in-out infinite;
+  will-change: transform;
+}
+.anim-nav-in {
+  animation: navBarIn var(--dur-slow) var(--ease-spring) both;
 }
 .page-enter {
   animation: riseIn var(--dur-base) var(--ease-out) both;
@@ -138,12 +212,12 @@
   animation: riseIn var(--dur-slow) var(--ease-spring) both;
 }
 
-/* Ambient loops: only the hero badge and live indicators may loop. */
+/* Ambient loops */
 .anim-float {
-  animation: floatY 4.5s var(--ease-standard) infinite;
+  animation: floatY 4.5s ease-in-out infinite;
 }
 .anim-glow {
-  animation: glowPulse 2.4s var(--ease-standard) infinite;
+  animation: glowPulse 2.2s ease-in-out infinite;
 }
 
 /* Stagger helper: <el style="--i:3"> */
@@ -155,22 +229,24 @@
 .reveal {
   transition:
     opacity var(--dur-slow) var(--ease-out),
-    transform var(--dur-slow) var(--ease-out);
+    transform var(--dur-slow) var(--ease-spring);
+  will-change: transform, opacity;
 }
 .reveal[data-shown="true"] {
   opacity: 1;
-  transform: none;
+  transform: translate3d(0, 0, 0) scale3d(1, 1, 1);
+  will-change: auto;
 }
 .reveal-rise {
   opacity: 0;
-  transform: translate3d(0, var(--dist-md), 0);
+  transform: translate3d(0, var(--dist-md), 0) scale3d(0.96, 0.96, 1);
 }
 .reveal-fade {
   opacity: 0;
 }
 .reveal-scale {
   opacity: 0;
-  transform: scale3d(0.96, 0.96, 1);
+  transform: scale3d(0.9, 0.9, 1);
 }
 .reveal-slide-left {
   opacity: 0;
@@ -183,10 +259,10 @@
 
 /* ---------- Signature moves ---------- */
 
-/* card-lift: poster cards. Lift + glow fade (glow is a pseudo, opacity only). */
+/* card-lift: poster cards. Springy lift + shadow rim fade */
 .card-lift {
   position: relative;
-  transition: transform var(--dur-fast) var(--ease-out);
+  transition: transform var(--dur-slow) var(--ease-spring);
 }
 .card-lift::before {
   content: "";
@@ -196,25 +272,25 @@
   pointer-events: none;
   z-index: 1;
   box-shadow:
-    0 0 0 1px oklch(0.72 0.18 270 / 0.55),
-    0 12px 40px oklch(0.62 0.21 282 / 0.45);
+    0 0 0 1px rgba(255, 255, 255, 0.28),
+    0 18px 40px -8px rgba(0, 0, 0, 0.52);
   opacity: 0;
   transition: opacity var(--dur-fast) var(--ease-out);
 }
 @media (hover: hover) {
   .card-lift:hover {
-    transform: translate3d(0, -6px, 0);
+    transform: translate3d(0, -8px, 0) scale(1.018);
   }
   .card-lift:hover::before {
     opacity: 1;
   }
 }
 .card-lift:active {
-  transform: translate3d(0, -2px, 0) scale(0.985);
+  transform: translate3d(0, -2px, 0) scale(0.965);
   transition-duration: var(--dur-instant);
 }
 
-/* glass-press: glass controls. The only place the spring is used on hover. */
+/* glass-press: glass controls */
 .glass-press {
   transition:
     transform var(--dur-slow) var(--ease-spring),
@@ -222,11 +298,11 @@
 }
 @media (hover: hover) {
   .glass-press:hover {
-    transform: translate3d(0, -2px, 0) scale(1.04);
+    transform: translate3d(0, -2px, 0) scale(1.05);
   }
 }
 .glass-press:active {
-  transform: scale(0.94);
+  transform: scale(0.93);
   transition-duration: var(--dur-instant);
 }
 
@@ -239,16 +315,16 @@
   content: "";
   position: absolute;
   inset: 0 auto 0 0;
-  width: 45%;
+  width: 50%;
   pointer-events: none;
-  background: linear-gradient(100deg, transparent, oklch(1 0 0 / 0.16), transparent);
-  transform: translate3d(-120%, 0, 0) skewX(-18deg);
+  background: linear-gradient(100deg, transparent, oklch(1 0 0 / 0.22), transparent);
+  transform: translate3d(-130%, 0, 0) skewX(-20deg);
   opacity: 0;
 }
 @media (hover: hover) {
   .sheen:hover::after {
     opacity: 1;
-    animation: sheenSweep 0.85s var(--ease-out);
+    animation: sheenSweep 0.78s var(--ease-out);
   }
 }
 
@@ -263,11 +339,7 @@
   bottom: -2px;
   height: 1.5px;
   width: 100%;
-  background: linear-gradient(
-    90deg,
-    var(--color-neon-cyan, currentColor),
-    var(--color-neon-magenta, currentColor)
-  );
+  background: linear-gradient(90deg, var(--primary, currentColor), rgba(255, 255, 255, 0.7));
   transform: scaleX(0);
   transform-origin: right;
   transition: transform var(--dur-base) var(--ease-out);
@@ -277,20 +349,20 @@
   transform-origin: left;
 }
 
-/* Global interactive feedback */
-button,
-a,
-[role="tab"] {
+/* Global interactive feedback — exclude @zakisheriff/liquid-glass controls so CSS never fights their JS springs */
+button:not(.lg-button, .lg-track__item, .lg-switch, .lg-menu__item),
+a:not(.lg-button, .card-lift),
+[role="tab"]:not(.lg-track__item) {
   transition:
-    transform var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-spring),
     background-color var(--dur-fast) var(--ease-standard),
     color var(--dur-fast) var(--ease-standard),
     box-shadow var(--dur-fast) var(--ease-standard),
     opacity var(--dur-fast) var(--ease-standard);
 }
-button:not(:disabled):active,
-a:active {
-  transform: scale(0.97);
+button:not(:disabled, .lg-button, .lg-track__item, .lg-switch, .lg-menu__item):active,
+a:not(.lg-button, .card-lift):active {
+  transform: scale(0.95);
   transition-duration: var(--dur-instant);
 }
 input,
@@ -301,7 +373,7 @@ textarea {
     background-color var(--dur-fast) var(--ease-standard);
 }
 
-/* Route transitions (TanStack defaultViewTransition). Exit faster than enter. */
+/* Route transitions (TanStack defaultViewTransition) */
 ::view-transition-old(root) {
   animation: vtOut var(--dur-fast) var(--ease-in) both;
 }
@@ -316,18 +388,21 @@ textarea {
     width var(--dur-slow) var(--ease-spring);
 }
 
-/* ---------- Reduced motion contract ----------
-   Applies when the device asks for reduced motion, or the user picks
-   "Reduced" in the appearance menu (data-motion="reduced" on <html>). */
+/* ---------- Reduced motion contract ---------- */
 @media (prefers-reduced-motion: reduce) {
   .anim-rise,
   .anim-pop,
+  .anim-pop-tr,
+  .anim-drop,
+  .anim-sheet,
+  .anim-nav-in,
   .page-enter,
   .bounce-in {
     animation: fadeIn var(--dur-fast) linear both;
   }
   .anim-float,
   .anim-glow,
+  .anim-hero-bg,
   .next-ep-hint {
     animation: none;
   }
@@ -359,12 +434,17 @@ textarea {
 }
 html[data-motion="reduced"] .anim-rise,
 html[data-motion="reduced"] .anim-pop,
+html[data-motion="reduced"] .anim-pop-tr,
+html[data-motion="reduced"] .anim-drop,
+html[data-motion="reduced"] .anim-sheet,
+html[data-motion="reduced"] .anim-nav-in,
 html[data-motion="reduced"] .page-enter,
 html[data-motion="reduced"] .bounce-in {
   animation: fadeIn var(--dur-fast) linear both;
 }
 html[data-motion="reduced"] .anim-float,
 html[data-motion="reduced"] .anim-glow,
+html[data-motion="reduced"] .anim-hero-bg,
 html[data-motion="reduced"] .next-ep-hint {
   animation: none;
 }
@@ -413,28 +493,25 @@ html[data-motion="off"] ::view-transition-new(root) {
 /* ---------- Motion: playful — bigger springs, longer travel ---------- */
 html[data-motion="playful"] {
   --dur-fast: 260ms;
-  --dur-base: 420ms;
-  --dur-slow: 700ms;
-  --dist-sm: 12px;
-  --dist-md: 24px;
-  --dist-lg: 36px;
+  --dur-base: 440ms;
+  --dur-slow: 720ms;
+  --dist-sm: 14px;
+  --dist-md: 28px;
+  --dist-lg: 40px;
 }
 @media (hover: hover) {
   html[data-motion="playful"] .card-lift:hover {
-    transform: translate3d(0, -10px, 0) scale(1.02);
+    transform: translate3d(0, -12px, 0) scale(1.03);
   }
   html[data-motion="playful"] .glass-press:hover {
     transform: translate3d(0, -3px, 0) scale(1.08);
   }
 }
 html[data-motion="playful"] .card-lift:active {
-  transform: translate3d(0, -2px, 0) scale(0.96);
+  transform: translate3d(0, -2px, 0) scale(0.95);
 }
 
-/* ---------- Smooth image loading ----------
-   Artwork starts invisible over a shimmer placeholder and fades in once
-   loaded, so posters never pop in or leave blank slots. Aspect-ratio
-   boxes on the cards reserve the space, so there is no layout shift. */
+/* ---------- Smooth image loading ---------- */
 .img-fade {
   opacity: 0;
   transition: opacity var(--dur-slow) var(--ease-standard);

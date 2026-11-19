@@ -1,11 +1,32 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Plug } from "lucide-react";
+import { Film, Plug } from "lucide-react";
 import { listEnabledCustomApis, callCustomApi } from "@/lib/custom-api";
 import { useProxyPref } from "@/lib/proxy-pref";
 
 type Item = { title: string; image?: string; sub?: string };
+
+function SourceThumb({ src, alt }: { src?: string; alt: string }) {
+  const [failed, setFailed] = useState(false);
+  if (!src || failed) {
+    return (
+      <div className="flex aspect-[2/3] w-full items-center justify-center rounded-lg bg-white/5 text-white/30">
+        <Film className="h-6 w-6" />
+      </div>
+    );
+  }
+  return (
+    <img
+      src={src}
+      alt={alt}
+      loading="lazy"
+      decoding="async"
+      onError={() => setFailed(true)}
+      className="aspect-[2/3] w-full rounded-lg object-cover"
+    />
+  );
+}
 
 /** Best-effort extraction of title/image rows from arbitrary JSON responses. */
 function extract(body: string): Item[] {
@@ -88,12 +109,17 @@ export function CustomSources({
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <Plug className="h-4 w-4 text-primary" />
         <h2 className="font-display text-lg font-bold text-white">{heading}</h2>
-        <div className="ml-auto flex flex-wrap gap-1">
+        <div className="ml-auto flex flex-wrap gap-1.5">
           {apis.data.map((a) => (
             <button
               key={a.id}
+              type="button"
               onClick={() => setSlug(a.slug)}
-              className={`rounded-full px-3 py-1 text-xs ${a.slug === active ? "bg-primary text-primary-foreground" : "bg-white/10 text-white/70 hover:bg-white/20"}`}
+              className={`min-h-[32px] rounded-full px-3 py-1 text-xs font-medium ${
+                a.slug === active
+                  ? "bg-primary text-white"
+                  : "bg-white/10 text-white/70 hover:bg-white/20"
+              }`}
             >
               {a.name}
             </button>
@@ -105,31 +131,31 @@ export function CustomSources({
           value={own}
           onChange={(e) => setOwn(e.target.value)}
           placeholder="Search this source…"
-          className="mb-3 w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white"
+          className="mb-3 min-h-[40px] w-full rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-white outline-none focus:border-primary"
         />
       )}
       {!q ? (
         <p className="text-sm text-white/50">Search for a title to see results from this source.</p>
       ) : res.isLoading ? (
         <div className="h-24 rounded-xl shimmer" />
-      ) : !res.data?.ok ? (
-        <p className="text-sm text-white/50">This source is unavailable right now.</p>
+      ) : res.isError || !res.data?.ok ? (
+        <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-white/50">
+          <span>This source is unavailable right now.</span>
+          <button
+            type="button"
+            onClick={() => res.refetch()}
+            className="rounded-lg bg-white/10 px-3 py-1 text-xs font-medium text-white hover:bg-white/20"
+          >
+            Retry
+          </button>
+        </div>
       ) : items.length === 0 ? (
         <p className="text-sm text-white/50">No matches from this source.</p>
       ) : (
         <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
           {items.map((it, i) => (
             <div key={i} className="min-w-0">
-              {it.image ? (
-                <img
-                  src={it.image}
-                  alt={it.title}
-                  loading="lazy"
-                  className="aspect-[2/3] w-full rounded-lg object-cover"
-                />
-              ) : (
-                <div className="aspect-[2/3] w-full rounded-lg bg-white/5" />
-              )}
+              <SourceThumb src={it.image} alt={it.title} />
               <div className="mt-1 truncate text-xs font-medium text-white">{it.title}</div>
               {it.sub && <div className="truncate text-[10px] text-white/40">{it.sub}</div>}
             </div>

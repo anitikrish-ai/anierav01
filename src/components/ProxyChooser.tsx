@@ -80,17 +80,19 @@ export function ProxyChooser() {
 
   return (
     <div className="flex flex-wrap items-center justify-center gap-2 text-xs text-white/60">
-      <Globe className="h-3.5 w-3.5" />
+      <Globe className="h-3.5 w-3.5 shrink-0" />
       <label htmlFor="proxy-select">Connection:</label>
       <select
         id="proxy-select"
         value={proxyId ?? ""}
         onChange={(e) => change(e.target.value || null)}
-        className="rounded-md border border-white/10 bg-background px-2 py-1 text-white"
+        className="min-h-[34px] max-w-full rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-white outline-none focus:border-primary"
       >
-        <option value="">Direct (server)</option>
+        <option value="" className="bg-background">
+          Direct (server)
+        </option>
         {proxies.data.map((p) => (
-          <option key={p.id} value={p.id}>
+          <option key={p.id} value={p.id} className="bg-background">
             {p.label}
             {p.region ? ` · ${p.region}` : ""}
             {p.display_ip ? ` · ${p.display_ip}` : ""}
@@ -98,9 +100,10 @@ export function ProxyChooser() {
         ))}
       </select>
       <button
+        type="button"
         onClick={verify}
         disabled={checking}
-        className="rounded-md bg-white/10 px-2 py-1 text-white hover:bg-white/20 disabled:opacity-50"
+        className="min-h-[34px] rounded-lg bg-white/10 px-3 py-1 font-medium text-white hover:bg-white/20 disabled:opacity-50"
       >
         {checking ? "Checking…" : "Check IP"}
       </button>

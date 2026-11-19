@@ -84,9 +84,10 @@ function SettingsPage() {
         description="Site identity, feature toggles, and homepage layout. Saved values apply to every page in real time."
         actions={
           <button
+            type="button"
             onClick={() => mut.mutate(form)}
             disabled={mut.isPending}
-            className="rounded-lg bg-gradient-to-r from-neon-cyan to-neon-magenta px-4 py-2 text-xs font-semibold text-background disabled:opacity-60"
+            className="min-h-[38px] rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-white hover:bg-primary/90 disabled:opacity-60"
           >
             {mut.isPending ? "Saving…" : "Save changes"}
           </button>
@@ -177,7 +178,7 @@ function SettingsPage() {
         .input { width: 100%; background: rgba(255,255,255,0.06); color: white;
           border: 1px solid rgba(255,255,255,0.1); border-radius: 0.5rem;
           padding: 0.5rem 0.75rem; font-size: 0.875rem; }
-        .input:focus { outline: 2px solid rgba(139,92,246,0.6); }
+        .input:focus { outline: 2px solid rgba(10,132,255,0.6); }
       `}</style>
     </>
   );
@@ -205,7 +206,7 @@ function Toggle({
     <button type="button" onClick={() => onChange(!checked)} className="flex items-center gap-3">
       <span
         className={`relative inline-flex h-5 w-9 rounded-full transition ${
-          checked ? "bg-neon-cyan" : "bg-white/20"
+          checked ? "bg-primary" : "bg-white/20"
         }`}
       >
         <span

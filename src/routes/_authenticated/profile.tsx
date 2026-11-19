@@ -19,6 +19,7 @@ import {
   downloadText,
   type LibEntry,
 } from "@/lib/listFormats";
+import { ErrorState } from "@/components/StateBlocks";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({
@@ -131,77 +132,148 @@ function ProfilePage() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8 py-6">
+    <div className="page-enter mx-auto max-w-3xl space-y-6 py-4 sm:space-y-8 sm:py-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-display text-3xl font-bold text-white">Profile</h1>
+        <div>
+          <h1 className="font-display text-2xl font-bold text-white sm:text-3xl">Profile</h1>
+          <p className="mt-0.5 text-sm text-white/60">
+            Account identity, MyAnimeList sync, and portable library backups.
+          </p>
+        </div>
         <button
+          type="button"
           onClick={signOut}
-          className="rounded-lg glass px-4 py-2 text-sm font-medium text-white hover:bg-white/10"
+          className="min-h-[44px] rounded-xl glass px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10"
         >
           Sign out
         </button>
       </header>
 
-      <section className="glass-strong space-y-4 rounded-2xl p-6">
-        <h2 className="font-display text-lg font-bold text-white">Account</h2>
-        <div className="grid gap-3 sm:grid-cols-2">
-          <label className="block">
-            <span className="mb-1 block text-xs text-white/60">Display name</span>
-            <input
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              maxLength={80}
-              className="w-full rounded-lg bg-white/5 px-3 py-2 text-sm text-white outline-none ring-1 ring-white/10 focus:ring-neon-cyan"
-            />
-          </label>
-          <label className="block">
-            <span className="mb-1 block text-xs text-white/60">MyAnimeList username</span>
-            <input
-              value={malUsername}
-              onChange={(e) => setMalUsername(e.target.value)}
-              maxLength={30}
-              placeholder="e.g. yourname"
-              className="w-full rounded-lg bg-white/5 px-3 py-2 text-sm text-white outline-none ring-1 ring-white/10 focus:ring-neon-cyan"
-            />
-          </label>
+      {profileQ.isError && (
+        <ErrorState
+          message={(profileQ.error as Error)?.message}
+          onRetry={() => profileQ.refetch()}
+          retrying={profileQ.isFetching}
+        />
+      )}
+
+      <section className="apple-group space-y-4 rounded-3xl p-5 sm:p-6">
+        <div className="border-b border-white/10 pb-3">
+          <h2 className="font-display text-lg font-bold text-white">Account</h2>
+          <p className="mt-0.5 text-xs text-white/55">
+            Configure your public review name and linked MyAnimeList handle.
+          </p>
         </div>
-        <button
-          onClick={() => saveMut.mutate()}
-          disabled={saveMut.isPending}
-          className="rounded-lg bg-gradient-to-r from-neon-cyan to-neon-magenta px-4 py-2 text-sm font-semibold text-background disabled:opacity-50"
-        >
-          {saveMut.isPending ? "Saving…" : "Save profile"}
-        </button>
+
+        {profileQ.isLoading ? (
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="h-16 rounded-xl shimmer" />
+            <div className="h-16 rounded-xl shimmer" />
+          </div>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <div className="flex items-baseline justify-between">
+                <label
+                  htmlFor="profile-display-name"
+                  className="text-xs font-semibold uppercase tracking-wider text-white/70"
+                >
+                  Display Name
+                </label>
+                <span className="text-[11px] tabular-nums text-white/45">
+                  {displayName.length}/80
+                </span>
+              </div>
+              <input
+                id="profile-display-name"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                maxLength={80}
+                placeholder="Your display name"
+                className="min-h-[44px] w-full rounded-xl border border-white/10 bg-white/[0.06] px-3.5 py-2 text-sm text-white placeholder:text-white/40 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/25"
+              />
+              <p className="text-[11px] text-white/50">Shown next to reviews you publish.</p>
+            </div>
+
+            <div className="space-y-1.5">
+              <div className="flex items-baseline justify-between">
+                <label
+                  htmlFor="profile-mal-username"
+                  className="text-xs font-semibold uppercase tracking-wider text-white/70"
+                >
+                  MyAnimeList Username
+                </label>
+                <span className="text-[11px] tabular-nums text-white/45">
+                  {malUsername.length}/30
+                </span>
+              </div>
+              <input
+                id="profile-mal-username"
+                value={malUsername}
+                onChange={(e) => setMalUsername(e.target.value)}
+                maxLength={30}
+                placeholder="e.g. yourname"
+                className="min-h-[44px] w-full rounded-xl border border-white/10 bg-white/[0.06] px-3.5 py-2 text-sm text-white placeholder:text-white/40 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/25"
+              />
+              <p className="text-[11px] text-white/50">
+                Used to import your public MyAnimeList catalogue.
+              </p>
+            </div>
+          </div>
+        )}
+
+        <div className="border-t border-white/10 pt-3 flex justify-end">
+          <button
+            type="button"
+            onClick={() => saveMut.mutate()}
+            disabled={saveMut.isPending || profileQ.isLoading}
+            className="min-h-[44px] rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-white transition hover:bg-primary/90 disabled:opacity-45"
+          >
+            {saveMut.isPending ? "Saving…" : "Save Profile"}
+          </button>
+        </div>
       </section>
 
-      <section className="glass-strong space-y-4 rounded-2xl p-6">
-        <h2 className="font-display text-lg font-bold text-white">Import from MyAnimeList</h2>
-        <p className="text-sm text-white/60">
-          Pulls your public anime list via Jikan and merges it into your AniEra library.
-        </p>
-        <button
-          onClick={() =>
-            malUsername.trim()
-              ? importMalMut.mutate(malUsername.trim())
-              : toast.error("Set a MAL username first")
-          }
-          disabled={importMalMut.isPending}
-          className="rounded-lg glass px-4 py-2 text-sm font-medium text-white hover:bg-white/10 disabled:opacity-50"
-        >
-          {importMalMut.isPending
-            ? "Importing…"
-            : `Import from MAL${malUsername ? ` (${malUsername})` : ""}`}
-        </button>
+      <section className="apple-group space-y-4 rounded-3xl p-5 sm:p-6">
+        <div className="border-b border-white/10 pb-3">
+          <h2 className="font-display text-lg font-bold text-white">Import from MyAnimeList</h2>
+          <p className="mt-0.5 text-xs text-white/55">
+            Pulls your public anime list via Jikan and merges it into your AniEra library.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <span className="text-xs text-white/50">
+            {malUsername.trim()
+              ? `Ready to sync public entries for "${malUsername.trim()}"`
+              : "Set a MyAnimeList username in Account above first"}
+          </span>
+          <button
+            type="button"
+            onClick={() =>
+              malUsername.trim()
+                ? importMalMut.mutate(malUsername.trim())
+                : toast.error("Set a MAL username first")
+            }
+            disabled={importMalMut.isPending}
+            className="min-h-[44px] rounded-xl border border-white/10 bg-white/[0.06] px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10 disabled:opacity-45"
+          >
+            {importMalMut.isPending
+              ? "Importing…"
+              : `Import from MAL${malUsername ? ` (${malUsername})` : ""}`}
+          </button>
+        </div>
       </section>
 
-      <section className="glass-strong space-y-4 rounded-2xl p-6">
-        <h2 className="font-display text-lg font-bold text-white">Import / Export list</h2>
-        <p className="text-sm text-white/60">
-          Drop a file in JSON, MAL XML, or CSV. Auto-detected on upload.
-        </p>
-        <div className="flex flex-wrap gap-2">
-          <label className="cursor-pointer rounded-lg bg-gradient-to-r from-neon-cyan to-neon-magenta px-4 py-2 text-sm font-semibold text-background">
-            {importFileMut.isPending ? "Importing…" : "Import file"}
+      <section className="apple-group space-y-4 rounded-3xl p-5 sm:p-6">
+        <div className="border-b border-white/10 pb-3">
+          <h2 className="font-display text-lg font-bold text-white">Import / Export List</h2>
+          <p className="mt-0.5 text-xs text-white/55">
+            Accepts .json, .xml (MAL), or .csv exports. Format is auto-detected on upload.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2.5">
+          <label className="inline-flex min-h-[44px] cursor-pointer items-center rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-white transition hover:bg-primary/90">
+            {importFileMut.isPending ? "Importing…" : "Import File"}
             <input
               type="file"
               accept=".json,.xml,.csv,.txt,application/json,application/xml,text/csv,text/plain"
@@ -214,26 +286,33 @@ function ProfilePage() {
             />
           </label>
           <button
+            type="button"
             onClick={() => download("json")}
-            className="rounded-lg glass px-4 py-2 text-sm font-medium text-white hover:bg-white/10"
+            className="min-h-[44px] rounded-xl border border-white/10 bg-white/[0.06] px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10"
           >
             Export JSON
           </button>
           <button
+            type="button"
             onClick={() => download("xml")}
-            className="rounded-lg glass px-4 py-2 text-sm font-medium text-white hover:bg-white/10"
+            className="min-h-[44px] rounded-xl border border-white/10 bg-white/[0.06] px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10"
           >
             Export MAL XML
           </button>
           <button
+            type="button"
             onClick={() => download("csv")}
-            className="rounded-lg glass px-4 py-2 text-sm font-medium text-white hover:bg-white/10"
+            className="min-h-[44px] rounded-xl border border-white/10 bg-white/[0.06] px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10"
           >
             Export CSV
           </button>
         </div>
-        <p className="text-xs text-white/40">
-          Library currently contains {entries.length} {entries.length === 1 ? "entry" : "entries"}.
+        <p className="border-t border-white/10 pt-3 text-xs text-white/50">
+          {libQ.isLoading
+            ? "Loading library summary…"
+            : libQ.isError
+              ? "Could not load library summary."
+              : `Library currently contains ${entries.length} ${entries.length === 1 ? "entry" : "entries"}.`}
         </p>
       </section>
     </div>

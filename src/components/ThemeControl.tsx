@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { GlassButton, GlassCard, GlassSegmented } from "@zakisheriff/liquid-glass";
+import { GlassCard } from "@zakisheriff/liquid-glass";
 import { Monitor, Moon, Sun, Sparkles, Turtle, CircleSlash, Settings2 } from "lucide-react";
+import { LiquidTabs } from "@/components/LiquidTabs";
+import { triggerHaptic } from "@/lib/haptics";
 
 type Theme = "system" | "light" | "dark";
 type Motion = "system" | "reduced" | "playful" | "off";
@@ -27,7 +29,7 @@ function readStored<T extends string>(key: string, allowed: readonly T[], fallba
   return fallback;
 }
 
-export function ThemeControl() {
+export function ThemeControl({ onOpen }: { onOpen?: () => void } = {}) {
   const [theme, setTheme] = useState<Theme>("system");
   const [motion, setMotion] = useState<Motion>("system");
   const [open, setOpen] = useState(false);
@@ -99,31 +101,39 @@ export function ThemeControl() {
 
   return (
     <div ref={wrapRef} className="site-theme-control relative inline-flex items-center shrink-0">
-      <GlassButton
-        variant="clear"
-        size="md"
-        icon={<Settings2 size={18} aria-hidden="true" />}
-        className="site-theme-trigger shrink-0"
+      <button
+        type="button"
+        className="site-icon-btn site-theme-trigger"
         aria-label="Appearance and animation settings"
         aria-expanded={open}
         title="Appearance"
-        onClick={() => setOpen((v) => !v)}
-      />
+        onClick={() => {
+          triggerHaptic("tap");
+          setOpen((v) => {
+            const next = !v;
+            if (next) onOpen?.();
+            return next;
+          });
+        }}
+      >
+        <Settings2 size={17} aria-hidden="true" />
+      </button>
       {open && (
-        <div className="site-theme-pop anim-pop absolute right-0 top-[calc(100%+10px)] z-50 w-72 pointer-events-auto">
+        <div className="site-theme-pop anim-pop-tr fixed right-3 top-[66px] sm:absolute sm:right-0 sm:top-[calc(100%+10px)] z-50 w-[min(368px,calc(100vw-24px))] pointer-events-auto">
           <GlassCard
             variant="regular"
             intensity={5}
             padding="14px"
             radius="22px"
-            className="w-full shadow-2xl border border-white/10"
+            className="w-full shadow-2xl border border-border"
             role="dialog"
             aria-label="Appearance and animation"
           >
             <p className="px-1 pb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/90">
               Appearance
             </p>
-            <GlassSegmented
+            <LiquidTabs
+              ariaLabel="Appearance"
               options={themeOptions.map((opt) => ({
                 label: opt.label,
                 icon: <opt.icon size={13} aria-hidden="true" />,
@@ -133,15 +143,13 @@ export function ThemeControl() {
                 themeOptions.findIndex((o) => o.value === theme),
               )}
               onChange={(index) => pickTheme(themeOptions[index]!.value)}
-              size="sm"
-              intensity={4}
-              className="w-full"
-              aria-label="Appearance"
+              className="w-full justify-between"
             />
             <p className="px-1 pb-2 pt-3.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/90">
               Animation
             </p>
-            <GlassSegmented
+            <LiquidTabs
+              ariaLabel="Animation"
               options={motionOptions.map((opt) => ({
                 label: opt.label,
                 icon: <opt.icon size={13} aria-hidden="true" />,
@@ -151,10 +159,8 @@ export function ThemeControl() {
                 motionOptions.findIndex((o) => o.value === motion),
               )}
               onChange={(index) => pickMotion(motionOptions[index]!.value)}
-              size="sm"
-              intensity={4}
-              className="w-full"
-              aria-label="Animation"
+              wrap
+              className="w-full justify-between"
             />
           </GlassCard>
         </div>

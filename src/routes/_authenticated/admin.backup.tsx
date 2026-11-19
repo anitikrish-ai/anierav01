@@ -65,9 +65,10 @@ function BackupPage() {
             Creates a portable JSON file. Keep it somewhere safe before making big changes.
           </p>
           <button
+            type="button"
             onClick={() => exportMut.mutate()}
             disabled={exportMut.isPending}
-            className="mt-4 rounded-lg bg-gradient-to-r from-neon-cyan to-neon-magenta px-4 py-2 text-sm font-semibold text-background disabled:opacity-50"
+            className="mt-4 min-h-[40px] rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-50"
           >
             {exportMut.isPending ? "Preparing…" : "Download backup"}
           </button>

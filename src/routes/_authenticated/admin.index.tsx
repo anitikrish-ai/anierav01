@@ -56,7 +56,7 @@ function DashboardPage() {
                   <div className="text-xs uppercase tracking-wider text-white/50">{c.label}</div>
                   <div className="mt-1 font-display text-2xl font-bold text-white">{c.value}</div>
                 </div>
-                <Icon className="h-8 w-8 text-neon-cyan/70" />
+                <Icon className="h-8 w-8 text-sky-400/85" />
               </div>
             </AdminCard>
           );

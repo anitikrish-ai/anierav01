@@ -71,9 +71,10 @@ function ThemePage() {
         description="Preview updates instantly. Click save to persist for every visitor."
         actions={
           <button
+            type="button"
             onClick={() => mut.mutate()}
             disabled={mut.isPending}
-            className="rounded-lg bg-gradient-to-r from-neon-cyan to-neon-magenta px-4 py-2 text-xs font-semibold text-background disabled:opacity-60"
+            className="min-h-[38px] rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-white hover:bg-primary/90 disabled:opacity-60"
           >
             {mut.isPending ? "Saving…" : "Save theme"}
           </button>

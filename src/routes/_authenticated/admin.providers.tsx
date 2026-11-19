@@ -100,8 +100,9 @@ function ProvidersPage() {
         description="Registry of anime data & streaming providers. Toggle, reorder by priority, and run health checks."
         actions={
           <button
+            type="button"
             onClick={() => setEditing({ enabled: true, priority: 100 })}
-            className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-neon-cyan to-neon-magenta px-4 py-2 text-xs font-semibold text-background"
+            className="flex min-h-[38px] items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-semibold text-white hover:bg-primary/90"
           >
             <Plus className="h-4 w-4" /> Add provider
           </button>
@@ -235,7 +236,7 @@ function ProvidersPage() {
           </ul>
         )}
       </AdminCard>
-      <style>{`.inp{width:100%;background:rgba(255,255,255,0.06);color:white;border:1px solid rgba(255,255,255,0.1);border-radius:0.5rem;padding:0.5rem 0.75rem;font-size:0.875rem}.inp:focus{outline:2px solid rgba(139,92,246,0.6)}`}</style>
+      <style>{`.inp{width:100%;background:rgba(255,255,255,0.06);color:white;border:1px solid rgba(255,255,255,0.1);border-radius:0.5rem;padding:0.5rem 0.75rem;font-size:0.875rem}.inp:focus{outline:2px solid rgba(10,132,255,0.6)}`}</style>
     </>
   );
 }

@@ -25,9 +25,10 @@ export function ErrorState({
       </p>
       {onRetry && (
         <button
+          type="button"
           onClick={onRetry}
           disabled={retrying}
-          className="mt-4 rounded-lg bg-white/10 px-4 py-2 text-sm font-semibold text-white hover:bg-white/20 disabled:opacity-50"
+          className="mt-4 min-h-[40px] rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-50"
         >
           {retrying ? "Retrying…" : "Try again"}
         </button>

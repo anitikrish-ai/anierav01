@@ -6,7 +6,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
  * Optimised for cost: one shared IntersectionObserver for the whole app,
  * each element is unobserved the moment it reveals, and the animation only
  * touches opacity + transform (compositor-only, no layout/paint).
- * SSR-safe: renders visible when IO is unavailable or motion is reduced.
+ * Includes an automatic safety reveal fallback so filtered grids never stall.
  */
 
 type Cb = () => void;
@@ -25,7 +25,7 @@ function getObserver() {
           observer!.unobserve(e.target);
         }
       },
-      { rootMargin: "0px 0px -8% 0px", threshold: 0.06 },
+      { rootMargin: "80px 0px -1% 0px", threshold: 0.01 },
     );
   }
   return observer;
@@ -52,19 +52,34 @@ export function Reveal({
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) {
+    const motion = document.documentElement.dataset.motion;
+    if (
+      motion === "off" ||
+      motion === "reduced" ||
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches
+    ) {
       setShown(true);
       return;
     }
+
+    const rect = el.getBoundingClientRect();
+    if (rect.top < window.innerHeight * 1.15 && rect.bottom > -40) {
+      const raf = requestAnimationFrame(() => setShown(true));
+      return () => cancelAnimationFrame(raf);
+    }
+
     const io = getObserver();
     if (!io) {
       setShown(true);
       return;
     }
-    // Already in view on mount (above the fold) → reveal on the next frame.
+
     callbacks.set(el, () => setShown(true));
     io.observe(el);
+
+    const safety = setTimeout(() => setShown(true), 900);
     return () => {
+      clearTimeout(safety);
       callbacks.delete(el);
       io.unobserve(el);
     };

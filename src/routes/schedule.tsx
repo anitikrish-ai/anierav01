@@ -1,13 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { CustomSources } from "@/components/CustomSources";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
-import { jikan, bestTitle } from "@/lib/jikan";
-import { GridSkeleton } from "@/components/AnimeCard";
+import { jikan, bestTitle, type Anime } from "@/lib/jikan";
+import { GridSkeleton, bestImage } from "@/components/AnimeCard";
 import { ErrorState, EmptyState } from "@/components/StateBlocks";
-import { GlassSegmented } from "@zakisheriff/liquid-glass";
+import { Reveal } from "@/components/Reveal";
+import { LiquidTabs } from "@/components/LiquidTabs";
 
 const DAYS = [
   { id: "monday", label: "Mon" },
@@ -60,28 +61,38 @@ function SchedulePage() {
     staleTime: 1000 * 60 * 30,
   });
 
-  const items = Array.isArray(q.data?.data) ? q.data.data : [];
+  // Jikan /schedules can occasionally contain duplicate mal_id entries
+  const items = useMemo(() => {
+    const raw = Array.isArray(q.data?.data) ? q.data.data : [];
+    const seen = new Set<number>();
+    const unique: Anime[] = [];
+    for (const a of raw) {
+      if (!a || typeof a.mal_id !== "number" || seen.has(a.mal_id)) continue;
+      seen.add(a.mal_id);
+      unique.push(a);
+    }
+    return unique;
+  }, [q.data]);
 
   return (
     <div className="page-enter space-y-6">
       <div>
-        <h1 className="font-display text-3xl font-bold text-white">Airing Schedule</h1>
+        <h1 className="font-display text-2xl sm:text-3xl font-bold text-white">Airing Schedule</h1>
         <p className="mt-1 text-sm text-white/60">Catch what's broadcasting this week.</p>
       </div>
 
-      <div className="w-full max-w-xl">
-        <GlassSegmented
-          options={DAYS.map((d) => d.label)}
-          value={Math.max(
-            0,
-            DAYS.findIndex((d) => d.id === day),
-          )}
-          onChange={(idx) => navigate({ search: { day: DAYS[idx]?.id } })}
-          size="md"
-          intensity={4}
-          aria-label="Airing schedule day"
-        />
-      </div>
+      <LiquidTabs
+        ariaLabel="Airing schedule day"
+        options={DAYS.map((d) => d.label)}
+        value={Math.max(
+          0,
+          DAYS.findIndex((d) => d.id === day),
+        )}
+        onChange={(idx) => navigate({ search: { day: DAYS[idx]?.id } })}
+        size="md"
+        wrap
+        className="w-fit"
+      />
 
       {q.isLoading ? (
         <GridSkeleton count={12} />
@@ -93,34 +104,48 @@ function SchedulePage() {
         />
       ) : items.length ? (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {items.map((a) => {
-            const img = a.images.webp?.image_url || a.images.jpg.image_url;
+          {items.map((a, i) => {
+            const img = bestImage(a);
             const time = (a as any).broadcast?.time as string | undefined;
             return (
-              <Link
-                key={a.mal_id}
-                to="/anime/$id"
-                params={{ id: String(a.mal_id) }}
-                className="group flex gap-3 overflow-hidden rounded-2xl glass p-3 transition hover:bg-white/5 hover:glow-cyan"
-              >
-                <img src={img} alt="" className="h-28 w-20 shrink-0 rounded-lg object-cover" />
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    {time && (
-                      <span className="rounded-md bg-neon-cyan/15 px-2 py-0.5 text-[11px] font-semibold text-neon-cyan">
-                        {time}
-                      </span>
-                    )}
-                    {a.score && (
-                      <span className="text-[11px] text-white/60">★ {a.score.toFixed(1)}</span>
-                    )}
+              <Reveal key={a.mal_id} variant="rise" delay={Math.min(i % 12, 11) * 40}>
+                <Link
+                  to="/anime/$id"
+                  params={{ id: String(a.mal_id) }}
+                  preload="intent"
+                  className="card-lift group flex gap-3 overflow-hidden rounded-2xl surface p-3 transition hover:border-primary/40 hover:bg-white/[0.06]"
+                >
+                  <img
+                    src={img}
+                    alt=""
+                    loading="lazy"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).style.opacity = "0";
+                    }}
+                    className="h-28 w-20 shrink-0 rounded-xl bg-white/5 object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      {time && (
+                        <span className="rounded-md border border-primary/25 bg-primary/15 px-2 py-0.5 text-[11px] font-semibold text-sky-300">
+                          {time}
+                        </span>
+                      )}
+                      {a.score ? (
+                        <span className="text-[11px] font-medium text-amber-300">
+                          ★ {a.score.toFixed(1)}
+                        </span>
+                      ) : null}
+                    </div>
+                    <h3 className="mt-1.5 line-clamp-2 text-sm font-semibold text-white group-hover:text-sky-300 transition-colors">
+                      {bestTitle(a)}
+                    </h3>
+                    <p className="mt-1 line-clamp-2 text-[11px] text-white/55">
+                      {a.synopsis ?? "—"}
+                    </p>
                   </div>
-                  <h3 className="mt-1 line-clamp-2 text-sm font-semibold text-white group-hover:text-neon-cyan">
-                    {bestTitle(a)}
-                  </h3>
-                  <p className="mt-1 line-clamp-2 text-[11px] text-white/55">{a.synopsis ?? "—"}</p>
-                </div>
-              </Link>
+                </Link>
+              </Reveal>
             );
           })}
         </div>

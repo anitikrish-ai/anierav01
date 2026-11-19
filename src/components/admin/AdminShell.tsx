@@ -33,12 +33,12 @@ export function AdminShell({ children }: { children: ReactNode }) {
     <div className="mx-auto grid w-full max-w-7xl gap-4 px-3 py-4 sm:px-4 lg:grid-cols-[240px_1fr] lg:gap-6 lg:py-6">
       <aside className="glass-strong h-max min-w-0 rounded-2xl p-2 lg:sticky lg:top-20 lg:p-3">
         <div className="mb-2 hidden items-center gap-2 px-3 py-2 lg:flex">
-          <ShieldCheck className="h-5 w-5 text-neon-cyan" />
+          <ShieldCheck className="h-5 w-5 text-sky-400" />
           <span className="font-display text-sm font-bold tracking-wide text-white">Admin CMS</span>
         </div>
         <nav
           aria-label="Admin sections"
-          className="flex gap-1 overflow-x-auto lg:flex-col lg:overflow-visible"
+          className="no-scrollbar flex gap-1 overflow-x-auto lg:flex-col lg:overflow-visible"
         >
           {items.map((item) => {
             const active = item.exact
@@ -50,9 +50,9 @@ export function AdminShell({ children }: { children: ReactNode }) {
                 key={item.to}
                 to={item.to as any}
                 aria-current={active ? "page" : undefined}
-                className={`flex shrink-0 items-center gap-2 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition ${
+                className={`flex min-h-[38px] shrink-0 items-center gap-2 whitespace-nowrap rounded-xl px-3 py-2 text-sm font-medium transition ${
                   active
-                    ? "bg-white/10 text-white"
+                    ? "bg-primary/20 text-white ring-1 ring-primary/35"
                     : "text-white/70 hover:bg-white/5 hover:text-white"
                 }`}
               >

@@ -70,7 +70,7 @@ export function Reviews({ malId, animeTitle }: { malId: number; animeTitle: stri
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <h2 className="font-display text-2xl font-bold text-white">Reviews & Comments</h2>
         {reviews.some((r) => r.rating) && (
-          <span className="rounded-full glass px-3 py-1 text-xs text-white/80">
+          <span className="rounded-full border border-amber-400/25 bg-amber-400/15 px-3 py-1 text-xs font-semibold text-amber-300">
             Community score ★ {avg.toFixed(1)} · {reviews.length} review
             {reviews.length === 1 ? "" : "s"}
           </span>
@@ -84,65 +84,97 @@ export function Reviews({ malId, animeTitle }: { malId: number; animeTitle: stri
             if (body.trim().length < 2) return;
             saveM.mutate();
           }}
-          className="glass rounded-2xl p-4"
+          className="apple-group rounded-2xl p-4 sm:p-5 space-y-4"
         >
-          <textarea
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-            rows={3}
-            maxLength={4000}
-            placeholder={mine ? "Update your review…" : "Share your thoughts on this anime…"}
-            aria-label="Your review"
-            className="w-full resize-y rounded-lg bg-white/5 px-3 py-2 text-sm text-white placeholder:text-white/40 outline-none ring-1 ring-white/10 focus:ring-neon-cyan"
-          />
-          <div className="mt-3 flex flex-wrap items-center gap-3">
-            <label className="flex items-center gap-2 text-xs text-white/70">
-              Rating
+          <div>
+            <div className="mb-1.5 flex items-baseline justify-between gap-2">
+              <label
+                htmlFor="review-body"
+                className="text-xs font-semibold uppercase tracking-wider text-white/70"
+              >
+                {mine ? "Edit Your Review" : "Write a Review"}
+              </label>
+              <span
+                className={`text-[11px] tabular-nums ${
+                  body.trim().length > 0 && body.trim().length < 2
+                    ? "text-rose-400"
+                    : "text-white/50"
+                }`}
+              >
+                {body.trim().length} / 4000 · min 2 characters
+              </span>
+            </div>
+            <textarea
+              id="review-body"
+              value={body}
+              onChange={(e) => setBody(e.target.value)}
+              rows={3}
+              maxLength={4000}
+              placeholder={
+                mine ? "Update your thoughts on this series…" : "Share your thoughts on this anime…"
+              }
+              className="w-full resize-y rounded-xl border border-white/10 bg-white/[0.06] px-3.5 py-2.5 text-sm text-white placeholder:text-white/40 outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/25"
+            />
+          </div>
+
+          <div className="border-t border-white/10 pt-3 flex flex-wrap items-center gap-3">
+            <label className="flex items-center gap-2 text-xs font-medium text-white/80">
+              <span>Score</span>
               <select
                 value={rating ?? ""}
                 onChange={(e) => setRating(e.target.value ? Number(e.target.value) : null)}
-                className="rounded-lg bg-white/5 px-2 py-1.5 text-sm text-white outline-none ring-1 ring-white/10 focus:ring-neon-cyan"
+                className="min-h-[40px] rounded-xl border border-white/10 bg-white/[0.06] px-3 py-1.5 text-sm text-white outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/25"
               >
                 <option value="" className="bg-background">
-                  —
+                  No rating
                 </option>
                 {Array.from({ length: 10 }, (_, i) => 10 - i).map((n) => (
                   <option key={n} value={n} className="bg-background">
-                    {n}
+                    {n} / 10
                   </option>
                 ))}
               </select>
             </label>
-            <label className="flex items-center gap-2 text-xs text-white/70">
+
+            <label className="flex min-h-[40px] cursor-pointer items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 text-xs font-medium text-white/80 hover:bg-white/[0.07]">
               <input
                 type="checkbox"
                 checked={spoiler}
                 onChange={(e) => setSpoiler(e.target.checked)}
+                className="h-4 w-4 accent-primary"
               />
-              Contains spoilers
+              <span>Contains spoilers</span>
             </label>
-            <button
-              type="submit"
-              disabled={saveM.isPending || body.trim().length < 2}
-              className="ml-auto rounded-lg bg-gradient-to-r from-neon-cyan to-neon-magenta px-4 py-2 text-sm font-semibold text-background transition hover:scale-105 disabled:opacity-50"
-            >
-              {saveM.isPending ? "Saving…" : mine ? "Update review" : "Post review"}
-            </button>
-            {mine && (
+
+            <div className="ml-auto flex flex-wrap items-center gap-2">
+              {mine && (
+                <button
+                  type="button"
+                  disabled={deleteM.isPending}
+                  onClick={() => deleteM.mutate(mine.id)}
+                  className="min-h-[44px] rounded-xl border border-white/10 bg-white/[0.06] px-4 py-2 text-sm font-medium text-white/80 transition hover:bg-white/10 hover:text-white"
+                >
+                  Delete
+                </button>
+              )}
               <button
-                type="button"
-                onClick={() => deleteM.mutate(mine.id)}
-                className="rounded-lg bg-white/5 px-3 py-2 text-sm text-white/70 hover:bg-white/10 hover:text-white"
+                type="submit"
+                disabled={saveM.isPending || body.trim().length < 2}
+                className="min-h-[44px] rounded-xl bg-primary px-5 py-2 text-sm font-semibold text-white transition hover:bg-primary/90 disabled:opacity-45"
               >
-                Delete
+                {saveM.isPending ? "Saving…" : mine ? "Update Review" : "Post Review"}
               </button>
-            )}
+            </div>
           </div>
-          {err && <p className="mt-2 text-xs text-neon-magenta">{err}</p>}
+          {err && (
+            <p role="alert" className="text-xs font-medium text-rose-400">
+              {err}
+            </p>
+          )}
         </form>
       ) : (
-        <div className="glass rounded-2xl p-4 text-sm text-white/70">
-          <Link to="/auth" className="font-semibold text-neon-cyan hover:underline">
+        <div className="apple-group rounded-2xl p-4 text-sm text-white/70">
+          <Link to="/auth" className="font-semibold text-sky-400 hover:underline">
             Sign in
           </Link>{" "}
           to post a review or rate this anime.
@@ -170,36 +202,39 @@ export function Reviews({ malId, animeTitle }: { malId: number; animeTitle: stri
 
 function ReviewCard({ r, own }: { r: ReviewRow; own: boolean }) {
   const [revealed, setRevealed] = useState(false);
+  const [avatarFailed, setAvatarFailed] = useState(false);
   return (
     <article className="glass rounded-2xl p-4">
       <div className="flex items-center gap-3">
-        {r.author_avatar ? (
+        {r.author_avatar && !avatarFailed ? (
           <img
             src={r.author_avatar}
             alt=""
             loading="lazy"
+            onError={() => setAvatarFailed(true)}
             className="h-8 w-8 rounded-full object-cover"
           />
         ) : (
-          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-xs text-white">
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-xs font-semibold text-white">
             {r.author_name.charAt(0).toUpperCase()}
           </span>
         )}
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold text-white">
             {r.author_name}
-            {own && <span className="ml-2 text-[11px] text-neon-cyan">you</span>}
+            {own && <span className="ml-2 text-[11px] font-medium text-sky-400">you</span>}
           </p>
           <p className="text-[11px] text-white/50">{new Date(r.created_at).toLocaleDateString()}</p>
         </div>
         {r.rating && (
-          <span className="ml-auto rounded-md bg-white/10 px-2 py-1 text-xs text-white">
+          <span className="ml-auto rounded-md border border-amber-400/25 bg-amber-400/15 px-2 py-0.5 text-xs font-semibold text-amber-300">
             ★ {r.rating}
           </span>
         )}
       </div>
       {r.spoiler && !revealed ? (
         <button
+          type="button"
           onClick={() => setRevealed(true)}
           className="mt-3 w-full rounded-lg bg-white/5 px-3 py-2 text-xs text-white/70 hover:bg-white/10"
         >

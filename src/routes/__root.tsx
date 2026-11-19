@@ -232,11 +232,41 @@ function SiteChrome() {
       <main id="main" tabIndex={-1} className="mx-auto max-w-7xl px-4 pb-16 pt-4 sm:px-6">
         <Outlet />
       </main>
-      <footer className="space-y-3 border-t border-white/5 py-8 text-center text-xs text-white/40">
-        <ProxyChooser />
-        <div>
-          AniEra · Powered by Jikan, VidNest & MegaPlay · Streams are embedded from third-party
-          sources.
+      <footer className="mt-12 border-t border-white/10 bg-white/[0.02] backdrop-blur-md">
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 space-y-6">
+          <div className="grid gap-6 text-left sm:grid-cols-3">
+            <div>
+              <h3 className="text-[11px] font-semibold uppercase tracking-wider text-white/70">
+                Catalog &amp; Metadata
+              </h3>
+              <p className="mt-1.5 text-xs leading-relaxed text-white/50">
+                Anime details, airing schedules, and community ratings powered by Jikan and AniList.
+              </p>
+            </div>
+            <div>
+              <h3 className="text-[11px] font-semibold uppercase tracking-wider text-white/70">
+                Playback &amp; Relays
+              </h3>
+              <p className="mt-1.5 text-xs leading-relaxed text-white/50">
+                Multi-server HLS and embedded streams via HiAnime, VidNest, MegaPlay, and Anikoto.
+              </p>
+            </div>
+            <div>
+              <h3 className="text-[11px] font-semibold uppercase tracking-wider text-white/70">
+                Design &amp; Interface
+              </h3>
+              <p className="mt-1.5 text-xs leading-relaxed text-white/50">
+                Crafted with Liquid Glass and Apple Human Interface Guidelines for clarity and ease.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-col items-center justify-between gap-3 border-t border-white/10 pt-5 text-xs text-white/45 sm:flex-row">
+            <ProxyChooser />
+            <p className="text-center sm:text-right">
+              AniEra · Streams are hosted by third-party providers.
+            </p>
+          </div>
         </div>
       </footer>
       <Toaster theme="dark" position="top-right" richColors />

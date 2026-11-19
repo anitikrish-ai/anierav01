@@ -1,11 +1,11 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { GlassButton, GlassCard } from "@zakisheriff/liquid-glass";
 import { useAuth } from "@/lib/auth";
 import { jikan, bestTitle } from "@/lib/jikan";
 import { supabase } from "@/integrations/supabase/client";
 import { ThemeControl } from "@/components/ThemeControl";
+import { triggerHaptic } from "@/lib/haptics";
 import {
   Home,
   Compass,
@@ -16,7 +16,6 @@ import {
   X,
   UserRound,
   ArrowRight,
-  Menu,
 } from "lucide-react";
 
 export function Navbar() {
@@ -26,10 +25,10 @@ export function Navbar() {
   const [q, setQ] = useState("");
   const [openSearch, setOpenSearch] = useState(false);
   const [searchExpanded, setSearchExpanded] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [debounced, setDebounced] = useState("");
   const [scrolled, setScrolled] = useState(false);
   const wrapRef = useRef<HTMLDivElement | null>(null);
+  const toggleBtnRef = useRef<HTMLButtonElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
@@ -42,7 +41,6 @@ export function Navbar() {
   useEffect(() => {
     setOpenSearch(false);
     setSearchExpanded(false);
-    setMobileMenuOpen(false);
   }, [pathname]);
 
   useEffect(() => {
@@ -52,9 +50,10 @@ export function Navbar() {
 
   useEffect(() => {
     const close = (event: PointerEvent) => {
-      if (!wrapRef.current?.contains(event.target as Node)) {
-        setOpenSearch(false);
-      }
+      const target = event.target as Node;
+      if (wrapRef.current?.contains(target) || toggleBtnRef.current?.contains(target)) return;
+      setOpenSearch(false);
+      setSearchExpanded(false);
     };
     document.addEventListener("pointerdown", close);
     return () => document.removeEventListener("pointerdown", close);
@@ -102,31 +101,38 @@ export function Navbar() {
 
   const search = () => {
     if (!q.trim()) return;
+    triggerHaptic("submit");
     navigate({ to: "/browse", search: { q: q.trim() } });
     setOpenSearch(false);
     setSearchExpanded(false);
   };
 
   return (
-    <header className="site-header" data-scrolled={scrolled}>
-      {/* Explicit bar positioning and CSS-only frosting: no duplicate bars or SVG displacement collisions */}
-      <div className="site-nav-surface">
+    <header className="site-header anim-nav-in" data-scrolled={scrolled}>
+      {/* Single Liquid Glass navbar with CSS-only frosting and pointer specular rim */}
+      <div className="site-nav-surface liquid-glass">
         <div className="site-nav-row">
           {/* Logo / Brand */}
-          <Link to="/" preload="intent" aria-label="AniEra home" className="site-brand group">
+          <Link
+            to="/"
+            preload="intent"
+            aria-label="AniEra home"
+            onClick={() => triggerHaptic("tap")}
+            className="site-brand group"
+          >
             <span
-              className="site-brand-mark transition-transform duration-200 group-hover:scale-105"
+              className="site-brand-mark transition-transform duration-200 group-hover:scale-105 group-hover:-rotate-3"
               aria-hidden="true"
             >
               A
             </span>
-            <span className="text-base sm:text-lg font-bold tracking-tight bg-gradient-to-r from-cyan-400 via-white to-purple-400 bg-clip-text text-transparent">
+            <span className="site-brand-text hidden sm:inline text-base sm:text-lg font-bold tracking-tight">
               AniEra
             </span>
           </Link>
 
-          {/* Desktop Navigation Links */}
-          <nav aria-label="Main navigation" className="hidden md:flex site-nav-links ml-3">
+          {/* Single Navigation Links: Icon-only on mobile/tablet, Icon + Label on desktop */}
+          <nav aria-label="Main navigation" className="site-nav-links sm:ml-1 lg:ml-3">
             {links.map((link) => {
               const active = activeLink(link.to);
               const Icon = link.icon;
@@ -135,20 +141,25 @@ export function Navbar() {
                   key={link.to}
                   to={link.to}
                   preload="intent"
+                  title={link.label}
+                  aria-label={link.label}
+                  onClick={() => triggerHaptic("tap")}
                   className="site-nav-link"
                   aria-current={active ? "page" : undefined}
                 >
                   <Icon
-                    size={15}
-                    className={active ? "text-primary" : "text-muted-foreground/80"}
+                    size={17}
+                    strokeWidth={active ? 2.25 : 1.9}
+                    aria-hidden="true"
+                    className={active ? "text-primary" : "text-muted-foreground"}
                   />
-                  <span>{link.label}</span>
+                  <span className="hidden lg:inline">{link.label}</span>
                 </Link>
               );
             })}
           </nav>
 
-          {/* Search bar (desktop inline, mobile popup) */}
+          {/* Search bar (inline on md+, frosted dropdown when toggled on mobile) */}
           <div ref={wrapRef} className="site-search" data-expanded={searchExpanded}>
             <form
               role="search"
@@ -158,11 +169,7 @@ export function Navbar() {
               }}
               className="site-search-field"
             >
-              <Search
-                size={15}
-                aria-hidden="true"
-                className="shrink-0 text-muted-foreground/80 ml-1"
-              />
+              <Search size={15} aria-hidden="true" className="shrink-0 text-muted-foreground/80" />
               <input
                 ref={inputRef}
                 type="search"
@@ -191,31 +198,36 @@ export function Navbar() {
                 <button
                   type="button"
                   onClick={() => {
+                    triggerHaptic("tap");
                     setQ("");
                     setDebounced("");
                     inputRef.current?.focus();
                   }}
                   aria-label="Clear search query"
-                  className="p-1 mr-0.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-white/10 transition-colors focus:outline-none"
+                  className="p-1 mr-0.5 rounded-full text-muted-foreground hover:text-foreground transition-colors focus:outline-none"
                 >
                   <X size={13} aria-hidden="true" />
                 </button>
               )}
-              <GlassButton
-                variant="clear"
-                size="sm"
-                type="submit"
-                aria-label="Submit search"
-                icon={<ArrowRight size={14} aria-hidden="true" />}
-              />
+              <button type="submit" aria-label="Submit search" className="site-search-submit">
+                <ArrowRight size={14} aria-hidden="true" />
+              </button>
             </form>
 
             {openSearch && debounced.length >= 2 && (
-              <div id="anime-search-results" className="site-search-results anim-pop">
+              <div id="anime-search-results" className="site-search-results anim-pop-tr">
                 {sugg.isPending && (
-                  <p role="status" className="p-4 text-sm text-muted-foreground">
-                    Searching...
-                  </p>
+                  <div role="status" aria-label="Searching" className="space-y-2 p-3">
+                    {Array.from({ length: 3 }).map((_, i) => (
+                      <div key={i} className="flex items-center gap-3">
+                        <div className="h-12 w-9 shrink-0 rounded-md shimmer" />
+                        <div className="flex-1 space-y-1.5">
+                          <div className="h-3.5 w-3/4 rounded shimmer" />
+                          <div className="h-2.5 w-1/2 rounded shimmer" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 )}
                 {sugg.isError && (
                   <p role="status" className="p-4 text-sm text-muted-foreground">
@@ -234,17 +246,27 @@ export function Navbar() {
                     params={{ id: String(anime.mal_id) }}
                     preload="intent"
                     onClick={() => {
+                      triggerHaptic("tap");
                       setOpenSearch(false);
+                      setSearchExpanded(false);
                       setQ("");
                     }}
-                    className="flex min-h-16 items-center gap-3 px-3 py-2 hover:bg-white/5 transition-colors focus-visible:bg-white/5"
+                    className="site-search-item flex min-h-16 items-center gap-3 px-3 py-2 transition-colors"
                   >
                     <img
-                      src={anime.images.webp?.image_url || anime.images.jpg.image_url}
+                      src={
+                        anime.images?.webp?.image_url ||
+                        anime.images?.jpg?.image_url ||
+                        anime.images?.jpg?.large_image_url ||
+                        ""
+                      }
                       alt=""
                       width={36}
                       height={48}
-                      className="h-12 w-9 shrink-0 rounded-md object-cover"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).style.opacity = "0";
+                      }}
+                      className="h-12 w-9 shrink-0 rounded-md bg-white/5 object-cover"
                     />
                     <div className="min-w-0">
                       <div className="truncate text-sm font-medium text-foreground">
@@ -264,8 +286,9 @@ export function Navbar() {
                 ))}
                 {results.length > 0 && (
                   <button
+                    type="button"
                     onClick={search}
-                    className="w-full flex items-center justify-between px-4 py-2 border-t border-border text-xs font-medium text-primary hover:bg-white/5 transition-colors"
+                    className="site-search-item w-full flex items-center justify-between px-4 py-2.5 border-t border-border text-xs font-medium text-primary transition-colors"
                   >
                     <span>All results for "{debounced}"</span>
                     <ArrowRight size={14} aria-hidden="true" />
@@ -275,90 +298,48 @@ export function Navbar() {
             )}
           </div>
 
-          {/* Action buttons */}
+          {/* Right Utility Icons */}
           <div className="site-nav-actions">
-            {/* Mobile search toggle: strictly hidden on desktop */}
-            <div className="md:hidden shrink-0 flex items-center">
-              <GlassButton
-                variant="clear"
-                size="md"
-                className="site-search-toggle"
-                aria-label={searchExpanded ? "Close search" : "Open search"}
-                aria-expanded={searchExpanded}
-                icon={
-                  searchExpanded ? (
-                    <X size={18} aria-hidden="true" />
-                  ) : (
-                    <Search size={18} aria-hidden="true" />
-                  )
-                }
-                onClick={() => {
-                  setSearchExpanded((value) => !value);
-                  setOpenSearch(false);
-                }}
-              />
-            </div>
+            <button
+              ref={toggleBtnRef}
+              type="button"
+              className="site-icon-btn md:hidden"
+              aria-label={searchExpanded ? "Close search" : "Open search"}
+              aria-expanded={searchExpanded}
+              title={searchExpanded ? "Close search" : "Search"}
+              onClick={() => {
+                triggerHaptic("tap");
+                setSearchExpanded((value) => !value);
+                setOpenSearch(false);
+              }}
+            >
+              {searchExpanded ? (
+                <X size={17} aria-hidden="true" />
+              ) : (
+                <Search size={17} aria-hidden="true" />
+              )}
+            </button>
 
-            {/* Appearance / Theme Control */}
-            <ThemeControl />
-
-            {/* Profile / Sign In */}
-            <GlassButton
-              variant="clear"
-              size="md"
-              className="site-profile-link shrink-0"
-              aria-label={signedIn ? "Profile" : "Sign in"}
-              title={signedIn ? "Profile" : "Sign in"}
-              icon={<UserRound size={18} aria-hidden="true" />}
-              onClick={() => navigate({ to: signedIn ? "/profile" : "/auth" })}
+            <ThemeControl
+              onOpen={() => {
+                setSearchExpanded(false);
+                setOpenSearch(false);
+              }}
             />
 
-            {/* Mobile menu toggle: strictly hidden on desktop */}
-            <div className="md:hidden shrink-0 flex items-center">
-              <GlassButton
-                variant="clear"
-                size="md"
-                aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
-                aria-expanded={mobileMenuOpen}
-                icon={
-                  mobileMenuOpen ? (
-                    <X size={18} aria-hidden="true" />
-                  ) : (
-                    <Menu size={18} aria-hidden="true" />
-                  )
-                }
-                onClick={() => setMobileMenuOpen((v) => !v)}
-              />
-            </div>
+            <Link
+              to={signedIn ? "/profile" : "/auth"}
+              preload="intent"
+              onClick={() => triggerHaptic("tap")}
+              className="site-icon-btn"
+              aria-label={signedIn ? "Profile" : "Sign in"}
+              title={signedIn ? "Profile" : "Sign in"}
+              aria-current={pathname === "/profile" || pathname === "/auth" ? "page" : undefined}
+            >
+              <UserRound size={17} aria-hidden="true" />
+            </Link>
           </div>
         </div>
-
-        {/* Mobile dropdown menu (stays inside the single header container) */}
-        {mobileMenuOpen && (
-          <div className="md:hidden border-t border-white/10 px-3 py-3 space-y-1.5 anim-drop">
-            {links.map((link) => {
-              const active = activeLink(link.to);
-              const Icon = link.icon;
-              return (
-                <Link
-                  key={link.to}
-                  to={link.to}
-                  preload="intent"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-3 px-3.5 py-3 min-h-[46px] rounded-xl text-sm font-medium transition active:scale-[0.98] ${
-                    active
-                      ? "bg-primary text-white font-semibold shadow-md shadow-primary/20"
-                      : "text-white/80 hover:text-white hover:bg-white/5"
-                  }`}
-                  aria-current={active ? "page" : undefined}
-                >
-                  <Icon size={18} className={active ? "text-white" : "text-muted-foreground"} />
-                  <span>{link.label}</span>
-                </Link>
-              );
-            })}
-          </div>
-        )}
       </div>
     </header>
   );

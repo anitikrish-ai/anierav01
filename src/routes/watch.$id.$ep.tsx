@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { jikan, bestTitle } from "@/lib/jikan";
+import { bestImage } from "@/components/AnimeCard";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   saveHistory,
@@ -24,12 +25,11 @@ import { HlsPlayer } from "@/components/HlsPlayer";
 import {
   GlassButton,
   GlassSegmented,
-  GlassSheet,
   GlassSwitch,
   GlassSlider,
   GlassCard,
 } from "@zakisheriff/liquid-glass";
-import { List, Settings2, Sparkles, Share2, Check } from "lucide-react";
+import { List, Settings2, Sparkles, Share2, Check, X } from "lucide-react";
 
 type Lang = "sub" | "dub";
 
@@ -166,6 +166,8 @@ function WatchPage() {
   const navigate = useNavigate();
   const malId = Number(id);
   const epNum = Number(ep);
+  const validParams = Number.isInteger(malId) && malId > 0 && Number.isInteger(epNum) && epNum >= 1;
+
   const [serverIdx, setServerIdx] = useState(() => {
     if (typeof window === "undefined") return 0;
     const preferred = getPreferredProvider(malId);
@@ -179,9 +181,16 @@ function WatchPage() {
   const stallTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Resume position for the current episode (seconds).
-  const resume = useMemo(() => getEpisodeProgress(malId, epNum)?.t ?? 0, [malId, epNum]);
+  const resume = useMemo(
+    () => (validParams ? (getEpisodeProgress(malId, epNum)?.t ?? 0) : 0),
+    [malId, epNum, validParams],
+  );
 
-  const animeQ = useQuery({ queryKey: ["anime", malId], queryFn: () => jikan.anime(malId) });
+  const animeQ = useQuery({
+    queryKey: ["anime", malId],
+    queryFn: () => jikan.anime(malId),
+    enabled: validParams,
+  });
   const a = animeQ.data?.data;
   const total = a?.episodes ?? null;
   const title = a ? bestTitle(a) : "";
@@ -190,6 +199,7 @@ function WatchPage() {
   const anilistQ = useQuery({
     queryKey: ["anilist", malId],
     queryFn: () => malToAnilist(malId),
+    enabled: validParams,
     staleTime: Infinity,
   });
 
@@ -197,13 +207,13 @@ function WatchPage() {
   const anikotoSearchQ = useQuery({
     queryKey: ["anikoto-search", title],
     queryFn: () => searchAnikotoByTitle({ data: { title } }),
-    enabled: !!title,
+    enabled: validParams && !!title,
     staleTime: 1000 * 60 * 60,
   });
   const anikotoSeriesQ = useQuery({
     queryKey: ["anikoto-series", anikotoSearchQ.data?.id],
     queryFn: () => getAnikotoSeries({ data: { id: String(anikotoSearchQ.data!.id) } }),
-    enabled: !!anikotoSearchQ.data?.id,
+    enabled: validParams && !!anikotoSearchQ.data?.id,
     staleTime: 1000 * 60 * 60,
   });
 
@@ -218,15 +228,6 @@ function WatchPage() {
     [malId, anilistQ.data, anikotoSeriesQ.data, epNum, lang],
   );
 
-  // HiAnime direct sources (only fetched when that server is active).
-  const hianimeQ = useQuery({
-    queryKey: ["hianime-src", malId, title, epNum, lang],
-    queryFn: () => getHianimeSources({ data: { malId, title, ep: epNum, lang } }),
-    enabled: !!malId,
-    staleTime: 1000 * 60 * 30,
-    retry: 1,
-  });
-
   // Resolve current server's embed, skipping forward if this server can't serve this request.
   const { embed, activeServer } = useMemo(() => {
     for (let i = 0; i < SERVERS.length; i++) {
@@ -237,18 +238,28 @@ function WatchPage() {
     return { embed: null as string | null, activeServer: SERVERS[0] };
   }, [serverIdx, ctx]);
 
-  // Reset load watcher whenever the embed changes; auto-flag stalled after 12s.
+  // HiAnime direct sources — only fetched when HiAnime Direct is active and title (if available) has settled.
+  const hianimeQ = useQuery({
+    queryKey: ["hianime-src", malId, title, epNum, lang],
+    queryFn: () => getHianimeSources({ data: { malId, title, ep: epNum, lang } }),
+    enabled:
+      validParams && activeServer.id === "hianime-direct" && (!animeQ.isLoading || animeQ.isError),
+    staleTime: 1000 * 60 * 30,
+    retry: 1,
+  });
+
+  // Reset load watcher whenever the iframe embed changes; auto-flag stalled after 12s (iframe embeds only).
   useEffect(() => {
     setLoadState("loading");
     if (stallTimerRef.current) clearTimeout(stallTimerRef.current);
-    if (!embed) return;
+    if (!embed || activeServer.id === "hianime-direct") return;
     stallTimerRef.current = setTimeout(() => {
       setLoadState((prev) => (prev === "loading" ? "stalled" : prev));
     }, 12000);
     return () => {
       if (stallTimerRef.current) clearTimeout(stallTimerRef.current);
     };
-  }, [embed]);
+  }, [embed, activeServer.id, iframeKey]);
 
   const tryNextServer = () => {
     setServerIdx((i) => {
@@ -259,11 +270,11 @@ function WatchPage() {
     setIframeKey((k) => k + 1);
   };
 
-  const selectServer = (id: string) => {
-    const idx = SERVERS.findIndex((s) => s.id === id);
+  const selectServer = (serverId: string) => {
+    const idx = SERVERS.findIndex((s) => s.id === serverId);
     if (idx >= 0) {
       setServerIdx(idx);
-      setPreferredProvider(malId, id);
+      setPreferredProvider(malId, serverId);
       setIframeKey((k) => k + 1);
     }
   };
@@ -273,19 +284,24 @@ function WatchPage() {
     setPreferredLang(v);
   };
 
+  const [watchedEpisodes, setWatchedEpisodes] = useState<number[]>(() =>
+    validParams ? getWatchedEpisodes(malId) : [],
+  );
+
   useEffect(() => {
-    if (!a) return;
+    if (!validParams || !a) return;
     saveHistory({
       malId,
       title: bestTitle(a),
-      image: a.images.webp?.large_image_url || a.images.jpg.large_image_url,
+      image: bestImage(a),
       episode: epNum,
       totalEpisodes: total,
       lang,
       updatedAt: Date.now(),
     });
     markEpisodeWatched(malId, epNum);
-  }, [a, malId, epNum, lang, total]);
+    setWatchedEpisodes(getWatchedEpisodes(malId));
+  }, [a, malId, epNum, lang, total, validParams]);
 
   const [episodeSheetOpen, setEpisodeSheetOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -294,7 +310,34 @@ function WatchPage() {
   const [autoplayNext, setAutoplayNext] = useState(true);
   const [copied, setCopied] = useState(false);
 
-  const watchedEpisodes = useMemo(() => getWatchedEpisodes(malId), [malId]);
+  const totalEpisodesCount = Math.max(
+    total ?? 0,
+    epNum,
+    anikotoSeriesQ.data?.episodes.length ?? 0,
+    12,
+  );
+  const pageSize = 100;
+  const totalRanges = Math.ceil(totalEpisodesCount / pageSize);
+  const [epRange, setEpRange] = useState(() => Math.floor((epNum - 1) / pageSize));
+
+  useEffect(() => {
+    setEpRange(Math.floor((epNum - 1) / pageSize));
+  }, [epNum]);
+
+  // Escape key & scroll lock for mobile episode drawer
+  useEffect(() => {
+    if (!episodeSheetOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setEpisodeSheetOpen(false);
+    };
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [episodeSheetOpen]);
 
   const goEp = (next: number) => {
     if (next < 1) return;
@@ -325,16 +368,41 @@ function WatchPage() {
     }
   };
 
+  if (!validParams) {
+    return (
+      <div className="py-20 text-center space-y-4">
+        <h2 className="text-2xl font-bold text-white">Invalid episode link</h2>
+        <p className="text-sm text-white/60 max-w-md mx-auto">
+          The anime or episode parameter is missing or malformed.
+        </p>
+        <Link
+          to="/"
+          className="inline-flex items-center rounded-full bg-primary px-5 py-2 text-sm font-semibold text-white"
+        >
+          Back to Home
+        </Link>
+      </div>
+    );
+  }
+
+  const rangeStart = epRange * pageSize + 1;
+  const rangeEnd = Math.min((epRange + 1) * pageSize, totalEpisodesCount);
+  const rangeCount = Math.max(0, rangeEnd - rangeStart + 1);
+
   return (
-    <div className="space-y-6">
+    <div className="page-enter space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-2 text-sm text-white/70">
-        <div className="flex items-center gap-2">
-          <Link to="/" className="hover:text-white">
+        <div className="flex flex-wrap items-center gap-2 min-w-0">
+          <Link to="/" className="hover:text-white transition-colors">
             Home
           </Link>
           <span>/</span>
           {a ? (
-            <Link to="/anime/$id" params={{ id }} className="hover:text-white">
+            <Link
+              to="/anime/$id"
+              params={{ id }}
+              className="truncate max-w-[200px] sm:max-w-xs hover:text-white transition-colors"
+            >
               {bestTitle(a)}
             </Link>
           ) : (
@@ -355,22 +423,22 @@ function WatchPage() {
       </div>
 
       <div className="relative">
-        {/* Dynamic ambient optical glow behind the player */}
+        {/* Dynamic subtle optical ambient behind the player */}
         {ambientGlow && (
           <div
             className="pointer-events-none absolute -inset-4 sm:-inset-6 rounded-3xl blur-3xl transition-opacity duration-300 -z-10"
             style={{
               background:
-                "radial-gradient(ellipse at center, rgba(139, 92, 246, 0.45), rgba(56, 189, 248, 0.25), transparent 70%)",
+                "radial-gradient(ellipse at center, rgba(10, 132, 255, 0.24), rgba(255, 255, 255, 0.08), transparent 72%)",
               opacity: ambientIntensity / 100,
             }}
           />
         )}
 
-        <div className="overflow-hidden rounded-3xl glass-strong border border-white/10 shadow-2xl">
+        <div className="overflow-hidden rounded-3xl glass-strong border border-white/12 shadow-2xl">
           <div className="relative aspect-video w-full bg-black">
             {activeServer.id === "hianime-direct" ? (
-              hianimeQ.isLoading ? (
+              hianimeQ.isLoading || (animeQ.isLoading && !animeQ.isError) ? (
                 <div className="flex h-full w-full items-center justify-center text-sm text-white/60">
                   Resolving HiAnime stream…
                 </div>
@@ -379,8 +447,11 @@ function WatchPage() {
                   key={`${hianimeQ.data.sources[0].file}-${iframeKey}`}
                   src={hianimeQ.data.sources[0].file}
                   tracks={hianimeQ.data.tracks}
-                  poster={a?.images.webp?.large_image_url || a?.images.jpg.large_image_url}
+                  poster={bestImage(a) || undefined}
                   startTime={resume}
+                  onReady={() => setLoadState("ok")}
+                  onFatalError={() => setLoadState("stalled")}
+                  onTryNextServer={tryNextServer}
                   onProgress={(t, d) => saveEpisodeProgress(malId, epNum, t, d)}
                   onEnded={() => {
                     if (autoplayNext && (!total || epNum < total)) {
@@ -391,14 +462,28 @@ function WatchPage() {
                   }}
                 />
               ) : (
-                <div className="flex h-full w-full flex-col items-center justify-center gap-2 p-4 text-center text-sm text-white/60">
-                  <span>HiAnime direct stream not found for this episode.</span>
-                  <button
-                    onClick={tryNextServer}
-                    className="rounded-md bg-gradient-to-r from-neon-cyan to-neon-magenta px-3 py-1 text-xs font-semibold text-background"
-                  >
-                    Try next server →
-                  </button>
+                <div className="flex h-full w-full flex-col items-center justify-center gap-3 p-4 text-center text-sm text-white/70">
+                  <span>
+                    {hianimeQ.isError
+                      ? "HiAnime direct stream failed to respond."
+                      : "HiAnime direct stream not found for this episode."}
+                  </span>
+                  <div className="flex flex-wrap items-center justify-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => hianimeQ.refetch()}
+                      className="rounded-lg bg-white/15 px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-white/25"
+                    >
+                      Retry
+                    </button>
+                    <button
+                      type="button"
+                      onClick={tryNextServer}
+                      className="rounded-lg bg-primary px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-primary/90"
+                    >
+                      Try next server →
+                    </button>
+                  </div>
                 </div>
               )
             ) : embed ? (
@@ -411,21 +496,22 @@ function WatchPage() {
                 referrerPolicy="no-referrer"
                 onLoad={() => setLoadState("ok")}
                 onError={() => tryNextServer()}
-                className="h-full w-full"
+                className="h-full w-full border-0"
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center text-sm text-white/60">
                 No server available for this episode.
               </div>
             )}
-            {loadState === "stalled" && (
-              <div className="absolute inset-x-0 bottom-0 flex flex-wrap items-center justify-between gap-2 bg-black/70 px-4 py-2 text-xs text-white/90 backdrop-blur">
+            {activeServer.id !== "hianime-direct" && loadState === "stalled" && (
+              <div className="on-media absolute inset-x-0 bottom-0 flex flex-wrap items-center justify-between gap-2 bg-black/75 px-4 py-2.5 text-xs text-white/90 backdrop-blur">
                 <span>
                   Stream slow or unavailable on <b>{activeServer.label}</b>.
                 </span>
                 <button
+                  type="button"
                   onClick={tryNextServer}
-                  className="rounded-md bg-gradient-to-r from-neon-cyan to-neon-magenta px-3 py-1 font-semibold text-background"
+                  className="rounded-lg bg-primary px-3 py-1 font-semibold text-white hover:bg-primary/90"
                 >
                   Try next server →
                 </button>
@@ -434,10 +520,10 @@ function WatchPage() {
           </div>
 
           {/* Interactive Player Controls Row */}
-          <div className="grid gap-3 p-3 sm:p-4 sm:flex sm:flex-wrap sm:items-center sm:justify-between border-t border-white/5">
+          <div className="grid gap-3 p-3.5 sm:p-4 lg:flex lg:flex-wrap lg:items-center lg:justify-between border-t border-white/10">
             <div className="min-w-0">
               <h1 className="truncate text-base sm:text-lg font-bold text-white">
-                {a ? bestTitle(a) : "Loading…"} <span className="text-cyan-400">· EP {epNum}</span>
+                {a ? bestTitle(a) : "Loading…"} <span className="text-sky-400">· EP {epNum}</span>
               </h1>
               <p className="mt-0.5 text-[11px] text-white/50">
                 MAL #{malId}
@@ -459,7 +545,7 @@ function WatchPage() {
               {/* Mobile Episodes Drawer Button */}
               <GlassButton
                 variant="tinted"
-                tint="#8b5cf6"
+                tint="#0a84ff"
                 size="sm"
                 icon={<List size={14} />}
                 onClick={() => setEpisodeSheetOpen(true)}
@@ -471,7 +557,8 @@ function WatchPage() {
               <select
                 value={activeServer.id}
                 onChange={(e) => selectServer(e.target.value)}
-                className="rounded-xl bg-white/5 px-2.5 py-1.5 text-xs text-white outline-none ring-1 ring-white/10 focus:ring-primary"
+                aria-label="Select streaming server"
+                className="min-h-[34px] w-full sm:w-auto max-w-full rounded-xl bg-white/5 px-2.5 py-1.5 text-xs text-white outline-none ring-1 ring-white/10 focus:ring-primary"
               >
                 {SERVERS.map((s) => {
                   const available = !!s.build(ctx);
@@ -494,6 +581,7 @@ function WatchPage() {
 
               <GlassButton
                 variant={settingsOpen ? "filled" : "clear"}
+                tint={settingsOpen ? "#0a84ff" : undefined}
                 size="sm"
                 icon={<Settings2 size={14} />}
                 onClick={() => setSettingsOpen((v) => !v)}
@@ -511,32 +599,30 @@ function WatchPage() {
                 ← Prev
               </GlassButton>
 
-              <div className="relative">
-                {showNextHint && (
-                  <span
-                    aria-hidden="true"
-                    className="next-ep-hint pointer-events-none absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-[11px] font-bold uppercase"
-                  >
-                    Next Episode →
-                  </span>
-                )}
-                <GlassButton
-                  variant="filled"
-                  tint="#8b5cf6"
-                  size="sm"
-                  onClick={() => goEp(epNum + 1)}
-                  disabled={!!total && epNum >= total}
-                  className={
-                    showNextHint
-                      ? "ring-2 ring-cyan-400/70 shadow-[0_0_20px_rgba(34,211,238,0.6)]"
-                      : ""
-                  }
-                >
-                  Next →
-                </GlassButton>
-              </div>
+              <GlassButton
+                variant="filled"
+                tint="#0a84ff"
+                size="sm"
+                onClick={() => goEp(epNum + 1)}
+                disabled={!!total && epNum >= total}
+                className={showNextHint ? "ring-2 ring-primary/80" : ""}
+              >
+                {showNextHint ? "Play Next Ep →" : "Next →"}
+              </GlassButton>
             </div>
           </div>
+          {showNextHint && (
+            <div className="flex items-center justify-between gap-3 border-t border-white/10 bg-white/[0.04] px-4 py-2 text-xs text-sky-300">
+              <span>Episode finished — ready to continue to Episode {epNum + 1}.</span>
+              <button
+                type="button"
+                onClick={() => goEp(epNum + 1)}
+                className="rounded-lg bg-primary px-3 py-1 font-semibold text-white hover:bg-primary/90"
+              >
+                Next Episode →
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -547,42 +633,42 @@ function WatchPage() {
           intensity={5}
           padding="16px"
           radius="22px"
-          className="anim-pop border border-white/10"
+          className="anim-pop border border-white/12"
         >
           <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-3">
             <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
               <Settings2 size={14} className="text-primary" />
               <span>Player Customization</span>
             </h3>
-            <span className="text-[11px] text-muted-foreground/80">Liquid Glass Controls</span>
+            <span className="text-[11px] text-muted-foreground/80">Player Controls</span>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-3">
             <label className="flex items-center justify-between gap-3 text-xs font-medium text-white/90">
               <span className="flex items-center gap-1.5">
-                <Sparkles size={14} className="text-cyan-300" />
-                <span>Ambient Refraction Glow</span>
+                <Sparkles size={14} className="text-sky-400" />
+                <span>Ambient Optical Backdrop</span>
               </span>
               <GlassSwitch
                 checked={ambientGlow}
                 onChange={setAmbientGlow}
-                tint="#38bdf8"
-                aria-label="Ambient Refraction Glow"
+                tint="#0a84ff"
+                aria-label="Ambient Optical Backdrop"
               />
             </label>
 
             <div className="flex flex-col gap-1.5">
               <div className="flex items-center justify-between text-xs text-white/80">
-                <span>Glow Refraction Intensity</span>
-                <span className="text-[11px] text-cyan-300 font-semibold">{ambientIntensity}%</span>
+                <span>Backdrop Intensity</span>
+                <span className="text-[11px] text-sky-400 font-semibold">{ambientIntensity}%</span>
               </div>
               <GlassSlider
                 value={ambientIntensity}
                 onChange={setAmbientIntensity}
                 min={10}
                 max={100}
-                tint="#8b5cf6"
-                aria-label="Glow Intensity"
+                tint="#0a84ff"
+                aria-label="Backdrop Intensity"
               />
             </div>
 
@@ -591,7 +677,7 @@ function WatchPage() {
               <GlassSwitch
                 checked={autoplayNext}
                 onChange={setAutoplayNext}
-                tint="#8b5cf6"
+                tint="#0a84ff"
                 aria-label="Autoplay Next Episode"
               />
             </label>
@@ -599,20 +685,42 @@ function WatchPage() {
         </GlassCard>
       )}
 
-      {/* Desktop / Full Episode Selector */}
+      {/* Episode Selector */}
       {a && (
         <section>
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
             <h2 className="text-lg font-bold text-white flex items-center gap-2">
               <span>Episodes</span>
               <span className="text-xs font-normal text-muted-foreground">
-                ({epNum} of {total ?? 12})
+                ({epNum} of {total ?? totalEpisodesCount})
               </span>
             </h2>
+            {totalRanges > 1 && (
+              <div className="flex flex-wrap gap-1.5">
+                {Array.from({ length: totalRanges }).map((_, idx) => {
+                  const start = idx * pageSize + 1;
+                  const end = Math.min((idx + 1) * pageSize, totalEpisodesCount);
+                  return (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setEpRange(idx)}
+                      className={`rounded-lg px-2.5 py-1 text-xs font-medium transition ${
+                        epRange === idx
+                          ? "bg-primary text-white"
+                          : "glass text-white/70 hover:text-white"
+                      }`}
+                    >
+                      {start}–{end}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
           <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-12">
-            {Array.from({ length: total ?? 12 }).map((_, i) => {
-              const n = i + 1;
+            {Array.from({ length: rangeCount }).map((_, i) => {
+              const n = rangeStart + i;
               const active = n === epNum;
               const isWatched = watchedEpisodes.includes(n);
               return (
@@ -621,18 +729,16 @@ function WatchPage() {
                   to="/watch/$id/$ep"
                   params={{ id, ep: String(n) }}
                   preload="intent"
-                  className={`rounded-xl px-2 py-2 text-center text-xs font-semibold transition active:scale-95 ${
+                  className={`flex min-h-[42px] flex-col items-center justify-center rounded-xl px-2 py-2 text-center text-xs font-semibold transition active:scale-95 ${
                     active
-                      ? "bg-primary text-white shadow-lg shadow-primary/30"
+                      ? "bg-primary !text-white shadow-sm"
                       : isWatched
-                        ? "bg-white/10 text-cyan-200 border border-cyan-400/20"
-                        : "glass text-white/80 hover:text-white hover:bg-white/10"
+                        ? "bg-white/10 text-sky-300 border border-primary/30"
+                        : "surface text-white/80 hover:text-white hover:bg-white/10"
                   }`}
                 >
                   <span>{n}</span>
-                  {isWatched && !active && (
-                    <span className="block text-[9px] text-cyan-400">✓</span>
-                  )}
+                  {isWatched && !active && <span className="block text-[9px] text-sky-400">✓</span>}
                 </Link>
               );
             })}
@@ -640,80 +746,88 @@ function WatchPage() {
         </section>
       )}
 
-      {/* Mobile Episode Drawer Bottom Sheet */}
-      <GlassSheet
-        open={episodeSheetOpen}
-        onClose={() => setEpisodeSheetOpen(false)}
-        aria-label="Episodes Sheet"
-        detents={["medium", "large"]}
-        intensity={6}
-      >
-        <div className="p-4 space-y-3">
-          <div className="flex items-center justify-between pb-2 border-b border-white/10">
-            <div>
-              <h3 className="text-base font-bold text-white">Select Episode</h3>
-              <p className="text-xs text-muted-foreground">
-                {total ? `${total} Episodes available` : "Episode list"}
-              </p>
+      {/* Smooth 120fps Mobile Episode Drawer Bottom Sheet */}
+      {episodeSheetOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Select Episode"
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/75 backdrop-blur-md anim-fade"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setEpisodeSheetOpen(false);
+          }}
+        >
+          <div
+            className="on-media w-full max-w-lg max-h-[82vh] overflow-y-auto no-scrollbar rounded-t-[28px] bg-[#111114]/96 border-t border-white/15 backdrop-blur-3xl p-4 pb-6 space-y-3 text-white anim-sheet"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-12 h-1.5 rounded-full bg-white/20 mx-auto mb-1" />
+            <div className="flex items-center justify-between pb-2 border-b border-white/10">
+              <div>
+                <h3 className="text-base font-bold text-white">Select Episode</h3>
+                <p className="text-xs text-white/60">
+                  {total ? `${total} Episodes available` : "Episode list"}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEpisodeSheetOpen(false)}
+                aria-label="Close episode drawer"
+                className="p-2 rounded-full text-white/70 hover:text-white hover:bg-white/10"
+              >
+                <X size={18} />
+              </button>
             </div>
-            <GlassButton variant="clear" size="sm" onClick={() => setEpisodeSheetOpen(false)}>
-              Done
-            </GlassButton>
-          </div>
-          <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 max-h-[55vh] overflow-y-auto pr-1">
-            {Array.from({ length: total ?? 12 }).map((_, i) => {
-              const n = i + 1;
-              const active = n === epNum;
-              const isWatched = watchedEpisodes.includes(n);
-              return (
-                <button
-                  key={n}
-                  onClick={() => {
-                    setEpisodeSheetOpen(false);
-                    goEp(n);
-                  }}
-                  className={`flex flex-col items-center justify-center p-2.5 rounded-xl text-xs font-semibold transition active:scale-95 ${
-                    active
-                      ? "bg-primary text-white shadow-lg shadow-primary/30"
-                      : isWatched
-                        ? "bg-white/10 text-cyan-200 border border-cyan-400/20"
-                        : "bg-white/5 text-white/80 hover:bg-white/10"
-                  }`}
-                >
-                  <span>EP {n}</span>
-                  {isWatched && <span className="text-[10px] text-cyan-400">✓ Watched</span>}
-                </button>
-              );
-            })}
+            {totalRanges > 1 && (
+              <div className="flex flex-wrap gap-1.5">
+                {Array.from({ length: totalRanges }).map((_, idx) => {
+                  const start = idx * pageSize + 1;
+                  const end = Math.min((idx + 1) * pageSize, totalEpisodesCount);
+                  return (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setEpRange(idx)}
+                      className={`rounded-lg px-2.5 py-1 text-xs font-medium ${
+                        epRange === idx ? "bg-primary text-white" : "bg-white/10 text-white/70"
+                      }`}
+                    >
+                      {start}–{end}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 max-h-[55vh] overflow-y-auto pr-1 no-scrollbar">
+              {Array.from({ length: rangeCount }).map((_, i) => {
+                const n = rangeStart + i;
+                const active = n === epNum;
+                const isWatched = watchedEpisodes.includes(n);
+                return (
+                  <button
+                    key={n}
+                    type="button"
+                    onClick={() => {
+                      setEpisodeSheetOpen(false);
+                      goEp(n);
+                    }}
+                    className={`flex flex-col items-center justify-center p-2.5 min-h-[44px] rounded-xl text-xs font-semibold transition active:scale-95 ${
+                      active
+                        ? "bg-primary text-white shadow-sm"
+                        : isWatched
+                          ? "bg-white/10 text-sky-300 border border-primary/30"
+                          : "bg-white/5 text-white/80 hover:bg-white/10"
+                    }`}
+                  >
+                    <span>EP {n}</span>
+                    {isWatched && <span className="text-[10px] text-sky-400">✓ Watched</span>}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
-      </GlassSheet>
-    </div>
-  );
-}
-
-function Toggle({
-  value,
-  options,
-  onChange,
-}: {
-  value: string;
-  options: [string, string][];
-  onChange: (v: string) => void;
-}) {
-  return (
-    <div className="glass flex rounded-lg p-0.5">
-      {options.map(([val, label]) => (
-        <button
-          key={val}
-          onClick={() => onChange(val)}
-          className={`rounded-md px-3 py-1.5 text-xs font-semibold transition ${
-            value === val ? "bg-white/15 text-neon-cyan" : "text-white/70 hover:text-white"
-          }`}
-        >
-          {label}
-        </button>
-      ))}
+      )}
     </div>
   );
 }

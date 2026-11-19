@@ -7,6 +7,7 @@ export function AiringCountdown({ malId, className = "" }: { malId: number; clas
   const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
+    if (!Number.isInteger(malId) || malId <= 0) return;
     let alive = true;
     getNextAiring(malId).then((n) => {
       if (alive) setNext(n);
@@ -28,11 +29,11 @@ export function AiringCountdown({ malId, className = "" }: { malId: number; clas
 
   return (
     <span
-      className={`inline-flex items-center gap-2 rounded-full glass px-3 py-1 text-xs font-medium ${soon ? "text-neon-magenta" : "text-neon-cyan"} ${className}`}
+      className={`inline-flex items-center gap-2 rounded-full glass px-3 py-1 text-xs font-medium ${soon ? "text-amber-300" : "text-sky-300"} ${className}`}
       title={new Date(next.airingAt * 1000).toLocaleString()}
     >
       <span
-        className={`h-1.5 w-1.5 rounded-full ${soon ? "bg-neon-magenta glow-magenta" : "bg-neon-cyan glow-cyan"} animate-pulse`}
+        className={`h-1.5 w-1.5 rounded-full ${soon ? "bg-amber-400" : "bg-primary"} animate-pulse`}
       />
       EP {next.episode} in {formatCountdown(left)}
     </span>
